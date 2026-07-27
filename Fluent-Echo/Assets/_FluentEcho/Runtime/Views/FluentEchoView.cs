@@ -21,6 +21,8 @@ namespace FluentEcho.Views
         [SerializeField] private Button demoButton;
         [SerializeField] private Button retryButton;
         [SerializeField] private Button listenButton;
+        [SerializeField] private Button previousButton;
+        [SerializeField] private Button nextButton;
         [SerializeField] private Toggle mockModeToggle;
         [SerializeField] private Image recordingIndicator;
         [SerializeField] private Image successPanel;
@@ -31,6 +33,8 @@ namespace FluentEcho.Views
         public event Action DemoPressed;
         public event Action RetryPressed;
         public event Action ListenPressed;
+        public event Action PreviousPressed;
+        public event Action NextPressed;
         public event Action<bool> MockModeChanged;
 
         public void ConfigureWordChipPrefab(WordChipView prefab)
@@ -49,6 +53,12 @@ namespace FluentEcho.Views
             demoButton.onClick.AddListener(() => DemoPressed?.Invoke());
             retryButton.onClick.AddListener(() => RetryPressed?.Invoke());
             listenButton.onClick.AddListener(() => ListenPressed?.Invoke());
+            if (previousButton != null)
+                previousButton.onClick.AddListener(() => PreviousPressed?.Invoke());
+
+            if (nextButton != null)
+                nextButton.onClick.AddListener(() => NextPressed?.Invoke());
+
             mockModeToggle.onValueChanged.AddListener(value => MockModeChanged?.Invoke(value));
         }
 
@@ -109,6 +119,15 @@ namespace FluentEcho.Views
         {
             mockModeToggle.SetIsOnWithoutNotify(mockMode);
             modeLabel.text = mockMode ? "DEMO ENGINE" : "LOCAL WHISPER";
+        }
+
+        public void SetNavigation(bool canGoPrevious, bool canGoNext)
+        {
+            if (previousButton != null)
+                previousButton.interactable = canGoPrevious;
+
+            if (nextButton != null)
+                nextButton.interactable = canGoNext;
         }
     }
 }

@@ -28,6 +28,7 @@ namespace FluentEcho.Services
         private bool warmupCompleted;
         private float lastPrepareSeconds;
         private float lastWarmupSeconds;
+        private int prepareGeneration;
 
         public event Action<string> TranscriptUpdated;
         public event Action AnalysisStarted;
@@ -77,10 +78,11 @@ namespace FluentEcho.Services
             if (prepareTask is { IsCompleted: false })
                 return;
 
+            int generation = ++prepareGeneration;
             warmupCompleted = false;
             lastPrepareSeconds = 0f;
             lastWarmupSeconds = 0f;
-            prepareTask = PrepareInternalAsync();
+            prepareTask = PrepareInternalAsync(generation);
         }
 
         public async void StartListening()
@@ -132,6 +134,8 @@ namespace FluentEcho.Services
 
         public void Cancel()
         {
+            prepareGeneration++;
+
             if (!IsListening)
                 return;
 
@@ -147,16 +151,21 @@ namespace FluentEcho.Services
             if (IsReady)
                 return true;
 
-            prepareTask = PrepareInternalAsync();
+            int generation = ++prepareGeneration;
+            prepareTask = PrepareInternalAsync(generation);
             await prepareTask;
             return IsReady;
         }
 
-        private async Task PrepareInternalAsync()
+        private async Task PrepareInternalAsync(int generation)
         {
             Stopwatch prepareStopwatch = Stopwatch.StartNew();
             ApplyConfiguration();
             string profileLabel = CurrentQualityProfile.ToString().ToUpperInvariant();
+
+            if (IsPrepareStale(generation))
+                return;
+
             StatusChanged?.Invoke($"Loading speech engine ({profileLabel})...");
 
             string modelPath = ResolveModelPath();
@@ -167,6 +176,9 @@ namespace FluentEcho.Services
                 StatusChanged?.Invoke("Whisper model is missing.");
                 return;
             }
+
+            if (IsPrepareStale(generation))
+                return;
 
             if (!whisperManager.IsLoaded)
             {
@@ -182,6 +194,9 @@ namespace FluentEcho.Services
                 }
             }
 
+            if (IsPrepareStale(generation))
+                return;
+
             if (!whisperManager.IsLoaded)
             {
                 RaiseError($"Whisper could not load model: {fullModelPath}");
@@ -195,8 +210,14 @@ namespace FluentEcho.Services
             if (!warmupCompleted && ResolveWarmupEnabled())
                 warmupSucceeded = await WarmUpAsync(profileLabel);
 
+            if (IsPrepareStale(generation))
+                return;
+
             if (stream == null && !IsListening)
                 stream = await whisperManager.CreateStream(microphone);
+
+            if (IsPrepareStale(generation))
+                return;
 
             if (stream == null)
             {
@@ -414,6 +435,8 @@ namespace FluentEcho.Services
             Debug.LogError($"[FluentEcho.Whisper] {message}", this);
             Failed?.Invoke(message);
         }
+
+        private bool IsPrepareStale(int generation) => generation != prepareGeneration;
 
         private void Unsubscribe()
         {

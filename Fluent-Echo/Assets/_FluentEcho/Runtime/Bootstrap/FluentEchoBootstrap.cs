@@ -75,6 +75,7 @@ namespace FluentEcho.Bootstrap
             EnsureProgressLabel();
             presenter = new FluentEchoPresenter(
                 exercise,
+                exerciseCatalog,
                 view,
                 whisperService,
                 mockService,
@@ -108,12 +109,21 @@ namespace FluentEcho.Bootstrap
             Dropdown dropdown = microphone?.microphoneDropdown;
             if (dropdown == null)
             {
-                dropdown = CreateDropdown(view.transform, "Microphone Dropdown", "Default microphone");
+                dropdown = CreateDropdown(
+                    view.transform,
+                    "Microphone Dropdown",
+                    "Default microphone",
+                    new Vector2(0.06f, 0.08f),
+                    new Vector2(0.42f, 0.15f));
                 if (microphone == null)
                     return;
 
                 microphone.microphoneDropdown = dropdown;
             }
+
+            RectTransform rect = dropdown.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.06f, 0.08f);
+            rect.anchorMax = new Vector2(0.42f, 0.15f);
 
             PopulateDropdown(microphone, dropdown);
         }
@@ -126,9 +136,18 @@ namespace FluentEcho.Bootstrap
             Dropdown dropdown = exerciseDropdown;
             if (dropdown == null)
             {
-                dropdown = CreateDropdown(view.transform, "Lesson Dropdown", exerciseCatalog.GetDisplayNames()[0]);
+                dropdown = CreateDropdown(
+                    view.transform,
+                    "Lesson Dropdown",
+                    exerciseCatalog.GetDisplayNames()[0],
+                    new Vector2(0.17f, 0.86f),
+                    new Vector2(0.78f, 0.93f));
                 exerciseDropdown = dropdown;
             }
+
+            RectTransform rect = dropdown.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.17f, 0.86f);
+            rect.anchorMax = new Vector2(0.78f, 0.93f);
 
             string[] names = exerciseCatalog.GetDisplayNames();
             var options = new List<Dropdown.OptionData>();
@@ -155,14 +174,19 @@ namespace FluentEcho.Bootstrap
             Dropdown dropdown = whisperProfileDropdown;
             if (dropdown == null)
             {
-                dropdown = CreateDropdown(view.transform, "Whisper Profile Dropdown", "FAST");
+                dropdown = CreateDropdown(
+                    view.transform,
+                    "Whisper Profile Dropdown",
+                    "FAST",
+                    new Vector2(0.46f, 0.08f),
+                    new Vector2(0.82f, 0.15f));
                 whisperProfileDropdown = dropdown;
             }
 
             WhisperQualityProfile currentProfile = whisperService.CurrentQualityProfile;
             RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.46f, 0.18f);
-            rect.anchorMax = new Vector2(0.82f, 0.26f);
+            rect.anchorMin = new Vector2(0.46f, 0.08f);
+            rect.anchorMax = new Vector2(0.82f, 0.15f);
 
             var options = new List<Dropdown.OptionData>();
             foreach (string name in Enum.GetNames(typeof(WhisperQualityProfile)))
@@ -226,7 +250,12 @@ namespace FluentEcho.Bootstrap
             return Mathf.Clamp(index, 0, exerciseCatalog.Count - 1);
         }
 
-        private static Dropdown CreateDropdown(Transform parent, string name, string caption)
+        private static Dropdown CreateDropdown(
+            Transform parent,
+            string name,
+            string caption,
+            Vector2? anchorMin = null,
+            Vector2? anchorMax = null)
         {
             DefaultControls.Resources resources = new()
             {
@@ -244,8 +273,8 @@ namespace FluentEcho.Bootstrap
             dropdownObject.transform.SetParent(parent, false);
 
             RectTransform rect = dropdownObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.06f, 0.18f);
-            rect.anchorMax = new Vector2(0.42f, 0.26f);
+            rect.anchorMin = anchorMin ?? new Vector2(0.06f, 0.08f);
+            rect.anchorMax = anchorMax ?? new Vector2(0.42f, 0.15f);
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 

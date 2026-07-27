@@ -23,6 +23,8 @@ namespace FluentEcho.Editor
         private const string FirstExercisePath = Root + "/Demo/Data/FirstLesson.asset";
         private const string SecondExercisePath = Root + "/Demo/Data/SecondLesson.asset";
         private const string ThirdExercisePath = Root + "/Demo/Data/ThirdLesson.asset";
+        private const string FourthExercisePath = Root + "/Demo/Data/FourthLesson.asset";
+        private const string FifthExercisePath = Root + "/Demo/Data/FifthLesson.asset";
         private const string WhisperSettingsPath = Root + "/Demo/Data/WhisperSettings.asset";
         private const string ChipPrefabPath = Root + "/Demo/Prefabs/WordChip.prefab";
 
@@ -152,22 +154,28 @@ namespace FluentEcho.Editor
             CreateText(lessonCard, "Step", "LESSON 01 / DESCRIBE THE DOG", 16, FontStyles.Bold, Coral,
                 new Vector2(0.06f, 0.86f), new Vector2(0.35f, 0.93f), TextAlignmentOptions.Left);
 
+            Button lessonPreviousButton = CreateButton(
+                lessonCard, "Lesson Previous Button", "PREV",
+                new Vector2(0.06f, 0.86f), new Vector2(0.15f, 0.93f), SurfaceRaised, Cream, out _);
             lessonDropdown = CreateDropdown(
                 lessonCard,
                 "Lesson Dropdown",
-                new Vector2(0.37f, 0.86f),
-                new Vector2(0.69f, 0.93f),
+                new Vector2(0.17f, 0.86f),
+                new Vector2(0.78f, 0.93f),
                 selectedExercise != null ? selectedExercise.name.ToUpperInvariant() : "LESSON 01");
+            Button lessonNextButton = CreateButton(
+                lessonCard, "Lesson Next Button", "NEXT",
+                new Vector2(0.80f, 0.86f), new Vector2(0.94f, 0.93f), SurfaceRaised, Cream, out _);
 
             TextMeshProUGUI modeLabel = CreateText(lessonCard, "Mode", "LOCAL WHISPER", 14, FontStyles.Bold, Ink,
-                new Vector2(0.71f, 0.86f), new Vector2(0.94f, 0.93f), TextAlignmentOptions.Right);
+                new Vector2(0.71f, 0.80f), new Vector2(0.94f, 0.85f), TextAlignmentOptions.Right);
             TextMeshProUGUI progressLabel = CreateText(lessonCard, "Progress", "PROGRESS | no attempts yet", 14, FontStyles.Bold, Coral,
-                new Vector2(0.62f, 0.80f), new Vector2(0.94f, 0.85f), TextAlignmentOptions.Right);
+                new Vector2(0.62f, 0.74f), new Vector2(0.94f, 0.79f), TextAlignmentOptions.Right);
             TextMeshProUGUI prompt = CreateText(lessonCard, "Prompt", "Say the sentence in English.", 42, FontStyles.Bold, Ink,
-                new Vector2(0.06f, 0.69f), new Vector2(0.94f, 0.85f), TextAlignmentOptions.BottomLeft);
+                new Vector2(0.06f, 0.66f), new Vector2(0.94f, 0.83f), TextAlignmentOptions.BottomLeft);
 
             RectTransform words = CreatePanel(
-                lessonCard, "Word Chips", new Vector2(0.06f, 0.57f), new Vector2(0.94f, 0.68f), new Color(0f, 0f, 0f, 0f));
+                lessonCard, "Word Chips", new Vector2(0.06f, 0.54f), new Vector2(0.94f, 0.65f), new Color(0f, 0f, 0f, 0f));
             HorizontalLayoutGroup wordLayout = words.gameObject.AddComponent<HorizontalLayoutGroup>();
             wordLayout.spacing = 12f;
             wordLayout.childAlignment = TextAnchor.MiddleLeft;
@@ -177,7 +185,7 @@ namespace FluentEcho.Editor
             wordLayout.childForceExpandHeight = true;
 
             RectTransform transcriptPanel = CreatePanel(
-                lessonCard, "Transcript Panel", new Vector2(0.06f, 0.38f), new Vector2(0.94f, 0.55f), Hex("E7E0CF"));
+                lessonCard, "Transcript Panel", new Vector2(0.06f, 0.37f), new Vector2(0.94f, 0.52f), Hex("E7E0CF"));
             CreateText(transcriptPanel, "Heard Label", "WHISPER HEARD", 13, FontStyles.Bold, Coral,
                 new Vector2(0.04f, 0.64f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Left);
             TextMeshProUGUI transcript = CreateText(
@@ -186,42 +194,42 @@ namespace FluentEcho.Editor
 
             TextMeshProUGUI status = CreateText(
                 lessonCard, "Status", "Loading speech engine...", 21, FontStyles.Normal, Ink,
-                new Vector2(0.06f, 0.29f), new Vector2(0.94f, 0.37f), TextAlignmentOptions.Left);
+                new Vector2(0.06f, 0.28f), new Vector2(0.94f, 0.36f), TextAlignmentOptions.Left);
 
             CreateText(
                 lessonCard, "Mic Label", "MICROPHONE DEVICE", 13, FontStyles.Bold, Coral,
-                new Vector2(0.06f, 0.23f), new Vector2(0.33f, 0.27f), TextAlignmentOptions.Left);
+                new Vector2(0.06f, 0.15f), new Vector2(0.33f, 0.19f), TextAlignmentOptions.Left);
             Dropdown microphoneDropdown = CreateDropdown(
                 lessonCard, "Microphone Dropdown",
-                new Vector2(0.06f, 0.18f), new Vector2(0.42f, 0.26f),
+                new Vector2(0.06f, 0.08f), new Vector2(0.42f, 0.15f),
                 "Default microphone");
 
             Image recordingIndicator = CreatePanel(
-                lessonCard, "Recording Indicator", new Vector2(0.06f, 0.235f), new Vector2(0.075f, 0.265f), Coral)
+                lessonCard, "Recording Indicator", new Vector2(0.06f, 0.155f), new Vector2(0.075f, 0.185f), Coral)
                 .GetComponent<Image>();
             recordingIndicator.gameObject.SetActive(false);
 
             Button micButton = CreateButton(
                 lessonCard, "Mic Button", "START SPEAKING",
-                new Vector2(0.06f, 0.11f), new Vector2(0.48f, 0.25f), Ink, Mint, out TextMeshProUGUI micLabel);
+                new Vector2(0.06f, 0.18f), new Vector2(0.48f, 0.30f), Ink, Mint, out TextMeshProUGUI micLabel);
             Button demoButton = CreateButton(
                 lessonCard, "Demo Button", "RUN DEMO ANSWER",
-                new Vector2(0.50f, 0.11f), new Vector2(0.72f, 0.25f), SurfaceRaised, Cream, out _);
+                new Vector2(0.50f, 0.18f), new Vector2(0.72f, 0.30f), SurfaceRaised, Cream, out _);
             Button listenButton = CreateButton(
                 lessonCard, "Listen Button", "LISTEN",
-                new Vector2(0.74f, 0.11f), new Vector2(0.94f, 0.25f), SurfaceRaised, Cream, out _);
+                new Vector2(0.74f, 0.18f), new Vector2(0.94f, 0.30f), SurfaceRaised, Cream, out _);
 
             Toggle mockToggle = CreateToggle(
                 lessonCard, "Mock Mode Toggle", "Use deterministic demo engine",
-                new Vector2(0.06f, 0.02f), new Vector2(0.46f, 0.09f));
+                new Vector2(0.06f, 0.01f), new Vector2(0.46f, 0.07f));
 
             Button retryButton = CreateButton(
                 lessonCard, "Retry Button", "NEW ATTEMPT",
-                new Vector2(0.74f, 0.02f), new Vector2(0.94f, 0.09f), Coral, Ink, out _);
+                new Vector2(0.74f, 0.01f), new Vector2(0.94f, 0.07f), Coral, Ink, out _);
             retryButton.gameObject.SetActive(false);
 
             Image success = CreatePanel(
-                lessonCard, "Success Badge", new Vector2(0.49f, 0.02f), new Vector2(0.72f, 0.09f), Mint)
+                lessonCard, "Success Badge", new Vector2(0.49f, 0.01f), new Vector2(0.72f, 0.07f), Mint)
                 .GetComponent<Image>();
             CreateText(success.rectTransform, "Success Text", "ANSWER ACCEPTED", 14, FontStyles.Bold, Ink,
                 Vector2.zero, Vector2.one, TextAlignmentOptions.Center);
@@ -241,6 +249,8 @@ namespace FluentEcho.Editor
             Set(serialized, "demoButton", demoButton);
             Set(serialized, "retryButton", retryButton);
             Set(serialized, "listenButton", listenButton);
+            Set(serialized, "previousButton", lessonPreviousButton);
+            Set(serialized, "nextButton", lessonNextButton);
             Set(serialized, "mockModeToggle", mockToggle);
             Set(serialized, "recordingIndicator", recordingIndicator);
             Set(serialized, "successPanel", success);
@@ -366,6 +376,27 @@ namespace FluentEcho.Editor
                 "this",
                 "book|one");
 
+            SpeechExerciseSO fourth = CreateExerciseAsset(
+                FourthExercisePath,
+                "Say: The apple is red.",
+                "the apple is red|the apple is bright red",
+                "lesson_04_the_apple_is_red",
+                "the",
+                "apple",
+                "is",
+                "red|bright red");
+
+            SpeechExerciseSO fifth = CreateExerciseAsset(
+                FifthExercisePath,
+                "Say: We are ready to go.",
+                "we are ready to go|we are all ready to go",
+                "lesson_05_ready_to_go",
+                "we",
+                "are",
+                "ready",
+                "to",
+                "go");
+
             SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>(ExerciseCatalogPath);
             if (catalog == null)
             {
@@ -375,10 +406,12 @@ namespace FluentEcho.Editor
 
             SerializedObject serialized = new(catalog);
             SerializedProperty exercises = serialized.FindProperty("exercises");
-            exercises.arraySize = 3;
+            exercises.arraySize = 5;
             exercises.GetArrayElementAtIndex(0).objectReferenceValue = first;
             exercises.GetArrayElementAtIndex(1).objectReferenceValue = second;
             exercises.GetArrayElementAtIndex(2).objectReferenceValue = third;
+            exercises.GetArrayElementAtIndex(3).objectReferenceValue = fourth;
+            exercises.GetArrayElementAtIndex(4).objectReferenceValue = fifth;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(catalog);
 

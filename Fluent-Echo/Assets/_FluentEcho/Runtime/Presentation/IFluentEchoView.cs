@@ -8,6 +8,8 @@ namespace FluentEcho.Presentation
         event Action DemoPressed;
         event Action RetryPressed;
         event Action ListenPressed;
+        event Action PreviousPressed;
+        event Action NextPressed;
         event Action<bool> MockModeChanged;
 
         void Build(string prompt, string[] targetWords);
@@ -18,5 +20,6 @@ namespace FluentEcho.Presentation
         void SetListening(bool listening);
         void SetSuccess(bool success);
         void SetMode(bool mockMode);
+        void SetNavigation(bool canGoPrevious, bool canGoNext);
     }
 }
