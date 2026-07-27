@@ -1,0 +1,18 @@
+{
+  "name": "FluentEcho.Runtime",
+  "rootNamespace": "FluentEcho",
+  "references": [
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "com.whisper.unity"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

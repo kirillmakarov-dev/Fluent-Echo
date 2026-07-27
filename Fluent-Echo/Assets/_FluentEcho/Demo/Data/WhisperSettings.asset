@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3d0f7f806debb74eb366daa136a639e, type: 3}
+  m_Name: WhisperSettings
+  m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Services.WhisperSettingsSO
+  qualityProfile: 0
+  fastModelPath: Whisper/ggml-tiny.en.bin
+  balancedModelPath: Whisper/ggml-base.en.bin
+  accurateModelPath: Whisper/ggml-small.en.bin
+  language: en
+  useGpu: 1
+  flashAttention: 1
+  streamingStepSeconds: 1.25
+  keepSeconds: 0.2
+  streamLengthSeconds: 10
+  updatePrompt: 1
+  dropOldBuffer: 0
+  useVad: 1
+  microphoneChunkSeconds: 0.25
+  warmupSeconds: 1.25
+  warmUpOnPrepare: 1
+  qualityProfilePrefsKey: FluentEcho.WhisperQualityProfile

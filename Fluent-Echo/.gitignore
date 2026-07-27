@@ -1,0 +1,39 @@
+# Unity generated folders
+Library/
+Temp/
+Logs/
+Obj/
+Build/
+Builds/
+UserSettings/
+
+# Rider / Visual Studio / IDE noise
+.vs/
+.idea/
+*.csproj.user
+*.pidb
+*.booproj
+*.suo
+*.user
+*.userprefs
+*.unityproj
+*.sln
+*.slnx
+
+# OS noise
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Unity cache and packages metadata
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+*.opendb
+*.VC.db
+*.apk
+*.aab
+
+# Build artifacts
+*.unitypackage
+

@@ -1,0 +1,22 @@
+{
+  "name": "FluentEcho.Editor",
+  "rootNamespace": "FluentEcho.Editor",
+  "references": [
+    "FluentEcho.Runtime",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "Unity.InputSystem",
+    "com.whisper.unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
