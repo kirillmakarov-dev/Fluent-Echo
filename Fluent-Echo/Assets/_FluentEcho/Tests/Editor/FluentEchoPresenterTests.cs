@@ -304,6 +304,67 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void NextMissionAfterSuccess_SwitchesLessonAndClearsResultState()
+        {
+            SpeechExerciseSO first = CreateExercise("word_01", "Say the first word.", "lesson_test_result_next_01");
+            SpeechExerciseSO second = CreateExercise("word_02", "Say the second word.", "lesson_test_result_next_02");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { first, second });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            int persistedCategory = -1;
+            int persistedExercise = -1;
+            var presenter = new FluentEchoPresenter(
+                first,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                0,
+                0,
+                (categoryIndex, exerciseIndex) =>
+                {
+                    persistedCategory = categoryIndex;
+                    persistedExercise = exerciseIndex;
+                });
+
+            try
+            {
+                LessonProgressRepository.Clear(first.ProgressKey);
+                LessonProgressRepository.Clear(second.ProgressKey);
+
+                presenter.Initialize();
+                view.RaiseMicPressed();
+                service.RaiseTranscript("word_01");
+                service.RaiseListeningStopped();
+
+                Assert.That(view.LastSuccessState, Is.True);
+                Assert.That(view.LastStatus, Does.Contain("Excellent"));
+
+                view.RaiseNextPressed();
+
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the second word."));
+                Assert.That(view.LastSuccessState, Is.False);
+                Assert.That(view.LastListeningState, Is.False);
+                Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
+                Assert.That(view.LastStatus, Does.Contain("Ready to practice").Or.Contain("Preparing"));
+                Assert.That(persistedCategory, Is.EqualTo(0));
+                Assert.That(persistedExercise, Is.EqualTo(1));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(2));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(first.ProgressKey);
+                LessonProgressRepository.Clear(second.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(first);
+                UnityEngine.Object.DestroyImmediate(second);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void RetryAfterSuccess_ResetsViewButKeepsSavedProgress()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_retry_after_success");
