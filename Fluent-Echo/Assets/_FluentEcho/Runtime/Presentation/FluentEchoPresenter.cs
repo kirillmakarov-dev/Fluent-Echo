@@ -500,7 +500,9 @@ namespace FluentEcho.Presentation
             view.SetWordMatches(new bool[currentExercise.GetDisplayWords().Length]);
             view.SetProgress(progress?.GetSummaryText() ?? string.Empty);
             view.SetProgressDetails(BuildProgressDetailsText());
-            view.SetPronunciation(string.Empty, string.Empty);
+            view.SetPronunciation(
+                PronunciationScoreResult.Unavailable.SummaryText,
+                BuildUnavailablePronunciationDetails());
             view.SetListening(false);
             view.SetSuccess(false);
             if (useMock)
@@ -675,7 +677,9 @@ namespace FluentEcho.Presentation
 
             if (!lastPronunciationScore.IsAvailable)
             {
-                view.SetPronunciation(string.Empty, string.Empty);
+                view.SetPronunciation(
+                    PronunciationScoreResult.Unavailable.SummaryText,
+                    BuildUnavailablePronunciationDetails());
                 return;
             }
 
@@ -779,6 +783,9 @@ namespace FluentEcho.Presentation
 
             return string.Join("\n", lines);
         }
+
+        private static string BuildUnavailablePronunciationDetails() =>
+            "Speak once to generate the first local estimate.\nPhoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.";
 
         private static string Capitalize(string value)
         {

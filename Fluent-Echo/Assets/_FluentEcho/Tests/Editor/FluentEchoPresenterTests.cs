@@ -104,6 +104,8 @@ namespace FluentEcho.Tests
                 Assert.That(view.NoticeVisible, Is.False);
                 Assert.That(view.CategoryScreenVisible, Is.True);
                 Assert.That(view.LastStatus, Does.Contain("Ready").Or.Contain("Preparing"));
+                Assert.That(view.LastPronunciationSummary, Does.Contain("READY FOR YOUR FIRST ATTEMPT"));
+                Assert.That(view.LastPronunciationFeedback, Does.Contain("Phoneme roadmap"));
             }
             finally
             {
