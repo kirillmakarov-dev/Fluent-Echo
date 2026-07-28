@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -87,25 +88,83 @@ namespace FluentEcho.Services
 namespace FluentEcho.Domain
 {
     [Serializable]
+    public sealed class LessonAttemptRecord
+    {
+        [SerializeField] private string timestampUtc = string.Empty;
+        [SerializeField] private string transcript = string.Empty;
+        [SerializeField] private int matchedWords;
+        [SerializeField] private int expectedWords;
+        [SerializeField] private bool isComplete;
+        [SerializeField] private int pronunciationScore;
+        [SerializeField] private string pronunciationBand = string.Empty;
+        [SerializeField] private string pronunciationSummary = string.Empty;
+
+        public string TimestampUtc => timestampUtc;
+        public string Transcript => transcript;
+        public int MatchedWords => matchedWords;
+        public int ExpectedWords => expectedWords;
+        public bool IsComplete => isComplete;
+        public int PronunciationScore => pronunciationScore;
+        public string PronunciationBand => pronunciationBand;
+        public string PronunciationSummary => pronunciationSummary;
+
+        public void Configure(
+            string utcTimestamp,
+            string transcriptValue,
+            int matchedWordCount,
+            int expectedWordCount,
+            bool complete,
+            int score,
+            string band,
+            string summary)
+        {
+            timestampUtc = utcTimestamp ?? string.Empty;
+            transcript = transcriptValue ?? string.Empty;
+            matchedWords = Math.Max(0, matchedWordCount);
+            expectedWords = Math.Max(0, expectedWordCount);
+            isComplete = complete;
+            pronunciationScore = Mathf.Clamp(score, 0, 100);
+            pronunciationBand = band ?? string.Empty;
+            pronunciationSummary = summary ?? string.Empty;
+        }
+    }
+
+    [Serializable]
     public sealed class LessonProgressState
     {
+        private const int HistoryLimit = 5;
+
         [SerializeField] private string lessonKey;
         [SerializeField] private int totalWords;
         [SerializeField] private int attempts;
         [SerializeField] private int successfulAttempts;
         [SerializeField] private int bestMatchedWords;
+        [SerializeField] private int bestPronunciationScore;
         [SerializeField] private string bestTranscript = string.Empty;
+        [SerializeField] private string bestPronunciationBand = string.Empty;
+        [SerializeField] private string bestPronunciationSummary = string.Empty;
         [SerializeField] private string lastTranscript = string.Empty;
+        [SerializeField] private int lastPronunciationScore;
+        [SerializeField] private string lastPronunciationBand = string.Empty;
+        [SerializeField] private string lastPronunciationSummary = string.Empty;
         [SerializeField] private string lastUpdatedUtc = string.Empty;
+        [SerializeField] private List<LessonAttemptRecord> attemptHistory = new();
 
         public string LessonKey => lessonKey;
         public int TotalWords => totalWords;
         public int Attempts => attempts;
         public int SuccessfulAttempts => successfulAttempts;
         public int BestMatchedWords => bestMatchedWords;
+        public int BestPronunciationScore => bestPronunciationScore;
         public string BestTranscript => bestTranscript;
+        public string BestPronunciationBand => bestPronunciationBand;
+        public string BestPronunciationSummary => bestPronunciationSummary;
         public string LastTranscript => lastTranscript;
+        public int LastPronunciationScore => lastPronunciationScore;
+        public string LastPronunciationBand => lastPronunciationBand;
+        public string LastPronunciationSummary => lastPronunciationSummary;
         public string LastUpdatedUtc => lastUpdatedUtc;
+        public IReadOnlyList<LessonAttemptRecord> AttemptHistory => attemptHistory;
 
         public void Configure(string key, int expectedTotalWords)
         {
@@ -114,23 +173,44 @@ namespace FluentEcho.Domain
             bestMatchedWords = Math.Min(bestMatchedWords, totalWords);
         }
 
-        public void RecordAttempt(string transcript, FluentEcho.Domain.SpeechMatchResult result, int expectedTotalWords)
+        public void RecordAttempt(
+            string transcript,
+            FluentEcho.Domain.SpeechMatchResult result,
+            int expectedTotalWords,
+            int pronunciationScore = 0,
+            string pronunciationBand = "",
+            string pronunciationSummary = "")
         {
             Configure(lessonKey, expectedTotalWords);
 
             attempts++;
             lastTranscript = transcript?.Trim() ?? string.Empty;
             int matchedWords = CountMatchedWords(result.MatchedWords);
+            lastPronunciationScore = Mathf.Clamp(pronunciationScore, 0, 100);
+            lastPronunciationBand = pronunciationBand ?? string.Empty;
+            lastPronunciationSummary = pronunciationSummary ?? string.Empty;
 
-            if (matchedWords >= bestMatchedWords)
+            if (matchedWords > bestMatchedWords
+                || (matchedWords == bestMatchedWords && lastPronunciationScore >= bestPronunciationScore))
             {
                 bestMatchedWords = matchedWords;
                 bestTranscript = lastTranscript;
+                bestPronunciationScore = lastPronunciationScore;
+                bestPronunciationBand = lastPronunciationBand;
+                bestPronunciationSummary = lastPronunciationSummary;
             }
 
             if (result.IsComplete)
                 successfulAttempts++;
 
+            AddAttemptHistory(
+                transcript,
+                matchedWords,
+                expectedTotalWords,
+                result.IsComplete,
+                pronunciationScore,
+                pronunciationBand,
+                pronunciationSummary);
             lastUpdatedUtc = DateTime.UtcNow.ToString("O");
         }
 
@@ -140,9 +220,43 @@ namespace FluentEcho.Domain
                 return $"PROGRESS | {attempts} attempts";
 
             string completion = $"{Math.Min(bestMatchedWords, totalWords)}/{totalWords}";
+            string score = bestPronunciationScore > 0 ? $" | score {bestPronunciationScore}/100" : string.Empty;
             string attemptsText = attempts == 0 ? "no attempts yet" : $"{attempts} attempts";
             string successText = successfulAttempts > 0 ? $" | cleared {successfulAttempts}" : string.Empty;
-            return $"PROGRESS | best {completion} | {attemptsText}{successText}";
+            return $"PROGRESS | best {completion}{score} | {attemptsText}{successText}";
+        }
+
+        public string GetHistoryText(int maxEntries = 3)
+        {
+            if (attemptHistory == null || attemptHistory.Count == 0)
+            {
+                string emptyHeader = BuildHistoryHeader();
+                return string.IsNullOrWhiteSpace(emptyHeader)
+                    ? "No attempts yet."
+                    : $"{emptyHeader}\nNo attempts yet.";
+            }
+
+            int limit = Math.Max(1, maxEntries);
+            int count = Math.Min(limit, attemptHistory.Count);
+            var lines = new List<string>(count + 1);
+            string header = BuildHistoryHeader();
+            if (!string.IsNullOrWhiteSpace(header))
+                lines.Add(header);
+
+            for (int i = 0; i < count; i++)
+            {
+                LessonAttemptRecord record = attemptHistory[i];
+                string prefix = !string.IsNullOrWhiteSpace(record.PronunciationSummary)
+                    ? record.PronunciationSummary
+                    : record.PronunciationScore > 0
+                        ? $"{record.PronunciationScore}/100"
+                        : $"{record.MatchedWords}/{Math.Max(1, record.ExpectedWords)}";
+                string status = record.IsComplete ? "cleared" : "retry";
+                string transcriptPreview = Truncate(record.Transcript, 34);
+                lines.Add($"* {prefix} | {status} | {transcriptPreview}");
+            }
+
+            return string.Join("\n", lines);
         }
 
         private static int CountMatchedWords(bool[] matches)
@@ -151,6 +265,63 @@ namespace FluentEcho.Domain
                 return 0;
 
             return matches.Count(match => match);
+        }
+
+        private void AddAttemptHistory(
+            string transcript,
+            int matchedWords,
+            int expectedTotalWords,
+            bool complete,
+            int pronunciationScore,
+            string pronunciationBand,
+            string pronunciationSummary)
+        {
+            if (attemptHistory == null)
+                attemptHistory = new List<LessonAttemptRecord>();
+
+            LessonAttemptRecord record = new();
+            record.Configure(
+                DateTime.UtcNow.ToString("O"),
+                transcript?.Trim() ?? string.Empty,
+                matchedWords,
+                expectedTotalWords,
+                complete,
+                pronunciationScore,
+                pronunciationBand,
+                pronunciationSummary);
+            attemptHistory.Insert(0, record);
+
+            while (attemptHistory.Count > HistoryLimit)
+                attemptHistory.RemoveAt(attemptHistory.Count - 1);
+        }
+
+        private static string Truncate(string text, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return "(empty)";
+
+            if (text.Length <= maxLength)
+                return text;
+
+            return text.Substring(0, Math.Max(0, maxLength - 3)) + "...";
+        }
+
+        private string BuildHistoryHeader()
+        {
+            if (attempts <= 0 && bestPronunciationScore <= 0)
+                return string.Empty;
+
+            string bestText = bestPronunciationScore > 0
+                ? $"best {bestPronunciationScore}/100 {bestPronunciationBand}".Trim()
+                : $"best {bestMatchedWords}/{Math.Max(1, totalWords)}";
+
+            string lastText = !string.IsNullOrWhiteSpace(lastPronunciationSummary)
+                ? $"last {lastPronunciationSummary}"
+                : lastPronunciationScore > 0
+                    ? $"last {lastPronunciationScore}/100 {lastPronunciationBand}".Trim()
+                    : (string.IsNullOrWhiteSpace(lastTranscript) ? "last attempt pending" : $"last {lastTranscript}");
+
+            return $"{bestText} | {lastText}";
         }
     }
 }

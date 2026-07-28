@@ -10,17 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4281b6398ed362f438e706340d1e917c, type: 3}
-  m_Name: Ready to Go
+  m_Name: Ask the Time
   m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Data.SpeechExerciseSO
-  prompt: 'Say: We are ready to go.'
+  prompt: 'Ask: What time is it?'
   targetWords:
-  - we
-  - are
-  - ready
-  - to
-  - go
-  acceptedPhrases: we are ready to go|we are all ready to go
-  progressKey: lesson_05_ready_to_go
+  - what
+  - time
+  - is
+  - it
+  acceptedPhrases: what time is it|could you tell me the time
+  progressKey: lesson_06_ask_the_time
   requireWordOrder: 1
   allowFuzzyMatch: 1
   silenceTimeoutSeconds: 2.5

@@ -10,6 +10,7 @@ namespace FluentEcho.Views
     {
         [SerializeField] private TextMeshProUGUI promptLabel;
         [SerializeField] private TextMeshProUGUI progressLabel;
+        [SerializeField] private TextMeshProUGUI progressDetailsLabel;
         [SerializeField] private TextMeshProUGUI pronunciationSummaryLabel;
         [SerializeField] private TextMeshProUGUI pronunciationFeedbackLabel;
         [SerializeField] private TextMeshProUGUI statusLabel;
@@ -45,6 +46,11 @@ namespace FluentEcho.Views
         public void ConfigureProgressLabel(TextMeshProUGUI label)
         {
             progressLabel = label;
+        }
+
+        public void ConfigureProgressDetailsLabel(TextMeshProUGUI label)
+        {
+            progressDetailsLabel = label;
         }
 
         public void ConfigurePronunciationLabels(
@@ -94,6 +100,14 @@ namespace FluentEcho.Views
         {
             if (progressLabel != null)
                 progressLabel.text = progress;
+        }
+
+        public void SetProgressDetails(string details)
+        {
+            if (progressDetailsLabel != null)
+                progressDetailsLabel.text = string.IsNullOrWhiteSpace(details)
+                    ? "Recent attempts will appear here."
+                    : details;
         }
 
         public void SetPronunciation(string summary, string feedback)

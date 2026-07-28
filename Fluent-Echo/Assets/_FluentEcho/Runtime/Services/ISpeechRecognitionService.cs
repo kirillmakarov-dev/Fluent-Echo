@@ -59,6 +59,9 @@ namespace FluentEcho.Services
             0,
             0,
             0,
+            0,
+            0,
+            0,
             0f,
             Array.Empty<PronunciationWordScore>());
 
@@ -72,6 +75,9 @@ namespace FluentEcho.Services
             int expectedWordCount,
             int missingWordCount,
             int extraWordCount,
+            int coverageScore,
+            int precisionScore,
+            int tempoScore,
             float recordingSeconds,
             PronunciationWordScore[] wordScores)
         {
@@ -84,6 +90,9 @@ namespace FluentEcho.Services
             ExpectedWordCount = Mathf.Max(0, expectedWordCount);
             MissingWordCount = Mathf.Max(0, missingWordCount);
             ExtraWordCount = Mathf.Max(0, extraWordCount);
+            CoverageScore = Mathf.Clamp(coverageScore, 0, 100);
+            PrecisionScore = Mathf.Clamp(precisionScore, 0, 100);
+            TempoScore = Mathf.Clamp(tempoScore, 0, 100);
             RecordingSeconds = Mathf.Max(0f, recordingSeconds);
             WordScores = wordScores ?? Array.Empty<PronunciationWordScore>();
         }
@@ -97,6 +106,9 @@ namespace FluentEcho.Services
         public int ExpectedWordCount { get; }
         public int MissingWordCount { get; }
         public int ExtraWordCount { get; }
+        public int CoverageScore { get; }
+        public int PrecisionScore { get; }
+        public int TempoScore { get; }
         public float RecordingSeconds { get; }
         public IReadOnlyList<PronunciationWordScore> WordScores { get; }
     }
@@ -138,6 +150,9 @@ namespace FluentEcho.Services
                     expectedCount,
                     missingCount,
                     extraCount,
+                    0,
+                    0,
+                    0,
                     recordingSeconds,
                     BuildWordScores(expectedWords, matchedWordFlags));
             }
@@ -148,6 +163,9 @@ namespace FluentEcho.Services
                 : Mathf.Clamp01(1f - (float) extraCount / Mathf.Max(1f, spokenCount));
             float tempo = ScoreTempo(recordingSeconds, spokenCount, expectedCount);
             float completenessBonus = matchResult.IsComplete ? 0.12f : 0f;
+            int coverageScore = Mathf.RoundToInt(coverage * 100f);
+            int precisionScore = Mathf.RoundToInt(precision * 100f);
+            int tempoScore = Mathf.RoundToInt(tempo * 100f);
 
             float raw = (coverage * 0.60f) + (precision * 0.20f) + (tempo * 0.20f) + completenessBonus;
             int overallScore = Mathf.Clamp(Mathf.RoundToInt(raw * 100f), 0, 100);
@@ -173,6 +191,9 @@ namespace FluentEcho.Services
                 expectedCount,
                 missingCount,
                 extraCount,
+                coverageScore,
+                precisionScore,
+                tempoScore,
                 recordingSeconds,
                 BuildWordScores(expectedWords, matchedWordFlags));
         }

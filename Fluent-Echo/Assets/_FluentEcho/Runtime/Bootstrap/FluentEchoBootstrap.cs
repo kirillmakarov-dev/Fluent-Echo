@@ -73,6 +73,7 @@ namespace FluentEcho.Bootstrap
             EnsureMicrophoneDropdown();
             EnsureQualityDropdown();
             EnsureProgressLabel();
+            EnsureProgressDetailsLabel();
             EnsurePronunciationLabels();
             presenter = new FluentEchoPresenter(
                 exercise,
@@ -235,6 +236,30 @@ namespace FluentEcho.Bootstrap
             view.ConfigureProgressLabel(label);
         }
 
+        private void EnsureProgressDetailsLabel()
+        {
+            if (view == null)
+                return;
+
+            Transform existing = view.transform.Find("Progress Details");
+            TextMeshProUGUI label = existing != null ? existing.GetComponent<TextMeshProUGUI>() : null;
+            if (label == null)
+            {
+                label = CreateText(
+                    view.transform,
+                    "Progress Details",
+                    "Recent attempts will appear here.",
+                    11,
+                    FontStyles.Normal,
+                    new Color(0.20f, 0.20f, 0.20f, 1f),
+                    new Vector2(0.62f, 0.67f),
+                    new Vector2(0.94f, 0.74f),
+                    TextAlignmentOptions.Right);
+            }
+
+            view.ConfigureProgressDetailsLabel(label);
+        }
+
         private void EnsurePronunciationLabels()
         {
             if (view == null)
@@ -253,8 +278,8 @@ namespace FluentEcho.Bootstrap
                     14,
                     FontStyles.Bold,
                     new Color(0.89f, 0.37f, 0.3f, 1f),
-                    new Vector2(0.62f, 0.32f),
-                    new Vector2(0.94f, 0.37f),
+                    new Vector2(0.62f, 0.23f),
+                    new Vector2(0.94f, 0.28f),
                     TextAlignmentOptions.Right);
             }
 
@@ -271,8 +296,8 @@ namespace FluentEcho.Bootstrap
                     12,
                     FontStyles.Italic,
                     new Color(0.21f, 0.21f, 0.21f, 1f),
-                    new Vector2(0.62f, 0.27f),
-                    new Vector2(0.94f, 0.32f),
+                    new Vector2(0.62f, 0.18f),
+                    new Vector2(0.94f, 0.23f),
                     TextAlignmentOptions.Right);
             }
 

@@ -10,17 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4281b6398ed362f438e706340d1e917c, type: 3}
-  m_Name: Ready to Go
+  m_Name: Need Water
   m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Data.SpeechExerciseSO
-  prompt: 'Say: We are ready to go.'
+  prompt: 'Say: I need a glass of water.'
   targetWords:
-  - we
-  - are
-  - ready
-  - to
-  - go
-  acceptedPhrases: we are ready to go|we are all ready to go
-  progressKey: lesson_05_ready_to_go
+  - i
+  - need
+  - a
+  - glass
+  - of
+  - water
+  acceptedPhrases: i need a glass of water|could i have some water
+  progressKey: lesson_08_need_water
   requireWordOrder: 1
   allowFuzzyMatch: 1
   silenceTimeoutSeconds: 2.5

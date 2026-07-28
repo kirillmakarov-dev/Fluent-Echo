@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4281b6398ed362f438e706340d1e917c, type: 3}
-  m_Name: SecondLesson
+  m_Name: Describe the Cat
   m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Data.SpeechExerciseSO
   prompt: 'Say: The cat is small.'
   targetWords:

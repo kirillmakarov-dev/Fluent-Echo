@@ -24,6 +24,7 @@ namespace FluentEcho.Presentation
         private bool useMock;
         private bool success;
         private float attemptStartedAt = -1f;
+        private PronunciationScoreResult lastPronunciationScore = PronunciationScoreResult.Unavailable;
 
         public FluentEchoPresenter(
             SpeechExerciseSO exercise,
@@ -251,6 +252,7 @@ namespace FluentEcho.Presentation
 
             progress = LessonProgressRepository.Load(currentExercise.ProgressKey, currentExercise.GetDisplayWords().Length);
             view.SetProgress(progress.GetSummaryText());
+            view.SetProgressDetails(BuildProgressDetailsText());
         }
 
         private void HandleTranscript(string transcript)
@@ -299,8 +301,8 @@ namespace FluentEcho.Presentation
                 || session.Phase == SpeechSessionPhase.Retry
                 || session.Phase == SpeechSessionPhase.Analyzing)
             {
-                SaveProgress();
                 UpdatePronunciationScore();
+                SaveProgress();
             }
 
             if (success || session.Phase == SpeechSessionPhase.Error)
@@ -347,9 +349,11 @@ namespace FluentEcho.Presentation
             session.Reset();
             success = false;
             ClearAttemptState();
+            lastPronunciationScore = PronunciationScoreResult.Unavailable;
             view.SetTranscript(string.Empty);
             view.SetWordMatches(new bool[currentExercise.GetDisplayWords().Length]);
             view.SetProgress(progress?.GetSummaryText() ?? string.Empty);
+            view.SetProgressDetails(BuildProgressDetailsText());
             view.SetPronunciation(string.Empty, string.Empty);
             view.SetListening(false);
             view.SetSuccess(false);
@@ -363,9 +367,16 @@ namespace FluentEcho.Presentation
             if (progress == null)
                 return;
 
-            progress.RecordAttempt(session.Transcript, session.MatchResult, currentExercise.GetDisplayWords().Length);
+            progress.RecordAttempt(
+                session.Transcript,
+                session.MatchResult,
+                currentExercise.GetDisplayWords().Length,
+                lastPronunciationScore.OverallScore,
+                lastPronunciationScore.BandLabel,
+                lastPronunciationScore.SummaryText);
             LessonProgressRepository.Save(progress);
             view.SetProgress(progress.GetSummaryText());
+            view.SetProgressDetails(BuildProgressDetailsText());
         }
 
         private bool IsInteractionLocked()
@@ -392,19 +403,21 @@ namespace FluentEcho.Presentation
 
         private void UpdatePronunciationScore()
         {
-            PronunciationScoreResult score = scoringService.Score(
+            lastPronunciationScore = scoringService.Score(
                 currentExercise,
                 session.Transcript,
                 session.MatchResult,
                 GetAttemptDurationSeconds());
 
-            if (!score.IsAvailable)
+            if (!lastPronunciationScore.IsAvailable)
             {
                 view.SetPronunciation(string.Empty, string.Empty);
                 return;
             }
 
-            view.SetPronunciation(score.SummaryText, score.FeedbackText);
+            view.SetPronunciation(
+                lastPronunciationScore.SummaryText,
+                BuildPronunciationDetails(lastPronunciationScore));
         }
 
         private float GetAttemptDurationSeconds()
@@ -418,6 +431,51 @@ namespace FluentEcho.Presentation
         private void ClearAttemptState()
         {
             attemptStartedAt = -1f;
+        }
+
+        private string BuildProgressDetailsText()
+        {
+            var lines = new System.Collections.Generic.List<string>();
+
+            if (lastPronunciationScore.IsAvailable)
+            {
+                lines.Add(
+                    $"RESULT | {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel.ToUpperInvariant()}");
+                lines.Add(
+                    $"Coverage {lastPronunciationScore.CoverageScore}% | Precision {lastPronunciationScore.PrecisionScore}% | Tempo {lastPronunciationScore.TempoScore}%");
+
+                if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
+                    lines.Add(lastPronunciationScore.FeedbackText);
+            }
+
+            string history = progress?.GetHistoryText(2);
+            if (!string.IsNullOrWhiteSpace(history))
+            {
+                if (lines.Count > 0)
+                    lines.Add(string.Empty);
+
+                lines.Add(history);
+            }
+
+            return lines.Count == 0
+                ? "Recent attempts will appear here."
+                : string.Join("\n", lines);
+        }
+
+        private static string BuildPronunciationDetails(PronunciationScoreResult score)
+        {
+            if (!score.IsAvailable)
+                return string.Empty;
+
+            string focus = score.MissingWordCount > 0
+                ? $"Focus next: {score.MissingWordCount} missing word{(score.MissingWordCount == 1 ? string.Empty : "s")}."
+                : "Focus next: keep the rhythm steady.";
+
+            return string.Join(
+                "\n",
+                $"Coverage {score.CoverageScore}% | Precision {score.PrecisionScore}% | Tempo {score.TempoScore}%",
+                focus,
+                string.IsNullOrWhiteSpace(score.FeedbackText) ? string.Empty : score.FeedbackText);
         }
 
         private int ResolveExerciseIndex(SpeechExerciseSO selectedExercise)

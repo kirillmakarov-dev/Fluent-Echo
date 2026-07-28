@@ -64,7 +64,10 @@ namespace FluentEcho.Tests
             state.RecordAttempt(
                 "the dog is",
                 new SpeechMatchResult(false, new[] { true, true, true, false }),
-                4);
+                4,
+                67,
+                "steady",
+                "PRONUNCIATION | 67/100 | STEADY");
             LessonProgressRepository.Save(state);
 
             LessonProgressState reloaded = LessonProgressRepository.Load(key, 4);
@@ -73,8 +76,13 @@ namespace FluentEcho.Tests
                 Assert.That(reloaded.Attempts, Is.EqualTo(1));
                 Assert.That(reloaded.SuccessfulAttempts, Is.EqualTo(0));
                 Assert.That(reloaded.BestMatchedWords, Is.EqualTo(3));
+                Assert.That(reloaded.BestPronunciationScore, Is.EqualTo(67));
+                Assert.That(reloaded.BestPronunciationBand, Is.EqualTo("steady"));
+                Assert.That(reloaded.BestPronunciationSummary, Does.Contain("67/100"));
                 Assert.That(reloaded.TotalWords, Is.EqualTo(4));
                 Assert.That(reloaded.GetSummaryText(), Does.Contain("best 3/4"));
+                Assert.That(reloaded.GetSummaryText(), Does.Contain("score 67/100"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("67/100"));
             }
             finally
             {
@@ -92,10 +100,15 @@ namespace FluentEcho.Tests
             state.RecordAttempt(
                 "the dog is big",
                 new SpeechMatchResult(true, new[] { true, true, true, true }),
-                4);
+                4,
+                94,
+                "strong",
+                "PRONUNCIATION | 94/100 | STRONG");
 
-            Assert.That(state.SuccessfulAttempts, Is.EqualTo(1));
-            Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
+                Assert.That(state.SuccessfulAttempts, Is.EqualTo(1));
+                Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
+                Assert.That(state.GetHistoryText(), Does.Contain("cleared"));
+                Assert.That(state.LastPronunciationSummary, Does.Contain("94/100"));
 
             LessonProgressRepository.Clear(key);
         }

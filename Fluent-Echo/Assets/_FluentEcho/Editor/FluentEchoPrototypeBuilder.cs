@@ -25,6 +25,9 @@ namespace FluentEcho.Editor
         private const string ThirdExercisePath = Root + "/Demo/Data/ThirdLesson.asset";
         private const string FourthExercisePath = Root + "/Demo/Data/FourthLesson.asset";
         private const string FifthExercisePath = Root + "/Demo/Data/FifthLesson.asset";
+        private const string SixthExercisePath = Root + "/Demo/Data/SixthLesson.asset";
+        private const string SeventhExercisePath = Root + "/Demo/Data/SeventhLesson.asset";
+        private const string EighthExercisePath = Root + "/Demo/Data/EighthLesson.asset";
         private const string WhisperSettingsPath = Root + "/Demo/Data/WhisperSettings.asset";
         private const string ChipPrefabPath = Root + "/Demo/Prefabs/WordChip.prefab";
 
@@ -351,6 +354,7 @@ namespace FluentEcho.Editor
                 "Look at Ava and say: The dog is big.",
                 "the dog is big|the dog is large",
                 "lesson_01_describe_the_dog",
+                "Describe the Dog",
                 "the",
                 "dog",
                 "is",
@@ -361,6 +365,7 @@ namespace FluentEcho.Editor
                 "Say: The cat is small.",
                 "the cat is small|the cat is little",
                 "lesson_02_describe_the_cat",
+                "Describe the Cat",
                 "the",
                 "cat",
                 "is",
@@ -371,6 +376,7 @@ namespace FluentEcho.Editor
                 "Say: I like this book.",
                 "i like this book|i like this one",
                 "lesson_03_like_this_book",
+                "Like This Book",
                 "i",
                 "like",
                 "this",
@@ -381,6 +387,7 @@ namespace FluentEcho.Editor
                 "Say: The apple is red.",
                 "the apple is red|the apple is bright red",
                 "lesson_04_the_apple_is_red",
+                "Describe the Apple",
                 "the",
                 "apple",
                 "is",
@@ -391,11 +398,47 @@ namespace FluentEcho.Editor
                 "Say: We are ready to go.",
                 "we are ready to go|we are all ready to go",
                 "lesson_05_ready_to_go",
+                "Ready to Go",
                 "we",
                 "are",
                 "ready",
                 "to",
                 "go");
+
+            SpeechExerciseSO sixth = CreateExerciseAsset(
+                SixthExercisePath,
+                "Ask: What time is it?",
+                "what time is it|could you tell me the time",
+                "lesson_06_ask_the_time",
+                "Ask the Time",
+                "what",
+                "time",
+                "is",
+                "it");
+
+            SpeechExerciseSO seventh = CreateExerciseAsset(
+                SeventhExercisePath,
+                "Say: Please open the window.",
+                "please open the window|open the window please",
+                "lesson_07_open_the_window",
+                "Open the Window",
+                "please",
+                "open",
+                "the",
+                "window");
+
+            SpeechExerciseSO eighth = CreateExerciseAsset(
+                EighthExercisePath,
+                "Say: I need a glass of water.",
+                "i need a glass of water|could i have some water",
+                "lesson_08_need_water",
+                "Need Water",
+                "i",
+                "need",
+                "a",
+                "glass",
+                "of",
+                "water");
 
             SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>(ExerciseCatalogPath);
             if (catalog == null)
@@ -406,12 +449,15 @@ namespace FluentEcho.Editor
 
             SerializedObject serialized = new(catalog);
             SerializedProperty exercises = serialized.FindProperty("exercises");
-            exercises.arraySize = 5;
+            exercises.arraySize = 8;
             exercises.GetArrayElementAtIndex(0).objectReferenceValue = first;
             exercises.GetArrayElementAtIndex(1).objectReferenceValue = second;
             exercises.GetArrayElementAtIndex(2).objectReferenceValue = third;
             exercises.GetArrayElementAtIndex(3).objectReferenceValue = fourth;
             exercises.GetArrayElementAtIndex(4).objectReferenceValue = fifth;
+            exercises.GetArrayElementAtIndex(5).objectReferenceValue = sixth;
+            exercises.GetArrayElementAtIndex(6).objectReferenceValue = seventh;
+            exercises.GetArrayElementAtIndex(7).objectReferenceValue = eighth;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(catalog);
 
@@ -424,6 +470,7 @@ namespace FluentEcho.Editor
             string prompt,
             string acceptedPhrases,
             string progressKey,
+            string displayName,
             params string[] words)
         {
             SpeechExerciseSO exercise = AssetDatabase.LoadAssetAtPath<SpeechExerciseSO>(path);
@@ -432,6 +479,8 @@ namespace FluentEcho.Editor
                 exercise = ScriptableObject.CreateInstance<SpeechExerciseSO>();
                 AssetDatabase.CreateAsset(exercise, path);
             }
+
+            exercise.name = displayName;
 
             SerializedObject serialized = new(exercise);
             serialized.FindProperty("prompt").stringValue = prompt;
