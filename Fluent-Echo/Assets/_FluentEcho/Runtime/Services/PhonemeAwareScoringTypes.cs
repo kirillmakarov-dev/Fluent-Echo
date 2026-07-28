@@ -7,6 +7,12 @@ using UnityEngine;
 
 namespace FluentEcho.Services
 {
+    public enum PhonemeAlignmentSource
+    {
+        Unavailable,
+        Preview
+    }
+
     public interface IPhonemeAlignmentService
     {
         PhonemeAlignmentResult Align(PhonemeAlignmentRequest request);
@@ -54,6 +60,7 @@ namespace FluentEcho.Services
                 : "Preview only: the current transcript is clean enough to inspect alignment flow.";
 
             return new PhonemeAlignmentResult(
+                PhonemeAlignmentSource.Preview,
                 true,
                 previewScore,
                 confidenceBand,
@@ -115,6 +122,7 @@ namespace FluentEcho.Services
     public sealed class PhonemeAlignmentResult
     {
         public static readonly PhonemeAlignmentResult Unavailable = new(
+            PhonemeAlignmentSource.Unavailable,
             false,
             0,
             "unavailable",
@@ -127,6 +135,7 @@ namespace FluentEcho.Services
             0f);
 
         public PhonemeAlignmentResult(
+            PhonemeAlignmentSource source,
             bool isAvailable,
             int alignmentScore,
             string confidenceBand,
@@ -138,6 +147,7 @@ namespace FluentEcho.Services
             string[] weakPhonemes,
             float recordingSeconds)
         {
+            Source = source;
             IsAvailable = isAvailable;
             AlignmentScore = Mathf.Clamp(alignmentScore, 0, 100);
             ConfidenceBand = confidenceBand ?? string.Empty;
@@ -150,6 +160,7 @@ namespace FluentEcho.Services
             RecordingSeconds = Mathf.Max(0f, recordingSeconds);
         }
 
+        public PhonemeAlignmentSource Source { get; }
         public bool IsAvailable { get; }
         public int AlignmentScore { get; }
         public string ConfidenceBand { get; }
@@ -166,5 +177,7 @@ namespace FluentEcho.Services
             || MatchedPhonemes.Count > 0
             || MissingPhonemes.Count > 0
             || WeakPhonemes.Count > 0;
+
+        public bool IsPreview => Source == PhonemeAlignmentSource.Preview;
     }
 }

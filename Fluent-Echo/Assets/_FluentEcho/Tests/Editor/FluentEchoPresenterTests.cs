@@ -1517,6 +1517,7 @@ namespace FluentEcho.Tests
                 CallCount++;
                 LastRequest = request;
                 return new PhonemeAlignmentResult(
+                    PhonemeAlignmentSource.Preview,
                     true,
                     88,
                     "high",

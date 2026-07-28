@@ -14,6 +14,7 @@ namespace FluentEcho.Tests
             PhonemeAlignmentResult result = PhonemeAlignmentResult.Unavailable;
 
             Assert.That(result.IsAvailable, Is.False);
+            Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
             Assert.That(result.AlignmentScore, Is.EqualTo(0));
             Assert.That(result.ConfidenceBand, Is.EqualTo("unavailable"));
             Assert.That(result.SummaryText, Does.Contain("not active yet"));
@@ -60,6 +61,7 @@ namespace FluentEcho.Tests
             PhonemeAlignmentResult result = service.Align(request);
 
             Assert.That(result.IsAvailable, Is.False);
+            Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
             Assert.That(result.AlignmentScore, Is.EqualTo(0));
             Assert.That(result.SummaryText, Does.Contain("not active yet"));
             Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
@@ -97,6 +99,7 @@ namespace FluentEcho.Tests
             PhonemeAlignmentResult result = service.Align(request);
 
             Assert.That(result.IsAvailable, Is.True);
+            Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Preview));
             Assert.That(result.AlignmentScore, Is.GreaterThan(0));
             Assert.That(result.SummaryText, Does.Contain("preview"));
             Assert.That(result.EvidenceText, Does.Contain("Preview mode"));
@@ -108,6 +111,7 @@ namespace FluentEcho.Tests
         public void PreviewFormatter_ReturnsCompactInspectableBlock()
         {
             PhonemeAlignmentResult alignment = new(
+                PhonemeAlignmentSource.Preview,
                 true,
                 82,
                 "high",
