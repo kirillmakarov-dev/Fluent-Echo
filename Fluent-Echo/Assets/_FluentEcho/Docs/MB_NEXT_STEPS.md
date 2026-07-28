@@ -1,6 +1,7 @@
 # Fluent Echo Next Steps Brief
 
 This brief captures the practical path from the current prototype to a fuller portfolio-grade application.
+It is intentionally short and execution-oriented so the next sprint can start from it without re-reading the entire roadmap.
 
 ## What is already in place
 
@@ -13,6 +14,8 @@ This brief captures the practical path from the current prototype to a fuller po
 - Practice-score language in the main result flow, with future phoneme scoring kept separate.
 - Editor-safe CPU fallback for Whisper.
 - Separate scene-owned panels for settings and result feedback.
+- Category-first lesson flow with multiple exercises per path.
+- `Next` / `Prev` navigation and per-lesson progress persistence.
 
 ## Current status
 
@@ -28,16 +31,16 @@ The next code sprint after docs polish should be a stronger pronunciation-scorin
 
 ## Recommended next steps
 
-### Current sprint roadmap
+### Sprint 4 checklist
 
 Use `SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md` as the current implementation plan.
-It now breaks the work into:
+For the current sprint, keep the focus on the portfolio story:
 
-- scene-owned UI and layout lock-down;
-- onboarding and friendly error states;
-- honest local pronunciation estimate;
-- lesson catalog, progress, and navigation;
-- portfolio case-study polish.
+- align `PROTOTYPE_OVERVIEW.md` with the actual category-based flow;
+- keep `CASE_STUDY_BRIEF.md` short, credible, and reviewer-friendly;
+- keep `MB_ARCHITECTURE.md` aligned with the current onboarding, settings, and result panels;
+- keep `PORTFOLIO_DEMO_SCRIPT.md` ready for a clean live walkthrough;
+- make sure the docs explain the local-only scoring story without overclaiming phoneme assessment.
 
 The plan intentionally avoids paid APIs and keeps the scoring pipeline local and transparent.
 
