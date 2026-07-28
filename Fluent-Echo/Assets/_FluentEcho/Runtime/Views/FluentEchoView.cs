@@ -375,14 +375,14 @@ namespace FluentEcho.Views
 
             if (status.StartsWith("No microphone device", StringComparison.OrdinalIgnoreCase))
             {
-                statusLabel.text = "Microphone not found.";
+                statusLabel.text = FluentEchoCopy.MicrophoneNotFoundStatus;
                 return;
             }
 
             if (status.Contains("permission", StringComparison.OrdinalIgnoreCase)
                 || status.StartsWith("The microphone could not start", StringComparison.OrdinalIgnoreCase))
             {
-                statusLabel.text = "Microphone permission needed.";
+                statusLabel.text = FluentEchoCopy.MicrophonePermissionNeededStatus;
                 return;
             }
 
@@ -390,20 +390,20 @@ namespace FluentEcho.Views
                 || status.StartsWith("Speech model failed to load", StringComparison.OrdinalIgnoreCase)
                 || status.StartsWith("The selected speech model could not load", StringComparison.OrdinalIgnoreCase))
             {
-                statusLabel.text = "Speech model missing.";
+                statusLabel.text = FluentEchoCopy.SpeechModelMissingStatus;
                 return;
             }
 
             if (status.StartsWith("Could not check this attempt", StringComparison.OrdinalIgnoreCase))
             {
-                statusLabel.text = "Could not check this attempt.";
+                statusLabel.text = FluentEchoCopy.CouldNotCheckAttemptStatus;
                 return;
             }
 
             if (status.StartsWith("I did not catch that", StringComparison.OrdinalIgnoreCase)
                 || status.StartsWith("No clear speech", StringComparison.OrdinalIgnoreCase))
             {
-                statusLabel.text = "I did not catch that.";
+                statusLabel.text = FluentEchoCopy.DidNotCatchThatStatus;
                 return;
             }
 
@@ -413,9 +413,9 @@ namespace FluentEcho.Views
                      || status.StartsWith("Warming", StringComparison.OrdinalIgnoreCase))
                 statusLabel.text = FluentEchoCopy.PreparingSpeechModelStatus;
             else if (status.StartsWith("Analyzing", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Checking your pronunciation...";
+                statusLabel.text = FluentEchoCopy.CheckingPronunciationStatus;
             else if (status.StartsWith("Excellent", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Great work. Answer accepted.";
+                statusLabel.text = FluentEchoCopy.GreatWorkAcceptedStatus;
             else
                 statusLabel.text = status;
         }

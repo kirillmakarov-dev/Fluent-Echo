@@ -11,6 +11,23 @@ namespace FluentEcho.Presentation
         public const string ReadyToPracticeStatus = "Ready to practice.";
         public const string DemoModeReadyStatus = "Demo mode is ready. Press Start Speaking to preview a correct answer.";
         public const string PreparingSpeechModelStatus = "Preparing speech model...";
+        public const string LoadingSpeechEngineStatus = "Loading speech engine...";
+        public const string ExcellentResultStatus = "Excellent. Every target word was recognized.";
+        public const string AnalyzingSpeechStatus = "Analyzing speech locally...";
+        public const string CheckingPronunciationStatus = "Checking your pronunciation...";
+        public const string GreatWorkAcceptedStatus = "Great work. Answer accepted.";
+        public const string CouldNotCheckAttemptStatus = "Could not check this attempt.";
+        public const string CouldNotCheckAttemptTitle = "Could not check this attempt";
+        public const string DidNotCatchThatStatus = "I did not catch that.";
+        public const string DidNotCatchThatTitle = "I did not catch that";
+        public const string DidNotCatchThatDetailedStatus = "I did not catch that. Check the microphone and try again.";
+        public const string AFewWordsAreMissingStatus = "A few words are missing. Review the highlights and try again.";
+        public const string MicrophoneNotFoundStatus = "Microphone not found.";
+        public const string MicrophoneNotFoundTitle = "Microphone not found";
+        public const string MicrophonePermissionNeededStatus = "Microphone permission needed.";
+        public const string MicrophonePermissionNeededTitle = "Microphone permission needed";
+        public const string SpeechModelMissingStatus = "Speech model missing.";
+        public const string SpeechModelMissingTitle = "Speech model missing";
         public const string NextMissionPrompt = "Choose Next Mission to continue, or Try Again to improve this score.";
 
         public static string BuildProgressSummary(int totalWords)

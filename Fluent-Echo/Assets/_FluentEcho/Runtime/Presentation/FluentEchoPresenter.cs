@@ -132,7 +132,7 @@ namespace FluentEcho.Presentation
             if (IsInteractionLocked())
             {
                 if (session.Phase == SpeechSessionPhase.Preparing)
-                    view.SetStatus("Loading speech engine...");
+                    view.SetStatus(FluentEchoCopy.LoadingSpeechEngineStatus);
                 return;
             }
 
@@ -420,7 +420,7 @@ namespace FluentEcho.Presentation
             success = true;
             session.BeginSuccess();
             view.SetSuccess(true);
-            view.SetStatus("Excellent. Every target word was recognized.");
+            view.SetStatus(FluentEchoCopy.ExcellentResultStatus);
             view.SetListening(false);
 
             if (activeService.IsListening)
@@ -433,7 +433,7 @@ namespace FluentEcho.Presentation
                 return;
 
             session.BeginAnalyzing();
-            view.SetStatus("Analyzing speech locally...");
+            view.SetStatus(FluentEchoCopy.AnalyzingSpeechStatus);
             view.SetListening(false);
         }
 
@@ -456,8 +456,8 @@ namespace FluentEcho.Presentation
 
             session.BeginRetry();
             view.SetStatus(string.IsNullOrWhiteSpace(session.Transcript)
-                ? "I did not catch that. Check the microphone and try again."
-                : "A few words are missing. Review the highlights and try again.");
+                ? FluentEchoCopy.DidNotCatchThatDetailedStatus
+                : FluentEchoCopy.AFewWordsAreMissingStatus);
         }
 
         private void HandleFailure(string message)
@@ -557,10 +557,10 @@ namespace FluentEcho.Presentation
             {
                 pendingNoticeAction = NoticeAction.OpenSettings;
                 view.ShowNotice(
-                    "Microphone not found",
+                    FluentEchoCopy.MicrophoneNotFoundTitle,
                     "Connect a microphone or choose another input in Settings. Fluent Echo needs an input device before it can check your answer.",
                     "OPEN SETTINGS");
-                view.SetStatus("Microphone not found.");
+                view.SetStatus(FluentEchoCopy.MicrophoneNotFoundStatus);
                 return;
             }
 
@@ -569,10 +569,10 @@ namespace FluentEcho.Presentation
             {
                 pendingNoticeAction = NoticeAction.OpenSettings;
                 view.ShowNotice(
-                    "Microphone permission needed",
+                    FluentEchoCopy.MicrophonePermissionNeededTitle,
                     "Allow microphone access in Windows privacy settings, then try again. You can also confirm the input device in Settings.",
                     "OPEN SETTINGS");
-                view.SetStatus("Microphone permission needed.");
+                view.SetStatus(FluentEchoCopy.MicrophonePermissionNeededStatus);
                 return;
             }
 
@@ -581,10 +581,10 @@ namespace FluentEcho.Presentation
             {
                 pendingNoticeAction = NoticeAction.OpenSettings;
                 view.ShowNotice(
-                    "Speech model missing",
+                    FluentEchoCopy.SpeechModelMissingTitle,
                     "Add the local Whisper model to StreamingAssets/Whisper, then open Settings to check the profile path.",
                     "OPEN SETTINGS");
-                view.SetStatus("Speech model missing.");
+                view.SetStatus(FluentEchoCopy.SpeechModelMissingStatus);
                 return;
             }
 
@@ -593,10 +593,10 @@ namespace FluentEcho.Presentation
             {
                 pendingNoticeAction = NoticeAction.RetryAttempt;
                 view.ShowNotice(
-                    "Could not check this attempt",
+                    FluentEchoCopy.CouldNotCheckAttemptTitle,
                     "The recording stopped before analysis finished. Please try again.",
                     "TRY AGAIN");
-                view.SetStatus("Could not check this attempt.");
+                view.SetStatus(FluentEchoCopy.CouldNotCheckAttemptStatus);
                 return;
             }
 
@@ -605,16 +605,16 @@ namespace FluentEcho.Presentation
             {
                 pendingNoticeAction = NoticeAction.RetryAttempt;
                 view.ShowNotice(
-                    "I did not catch that",
+                    FluentEchoCopy.DidNotCatchThatTitle,
                     "Move closer to the microphone and try again.",
                     "TRY AGAIN");
-                view.SetStatus("I did not catch that.");
+                view.SetStatus(FluentEchoCopy.DidNotCatchThatStatus);
                 return;
             }
 
             pendingNoticeAction = NoticeAction.RetryAttempt;
             view.ShowNotice(
-                "Could not check this attempt",
+                FluentEchoCopy.CouldNotCheckAttemptTitle,
                 "Please try again.",
                 "TRY AGAIN");
             view.SetStatus(normalized);

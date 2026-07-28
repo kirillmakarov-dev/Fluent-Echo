@@ -225,7 +225,7 @@ namespace FluentEcho.Tests
                 service.RaiseFailure("Speech analysis could not start.");
 
                 Assert.That(view.NoticeVisible, Is.True);
-                Assert.That(view.NoticeTitle, Is.EqualTo("Could not check this attempt"));
+                Assert.That(view.NoticeTitle, Is.EqualTo(FluentEchoCopy.CouldNotCheckAttemptTitle));
                 Assert.That(view.NoticeActionLabel, Is.EqualTo("TRY AGAIN"));
 
                 view.RaiseNoticeConfirmed();
@@ -254,10 +254,10 @@ namespace FluentEcho.Tests
             try
             {
                 presenter.Initialize();
-                service.RaiseFailure("I did not catch that. Check the microphone and try again.");
+                service.RaiseFailure(FluentEchoCopy.DidNotCatchThatDetailedStatus);
 
                 Assert.That(view.NoticeVisible, Is.True);
-                Assert.That(view.NoticeTitle, Is.EqualTo("I did not catch that"));
+                Assert.That(view.NoticeTitle, Is.EqualTo(FluentEchoCopy.DidNotCatchThatTitle));
                 Assert.That(view.NoticeActionLabel, Is.EqualTo("TRY AGAIN"));
 
                 view.RaiseNoticeConfirmed();
