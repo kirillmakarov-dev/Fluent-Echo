@@ -464,6 +464,9 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastStatus, Does.Contain("Excellent"));
                     Assert.That(view.LastSuccessState, Is.True);
                     Assert.That(view.LastListeningState, Is.False);
+                    Assert.That(view.LastProgressDetails, Does.Contain("Phoneme roadmap"));
+                    Assert.That(view.LastPronunciationSummary, Does.Contain("Practice score"));
+                    Assert.That(view.LastPronunciationFeedback, Does.Contain("Phoneme roadmap"));
                     Assert.That(saved.Attempts, Is.EqualTo(1));
                     Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
                     Assert.That(saved.BestPronunciationScore, Is.GreaterThan(0));
@@ -858,6 +861,9 @@ namespace FluentEcho.Tests
             public string LastStatus { get; private set; } = string.Empty;
             public string LastTranscript { get; private set; } = string.Empty;
             public string[] LessonOptions { get; private set; } = Array.Empty<string>();
+            public string LastProgressDetails { get; private set; } = string.Empty;
+            public string LastPronunciationSummary { get; private set; } = string.Empty;
+            public string LastPronunciationFeedback { get; private set; } = string.Empty;
             public bool CategoryScreenVisible { get; private set; }
             public bool SettingsPanelVisible { get; private set; }
             public bool NoticeVisible { get; private set; }
@@ -949,9 +955,16 @@ namespace FluentEcho.Tests
                 NoticeVisible = false;
             }
 
-            public void SetProgressDetails(string details) { }
+            public void SetProgressDetails(string details)
+            {
+                LastProgressDetails = details ?? string.Empty;
+            }
 
-            public void SetPronunciation(string summary, string feedback) { }
+            public void SetPronunciation(string summary, string feedback)
+            {
+                LastPronunciationSummary = summary ?? string.Empty;
+                LastPronunciationFeedback = feedback ?? string.Empty;
+            }
         }
     }
 }

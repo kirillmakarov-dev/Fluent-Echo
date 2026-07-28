@@ -713,6 +713,7 @@ namespace FluentEcho.Presentation
                     $"Transcript match: coverage {lastPronunciationScore.CoverageScore}% | precision {lastPronunciationScore.PrecisionScore}%");
                 lines.Add(
                     $"Rhythm: {lastPronunciationScore.TempoScore}% | word focus {lastPronunciationScore.WordQualityScore}%");
+                lines.Add("Phoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.");
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -765,7 +766,8 @@ namespace FluentEcho.Presentation
                 $"Recognition confidence: {Capitalize(score.ConfidenceBand)}",
                 $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
                 $"Transcript match: coverage {score.CoverageScore}% | precision {score.PrecisionScore}%",
-                $"Rhythm: {score.TempoScore}% | word focus: {score.WordQualityScore}%"
+                $"Rhythm: {score.TempoScore}% | word focus: {score.WordQualityScore}%",
+                "Phoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next."
             };
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
