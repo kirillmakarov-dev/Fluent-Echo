@@ -53,8 +53,10 @@ namespace FluentEcho.Views
         [SerializeField] private CanvasGroup successPanelGroup;
         [SerializeField] private RectTransform successPanelRect;
         [SerializeField] private GameObject categoryScreen;
+        [SerializeField] private GameObject settingsPanel;
         [SerializeField] private TextMeshProUGUI selectedCategoryLabel;
         [SerializeField] private TextMeshProUGUI selectedCategoryDescriptionLabel;
+        [SerializeField] private RectTransform noticeCard;
 
         [Header("Result Motion")]
         [SerializeField, Min(0f)] private float resultEnterDuration = 0.22f;
@@ -142,25 +144,15 @@ namespace FluentEcho.Views
 
         private void EnsureCategoriesButton()
         {
-            if (categoriesButton != null)
+            if (categoriesButton == null)
             {
-                ConfigureCategoriesButton(categoriesButton);
+                Debug.LogWarning(
+                    "[FluentEchoView] Category Back Button is not assigned in the scene.",
+                    this);
                 return;
             }
 
-            Transform existing = transform.Find("Category Back Button");
-            if (existing != null)
-            {
-                categoriesButton = existing.GetComponent<Button>();
-                if (categoriesButton != null)
-                {
-                    ConfigureCategoriesButton(categoriesButton);
-                    return;
-                }
-            }
-            Debug.LogWarning(
-                "[FluentEchoView] Category Back Button is not assigned in the scene.",
-                this);
+            ConfigureCategoriesButton(categoriesButton);
         }
 
         private static void ConfigureCategoriesButton(Button button)
@@ -263,11 +255,13 @@ namespace FluentEcho.Views
 
         public void SetSettingsPanelVisible(bool visible)
         {
-            Transform settingsPanel = FindDeepTransform(transform.root, "Settings Panel");
             if (settingsPanel == null)
+            {
+                Debug.LogWarning("[FluentEchoView] Settings Panel is not assigned in the scene.", this);
                 return;
+            }
 
-            settingsPanel.gameObject.SetActive(visible);
+            settingsPanel.SetActive(visible);
         }
 
         public void ShowNotice(string title, string body, string primaryActionLabel)
@@ -483,55 +477,44 @@ namespace FluentEcho.Views
         private void EnsureNoticePanel()
         {
             if (noticePanel == null)
-                noticePanel = FindDeepTransform(transform.root, "Notice Panel")?.gameObject;
-
-            if (noticePanel == null)
             {
                 Debug.LogWarning("[FluentEchoView] Notice Panel is not assigned in the scene.", this);
                 return;
             }
 
-            noticePanelGroup = noticePanel.GetComponent<CanvasGroup>();
             if (noticePanelGroup == null)
             {
                 Debug.LogWarning("[FluentEchoView] Notice Panel is missing a CanvasGroup.", this);
                 return;
             }
 
-            Transform card = noticePanel.transform.Find("Notice Card");
-            RectTransform cardRect = card != null ? card.GetComponent<RectTransform>() : null;
-            if (cardRect == null)
+            if (noticeCard == null)
             {
                 Debug.LogWarning("[FluentEchoView] Notice Card is not assigned in the scene.", this);
                 return;
             }
 
-            Image image = cardRect.GetComponent<Image>();
+            Image image = noticeCard.GetComponent<Image>();
             if (image != null)
                 image.color = NoticeFill;
 
-            Outline outline = cardRect.GetComponent<Outline>();
+            Outline outline = noticeCard.GetComponent<Outline>();
             if (outline != null)
             {
                 outline.effectColor = NoticeBorder;
                 outline.effectDistance = new Vector2(1.5f, -1.5f);
             }
 
-            CanvasGroup cardGroup = cardRect.GetComponent<CanvasGroup>();
+            CanvasGroup cardGroup = noticeCard.GetComponent<CanvasGroup>();
             if (cardGroup != null)
             {
                 cardGroup.interactable = true;
                 cardGroup.blocksRaycasts = true;
             }
 
-            Transform accent = cardRect.Find("Notice Accent");
+            Transform accent = noticeCard.Find("Notice Accent");
             if (accent != null && accent.TryGetComponent(out Image accentImage))
                 accentImage.color = NoticeAccent;
-
-            noticeTitleLabel = noticeTitleLabel != null ? noticeTitleLabel : cardRect.Find("Notice Title")?.GetComponent<TextMeshProUGUI>();
-            noticeBodyLabel = noticeBodyLabel != null ? noticeBodyLabel : cardRect.Find("Notice Body")?.GetComponent<TextMeshProUGUI>();
-            noticeActionButton = noticeActionButton != null ? noticeActionButton : cardRect.Find("Notice Action Button")?.GetComponent<Button>();
-            noticeActionLabel = noticeActionLabel != null ? noticeActionLabel : noticeActionButton?.GetComponentInChildren<TextMeshProUGUI>(true);
 
             if (noticeTitleLabel == null || noticeBodyLabel == null || noticeActionButton == null || noticeActionLabel == null)
             {

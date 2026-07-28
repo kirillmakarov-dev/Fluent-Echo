@@ -25,6 +25,7 @@ The app should stay honest about what local Whisper can do. It can produce trans
 - Scene-owned binding is now the default path in bootstrap.
 - Runtime fallback creation has been removed for lesson, microphone, and Whisper profile controls.
 - Notice overlay is now scene-owned instead of being created from code.
+- Settings panel and notice UI are now assigned through the scene instead of being reconstructed at runtime.
 - Next pass should finish the remaining manual UI wiring and verify the edited scene layout directly in Play mode.
 
 ## Sprint 0 - Scene-Owned UI and Layout Lock-Down

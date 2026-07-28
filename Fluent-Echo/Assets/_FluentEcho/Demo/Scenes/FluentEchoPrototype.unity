@@ -13715,8 +13715,16 @@ MonoBehaviour:
   successPanelGroup: {fileID: 590223887}
   successPanelRect: {fileID: 590223883}
   categoryScreen: {fileID: 1727443241}
+  settingsPanel: {fileID: 76370613}
   selectedCategoryLabel: {fileID: 880603105}
   selectedCategoryDescriptionLabel: {fileID: 1852692513}
+  noticePanel: {fileID: 900000001}
+  noticePanelGroup: {fileID: 900000005}
+  noticeTitleLabel: {fileID: 900000018}
+  noticeBodyLabel: {fileID: 900000022}
+  noticeActionButton: {fileID: 900000027}
+  noticeActionLabel: {fileID: 900000031}
+  noticeCard: {fileID: 900000007}
   resultEnterDuration: 0.22
   resultEnterScale: 0.965
 --- !u!1 &1800018946
