@@ -147,7 +147,7 @@ namespace FluentEcho.Tests
                 Assert.That(phonemeService.CallCount, Is.EqualTo(1));
                 Assert.That(phonemeService.LastRequest, Is.Not.Null);
                 Assert.That(phonemeService.LastRequest.Transcript, Is.EqualTo("apple"));
-                Assert.That(view.LastProgressDetails, Does.Contain("Phoneme alignment:"));
+                Assert.That(view.LastProgressDetails, Does.Contain("Alignment preview (demo only):"));
                 Assert.That(view.LastProgressDetails, Does.Contain("apple_phoneme"));
                 Assert.That(view.LastPronunciationFeedback, Does.Contain("local speech model").Or.Contain("Phoneme"));
             }
