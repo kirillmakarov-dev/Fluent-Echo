@@ -1121,6 +1121,45 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void RetryWhileListening_CancelsCurrentAttemptAndAllowsAnotherRecording()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_retry_while_listening");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                Assert.That(service.StartListeningCalls, Is.EqualTo(1));
+                Assert.That(view.LastListeningState, Is.True);
+
+                view.RaiseRetryPressed();
+
+                Assert.That(service.CancelCalls, Is.EqualTo(1));
+                Assert.That(view.LastListeningState, Is.False);
+                Assert.That(view.LastMicInteractable, Is.True);
+                Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
+                Assert.That(view.LastStatus, Does.Contain("Ready to practice"));
+
+                view.RaiseMicPressed();
+
+                Assert.That(service.StartListeningCalls, Is.EqualTo(2));
+                Assert.That(view.LastListeningState, Is.True);
+                Assert.That(view.LastStatus, Does.Contain("Listening"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void MockModeToggle_SwitchesToDemoServiceAndResetsFlow()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_mock_mode");

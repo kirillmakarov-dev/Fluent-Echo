@@ -14,6 +14,22 @@ namespace FluentEcho.Tests
 
             Assert.That(session.Phase, Is.EqualTo(SpeechSessionPhase.Cancelling));
             Assert.That(session.IsBusy, Is.True);
+            Assert.That(session.CanStartRecording, Is.False);
+            Assert.That(session.IsCancelling, Is.True);
+        }
+
+        [Test]
+        public void Reset_FromCancellation_ReturnsToIdleAndAllowsNewRecording()
+        {
+            SpeechSession session = new();
+
+            session.BeginCancelling();
+            session.Reset();
+
+            Assert.That(session.Phase, Is.EqualTo(SpeechSessionPhase.Idle));
+            Assert.That(session.IsBusy, Is.False);
+            Assert.That(session.CanStartRecording, Is.True);
+            Assert.That(session.IsCancelling, Is.False);
         }
 
         [Test]
