@@ -27,33 +27,34 @@ The active build already covers the core playable loop and the sprint work has m
 - Sprint 2: honest local pronunciation estimate is complete.
 - Sprint 3: lesson catalog, progress, and navigation is complete.
 - Sprint 4: portfolio case-study polish is complete.
-- Sprint 5: phoneme-aware scoring roadmap is the next active focus.
+- Sprint 5: phoneme-aware scoring roadmap and architecture cleanup is the next active focus.
 - Sprint 6: final portfolio polish and demo packaging will follow.
 
 The next code sprint after docs polish should be a stronger pronunciation-scoring pipeline that stays local and honest.
 
 ## Recommended next steps
 
-### Sprint 4 checklist
+### Sprint 5 checklist
 
 Use `SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md` as the current implementation plan.
-For the current sprint, keep the focus on the roadmap story:
+For the current sprint, keep the focus on the phoneme-aware transition story:
 
-- align `PROTOTYPE_OVERVIEW.md` with the actual category-based flow;
-- keep `CASE_STUDY_BRIEF.md` short, credible, and reviewer-friendly;
+- keep the heuristic scorer described as the current, honest default;
+- keep the phoneme-aware path described as additive, optional, and local-first;
 - keep `MB_ARCHITECTURE.md` aligned with the current onboarding, settings, and result panels;
+- keep `PHONEME_AWARE_SCORING_ROADMAP.md` as the concrete handoff for the next scoring layer;
+- keep `CASE_STUDY_BRIEF.md` short, credible, and reviewer-friendly;
 - keep `PORTFOLIO_DEMO_SCRIPT.md` ready for a clean live walkthrough;
 - make sure the docs explain the local-only scoring story without overclaiming phoneme assessment.
-- make the phoneme-aware scoring path explicit as the next additive service boundary.
-- use `PHONEME_AWARE_SCORING_ROADMAP.md` as the concrete sprint 5 handoff for the next scoring layer.
 
 The plan intentionally avoids paid APIs and keeps the scoring pipeline local and transparent.
 
 For the next implementation pass, keep the order simple:
 
-1. Finish portfolio-facing documentation and demo narration.
+1. Keep the current heuristic scoring and preview boundaries honest.
 2. Preserve the stable result and settings flow.
 3. Improve the local scoring pipeline only after the presentation layer is fully clear.
+4. Use the roadmap docs to explain what the next scorer must receive and return.
 
 ### 1. Keep the interaction loop stable
 

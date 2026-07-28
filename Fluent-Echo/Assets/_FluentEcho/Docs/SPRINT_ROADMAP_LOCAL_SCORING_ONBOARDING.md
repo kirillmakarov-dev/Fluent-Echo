@@ -405,6 +405,8 @@ Define the next scoring stage clearly enough that the project can move from heur
 - Describe the data needed for future alignment: transcript, timing, target words, and per-word match quality.
 - Keep the current heuristic scorer as the MVP fallback until a stronger scorer exists.
 - Document how the UI should keep showing honest labels while the new scorer is being introduced.
+- Keep the no-op alignment default and inspector preview mode clearly separated from true scoring.
+- Document the minimum verification story so the next scorer can be added without regressing the current build.
 
 ### Acceptance Criteria
 
@@ -412,6 +414,8 @@ Define the next scoring stage clearly enough that the project can move from heur
 - The future phoneme-aware path is documented as an additive service, not a rewrite of Whisper.
 - No paid API is required for the documented next step.
 - The docs give a reviewer a believable technical path from practice estimate to phoneme-aware assessment.
+- The roadmap makes it obvious that the current build still uses the heuristic scorer by default.
+- The roadmap keeps the preview alignment mode framed as demo-only, not production scoring.
 
 ### Suggested Files
 
@@ -426,6 +430,7 @@ Define the next scoring stage clearly enough that the project can move from heur
 - Confirm the docs still describe the current heuristic scorer honestly.
 - Confirm the future scorer is documented as optional and local-first.
 - Confirm the reviewer can understand the next technical step without guessing.
+- Confirm the no-op and preview alignment paths are still called out as separate from the real scorer.
 
 ## Sprint 6 - Final Portfolio Polish And Demo Packaging
 
