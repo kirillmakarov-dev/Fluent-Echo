@@ -20,6 +20,8 @@ namespace FluentEcho.Presentation
         private ISpeechRecognitionService activeService;
         private LessonProgressState progress;
         private SpeechExerciseSO currentExercise;
+        private readonly Action<int, int> persistSelection;
+        private int currentCategoryIndex;
         private int currentExerciseIndex;
         private bool useMock;
         private bool success;
@@ -33,16 +35,21 @@ namespace FluentEcho.Presentation
             ISpeechRecognitionService realService,
             ISpeechRecognitionService mockService,
             bool useMockByDefault,
-            Action<AudioClip> playReference)
+            Action<AudioClip> playReference,
+            int selectedCategoryIndex = 0,
+            int selectedExerciseIndex = 0,
+            Action<int, int> persistSelection = null)
         {
-            currentExercise = exercise;
             this.exerciseCatalog = exerciseCatalog;
             this.view = view;
             this.realService = realService;
             this.mockService = mockService;
             useMock = useMockByDefault;
             this.playReference = playReference;
-            currentExerciseIndex = ResolveExerciseIndex(exercise);
+            this.persistSelection = persistSelection;
+            currentCategoryIndex = ResolveCategoryIndex(selectedCategoryIndex);
+            currentExerciseIndex = Mathf.Max(0, selectedExerciseIndex);
+            currentExercise = ResolveExercise(exercise);
         }
 
         public void Initialize()
@@ -56,11 +63,15 @@ namespace FluentEcho.Presentation
             view.ListenPressed += HandleListen;
             view.PreviousPressed += HandlePreviousExercise;
             view.NextPressed += HandleNextExercise;
+            view.CategoriesPressed += HandleCategoriesPressed;
+            view.CategorySelected += HandleCategorySelected;
+            view.LessonSelected += HandleLessonSelected;
             view.MockModeChanged += HandleMockModeChanged;
 
             SelectService(useMock);
             ResetView();
             activeService.Prepare();
+            view.SetCategoryScreenVisible(true);
         }
 
         public void Dispose()
@@ -75,6 +86,9 @@ namespace FluentEcho.Presentation
             view.ListenPressed -= HandleListen;
             view.PreviousPressed -= HandlePreviousExercise;
             view.NextPressed -= HandleNextExercise;
+            view.CategoriesPressed -= HandleCategoriesPressed;
+            view.CategorySelected -= HandleCategorySelected;
+            view.LessonSelected -= HandleLessonSelected;
             view.MockModeChanged -= HandleMockModeChanged;
         }
 
@@ -101,8 +115,8 @@ namespace FluentEcho.Presentation
             view.SetWordMatches(new bool[currentExercise.GetDisplayWords().Length]);
             view.SetSuccess(false);
             view.SetStatus(useMock
-                ? "Running deterministic demo..."
-                : "Listening... Transcription appears in short local-processing chunks.");
+                ? "Playing a demo attempt..."
+                : "Listening. Speak naturally, then press Check Answer.");
             view.SetListening(true);
             session.BeginListening();
             attemptStartedAt = Time.realtimeSinceStartup;
@@ -127,7 +141,7 @@ namespace FluentEcho.Presentation
 
         private void HandleRetry()
         {
-            CancelCurrentService("Stopping current attempt...");
+            CancelCurrentService("Resetting attempt...");
             success = false;
             session.Reset();
             ClearAttemptState();
@@ -162,7 +176,7 @@ namespace FluentEcho.Presentation
 
         private void HandlePreviousExercise()
         {
-            if (IsInteractionLocked())
+            if (IsRecordingLocked())
                 return;
 
             SwitchExercise(currentExerciseIndex - 1);
@@ -170,31 +184,85 @@ namespace FluentEcho.Presentation
 
         private void HandleNextExercise()
         {
-            if (IsInteractionLocked())
+            if (IsRecordingLocked())
                 return;
 
             SwitchExercise(currentExerciseIndex + 1);
         }
 
-        private void SwitchExercise(int requestedIndex)
+        private void HandleCategoriesPressed()
         {
-            if (exerciseCatalog == null || exerciseCatalog.Count == 0)
+            if (IsRecordingLocked())
                 return;
 
-            int clampedIndex = Mathf.Clamp(requestedIndex, 0, exerciseCatalog.Count - 1);
-            if (clampedIndex == currentExerciseIndex)
+            view.SetCategoryScreenVisible(true);
+        }
+
+        private void HandleCategorySelected(int categoryIndex)
+        {
+            if (IsRecordingLocked())
                 return;
 
-            CancelCurrentService("Switching lesson...");
+            SwitchCategory(categoryIndex);
+            view.SetCategoryScreenVisible(false);
+        }
+
+        private void HandleLessonSelected(int exerciseIndex)
+        {
+            if (IsRecordingLocked())
+                return;
+
+            SwitchExercise(exerciseIndex);
+        }
+
+        private void SwitchCategory(int requestedCategoryIndex)
+        {
+            if (exerciseCatalog == null || exerciseCatalog.CategoryCount == 0)
+                return;
+
+            int clampedIndex = Mathf.Clamp(requestedCategoryIndex, 0, exerciseCatalog.CategoryCount - 1);
+            if (clampedIndex == currentCategoryIndex)
+            {
+                ClearAttemptState();
+                BindView();
+                LoadCurrentExercise();
+                ConfigureActiveServiceForCurrentExercise();
+                ResetView();
+                persistSelection?.Invoke(currentCategoryIndex, currentExerciseIndex);
+                return;
+            }
+
             ClearAttemptState();
-            currentExerciseIndex = clampedIndex;
-            currentExercise = exerciseCatalog.GetExercise(currentExerciseIndex);
+            currentCategoryIndex = clampedIndex;
+            currentExerciseIndex = 0;
+            currentExercise = exerciseCatalog.GetCategoryExercise(currentCategoryIndex, currentExerciseIndex);
+            persistSelection?.Invoke(currentCategoryIndex, currentExerciseIndex);
             EnsureExercise();
             BindView();
             LoadCurrentExercise();
-            SelectService(useMock);
+            ConfigureActiveServiceForCurrentExercise();
             ResetView();
-            activeService.Prepare();
+        }
+
+        private void SwitchExercise(int requestedIndex)
+        {
+            int exerciseCount = GetCurrentExerciseCount();
+            if (exerciseCount == 0)
+                return;
+
+            int clampedIndex = Mathf.Clamp(requestedIndex, 0, exerciseCount - 1);
+            if (clampedIndex == currentExerciseIndex)
+                return;
+
+            ClearAttemptState();
+            currentExerciseIndex = clampedIndex;
+            currentExercise = exerciseCatalog.GetCategoryExercise(currentCategoryIndex, currentExerciseIndex);
+            persistSelection?.Invoke(currentCategoryIndex, currentExerciseIndex);
+            EnsureExercise();
+            BindView();
+            LoadCurrentExercise();
+            ConfigureActiveServiceForCurrentExercise();
+            ResetView();
         }
 
         private void SelectService(bool mock)
@@ -211,6 +279,14 @@ namespace FluentEcho.Presentation
             activeService.Failed += HandleFailure;
             activeService.StatusChanged += HandleServiceStatus;
             view.SetMode(mock);
+        }
+
+        private void ConfigureActiveServiceForCurrentExercise()
+        {
+            if (activeService == null)
+                return;
+
+            activeService.Configure(currentExercise);
         }
 
         private void UnbindService()
@@ -232,20 +308,34 @@ namespace FluentEcho.Presentation
 
             if (exerciseCatalog != null && exerciseCatalog.Count > 0)
             {
-                currentExerciseIndex = Mathf.Clamp(currentExerciseIndex, 0, exerciseCatalog.Count - 1);
-                currentExercise = exerciseCatalog.GetExercise(currentExerciseIndex);
+                currentCategoryIndex = ResolveCategoryIndex(currentCategoryIndex);
+                currentExerciseIndex = Mathf.Clamp(currentExerciseIndex, 0, Mathf.Max(0, GetCurrentExerciseCount() - 1));
+                currentExercise = exerciseCatalog.GetCategoryExercise(currentCategoryIndex, currentExerciseIndex);
             }
         }
 
         private void BindView()
         {
+            SpeechExerciseCategory category = exerciseCatalog != null
+                ? exerciseCatalog.GetCategory(currentCategoryIndex)
+                : null;
+            string categoryName = category != null ? category.DisplayName : "Practice Menu";
+            string categoryDescription = category != null ? category.Description : "Pick a lesson set and practice at your own pace.";
+            int exerciseCount = GetCurrentExerciseCount();
+
+            view.SetCategory(categoryName, categoryDescription);
+            view.SetLessonOptions(
+                exerciseCatalog != null
+                    ? exerciseCatalog.GetCategoryExerciseDisplayNames(currentCategoryIndex)
+                    : Array.Empty<string>(),
+                currentExerciseIndex);
             view.Build(currentExercise.Prompt, currentExercise.GetDisplayWords());
             view.SetNavigation(
                 exerciseCatalog != null && currentExerciseIndex > 0,
-                exerciseCatalog != null && currentExerciseIndex < exerciseCatalog.Count - 1);
+                exerciseCatalog != null && currentExerciseIndex < exerciseCount - 1);
             view.SetLessonPosition(
                 currentExerciseIndex + 1,
-                exerciseCatalog != null ? exerciseCatalog.Count : 1);
+                exerciseCount > 0 ? exerciseCount : 1);
         }
 
         private void LoadCurrentExercise()
@@ -313,8 +403,8 @@ namespace FluentEcho.Presentation
 
             session.BeginRetry();
             view.SetStatus(string.IsNullOrWhiteSpace(session.Transcript)
-                ? "No speech was recognized. Check the microphone and try again."
-                : "Some words are missing. Review the highlights and retry.");
+                ? "I did not catch that. Check the microphone and try again."
+                : "A few words are missing. Review the highlights and try again.");
         }
 
         private void HandleFailure(string message)
@@ -360,9 +450,12 @@ namespace FluentEcho.Presentation
             view.SetPronunciation(string.Empty, string.Empty);
             view.SetListening(false);
             view.SetSuccess(false);
-            view.SetStatus(useMock
-                ? "Demo mode is ready. Press the microphone to simulate a correct answer."
-                : "Loading speech engine...");
+            if (useMock)
+                view.SetStatus("Demo mode is ready. Press Start Speaking to preview a correct answer.");
+            else if (activeService != null && activeService.IsReady)
+                view.SetStatus("Ready to practice.");
+            else
+                view.SetStatus("Preparing speech model...");
         }
 
         private void SaveProgress()
@@ -388,6 +481,14 @@ namespace FluentEcho.Presentation
                 ? false
                 : session.IsBusy
                   || activeService.IsListening;
+        }
+
+        private bool IsRecordingLocked()
+        {
+            return activeService != null
+                   && (activeService.IsListening
+                       || session.Phase == SpeechSessionPhase.Cancelling
+                       || session.Phase == SpeechSessionPhase.Analyzing);
         }
 
         private void CancelCurrentService(string statusMessage)
@@ -445,9 +546,9 @@ namespace FluentEcho.Presentation
                 lines.Add(
                     $"Score: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
                 lines.Add(
-                    $"Words: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount} matched");
+                    $"Matched words: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
                 lines.Add(
-                    $"Clarity: {lastPronunciationScore.WordQualityScore}% | Coverage: {lastPronunciationScore.CoverageScore}% | Tempo: {lastPronunciationScore.TempoScore}%");
+                    $"Pronunciation: clarity {lastPronunciationScore.WordQualityScore}% | coverage {lastPronunciationScore.CoverageScore}% | rhythm {lastPronunciationScore.TempoScore}%");
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -456,7 +557,7 @@ namespace FluentEcho.Presentation
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
                 {
                     lines.Add(string.Empty);
-                    lines.Add($"Coach note: {lastPronunciationScore.FeedbackText}");
+                    lines.Add($"Coach tip: {lastPronunciationScore.FeedbackText}");
                 }
             }
 
@@ -474,12 +575,12 @@ namespace FluentEcho.Presentation
                 if (lines.Count > 0)
                     lines.Add(string.Empty);
 
-                lines.Add("Choose Next Mission to keep going, or Try Again to improve this score.");
+                lines.Add("Choose Next Mission to continue, or Try Again to improve this score.");
                 return string.Join("\n", lines);
             }
 
             return lines.Count == 0
-                ? "Recent attempts will appear here."
+                ? "Your attempt history will appear after your first recording."
                 : string.Join("\n", lines);
         }
 
@@ -489,16 +590,16 @@ namespace FluentEcho.Presentation
                 return string.Empty;
 
             string focus = score.MissingWordCount > 0
-                ? $"Next focus: repeat the missing word{(score.MissingWordCount == 1 ? string.Empty : "s")} slowly once, then say the full sentence."
-                : "Next focus: keep the same clear rhythm on the next mission.";
+                ? $"Focus next: say the missing word{(score.MissingWordCount == 1 ? string.Empty : "s")} slowly once, then repeat the full line."
+                : "Focus next: keep the same clear rhythm on the next mission.";
 
             string wordBreakdown = BuildWordBreakdown(score.WordScores);
 
             var lines = new System.Collections.Generic.List<string>
             {
                 $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
-                $"Coverage {score.CoverageScore}% | Precision {score.PrecisionScore}% | Tempo {score.TempoScore}%",
-                $"Word clarity: {score.WordQualityScore}%"
+                $"Recognition: coverage {score.CoverageScore}% | precision {score.PrecisionScore}% | rhythm {score.TempoScore}%",
+                $"Pronunciation clarity: {score.WordQualityScore}%"
             };
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -531,21 +632,51 @@ namespace FluentEcho.Presentation
                 parts.Add($"{wordScore.Word}: {wordScore.Score}% {marker}");
             }
 
-            return $"Word detail: {string.Join(" | ", parts)}";
+            return $"Word focus: {string.Join(" | ", parts)}";
         }
 
-        private int ResolveExerciseIndex(SpeechExerciseSO selectedExercise)
+        private SpeechExerciseSO ResolveExercise(SpeechExerciseSO selectedExercise)
         {
-            if (exerciseCatalog == null || exerciseCatalog.Count == 0 || selectedExercise == null)
-                return 0;
+            if (exerciseCatalog == null || exerciseCatalog.Count == 0)
+                return selectedExercise;
 
-            for (int i = 0; i < exerciseCatalog.Count; i++)
+            if (selectedExercise != null)
             {
-                if (exerciseCatalog.GetExercise(i) == selectedExercise)
-                    return i;
+                for (int categoryIndex = 0; categoryIndex < Mathf.Max(1, exerciseCatalog.CategoryCount); categoryIndex++)
+                {
+                    int count = exerciseCatalog.GetCategoryExerciseCount(categoryIndex);
+                    for (int exerciseIndex = 0; exerciseIndex < count; exerciseIndex++)
+                    {
+                        if (exerciseCatalog.GetCategoryExercise(categoryIndex, exerciseIndex) == selectedExercise)
+                        {
+                            currentCategoryIndex = categoryIndex;
+                            currentExerciseIndex = exerciseIndex;
+                            return selectedExercise;
+                        }
+                    }
+                }
             }
 
-            return 0;
+            currentCategoryIndex = ResolveCategoryIndex(currentCategoryIndex);
+            currentExerciseIndex = Mathf.Clamp(currentExerciseIndex, 0, Mathf.Max(0, GetCurrentExerciseCount() - 1));
+            return exerciseCatalog.GetCategoryExercise(currentCategoryIndex, currentExerciseIndex);
+        }
+
+        private int ResolveCategoryIndex(int selectedCategoryIndex)
+        {
+            if (exerciseCatalog == null || exerciseCatalog.CategoryCount == 0)
+                return 0;
+
+            return Mathf.Clamp(selectedCategoryIndex, 0, exerciseCatalog.CategoryCount - 1);
+        }
+
+        private int GetCurrentExerciseCount()
+        {
+            if (exerciseCatalog == null)
+                return 0;
+
+            int categoryCount = exerciseCatalog.GetCategoryExerciseCount(currentCategoryIndex);
+            return categoryCount > 0 ? categoryCount : exerciseCatalog.Count;
         }
     }
 }

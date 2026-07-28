@@ -27,14 +27,22 @@ namespace FluentEcho.Views
         [SerializeField] private Button listenButton;
         [SerializeField] private Button previousButton;
         [SerializeField] private Button nextButton;
+        [SerializeField] private Button categoriesButton;
         [SerializeField] private Button resultCloseButton;
         [SerializeField] private Button resultNextButton;
         [SerializeField] private Button resultTryAgainButton;
+        [SerializeField] private Button wordsCategoryButton;
+        [SerializeField] private Button shortSentencesCategoryButton;
+        [SerializeField] private Button challengeCategoryButton;
+        [SerializeField] private Dropdown lessonDropdown;
         [SerializeField] private Toggle mockModeToggle;
         [SerializeField] private Image recordingIndicator;
         [SerializeField] private Image successPanel;
         [SerializeField] private CanvasGroup successPanelGroup;
         [SerializeField] private RectTransform successPanelRect;
+        [SerializeField] private GameObject categoryScreen;
+        [SerializeField] private TextMeshProUGUI selectedCategoryLabel;
+        [SerializeField] private TextMeshProUGUI selectedCategoryDescriptionLabel;
 
         [Header("Result Motion")]
         [SerializeField, Min(0f)] private float resultEnterDuration = 0.22f;
@@ -49,6 +57,9 @@ namespace FluentEcho.Views
         public event Action ListenPressed;
         public event Action PreviousPressed;
         public event Action NextPressed;
+        public event Action CategoriesPressed;
+        public event Action<int> CategorySelected;
+        public event Action<int> LessonSelected;
         public event Action<bool> MockModeChanged;
 
         public void ConfigureWordChipPrefab(WordChipView prefab)
@@ -75,6 +86,8 @@ namespace FluentEcho.Views
 
         private void Awake()
         {
+            EnsureCategoriesButton();
+            NormalizeTopNavigationLayout();
             micButton.onClick.AddListener(() => MicPressed?.Invoke());
             demoButton.onClick.AddListener(() => DemoPressed?.Invoke());
             retryButton.onClick.AddListener(() => RetryPressed?.Invoke());
@@ -85,6 +98,9 @@ namespace FluentEcho.Views
             if (nextButton != null)
                 nextButton.onClick.AddListener(() => NextPressed?.Invoke());
 
+            if (categoriesButton != null)
+                categoriesButton.onClick.AddListener(() => CategoriesPressed?.Invoke());
+
             if (resultCloseButton != null)
                 resultCloseButton.onClick.AddListener(HideResultPanel);
 
@@ -94,8 +110,122 @@ namespace FluentEcho.Views
             if (resultTryAgainButton != null)
                 resultTryAgainButton.onClick.AddListener(() => RetryPressed?.Invoke());
 
-            mockModeToggle.onValueChanged.AddListener(value => MockModeChanged?.Invoke(value));
+            if (wordsCategoryButton != null)
+                wordsCategoryButton.onClick.AddListener(() => CategorySelected?.Invoke(0));
+
+            if (shortSentencesCategoryButton != null)
+                shortSentencesCategoryButton.onClick.AddListener(() => CategorySelected?.Invoke(1));
+
+            if (challengeCategoryButton != null)
+                challengeCategoryButton.onClick.AddListener(() => CategorySelected?.Invoke(2));
+
+            if (lessonDropdown != null)
+                lessonDropdown.onValueChanged.AddListener(index => LessonSelected?.Invoke(index));
+
+            if (mockModeToggle != null)
+                mockModeToggle.onValueChanged.AddListener(value => MockModeChanged?.Invoke(value));
             EnsureResultAnimationReferences();
+        }
+
+        private void EnsureCategoriesButton()
+        {
+            if (categoriesButton != null)
+            {
+                ConfigureCategoriesButton(categoriesButton);
+                return;
+            }
+
+            Transform existing = transform.Find("Category Back Button");
+            if (existing != null)
+            {
+                categoriesButton = existing.GetComponent<Button>();
+                if (categoriesButton != null)
+                {
+                    ConfigureCategoriesButton(categoriesButton);
+                    return;
+                }
+            }
+
+            GameObject buttonObject = new("Category Back Button", typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(transform, false);
+            RectTransform rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.06f, 0.86f);
+            rect.anchorMax = new Vector2(0.24f, 0.93f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            Image background = buttonObject.GetComponent<Image>();
+            background.color = new Color(0.95f, 0.93f, 0.87f, 1f);
+
+            categoriesButton = buttonObject.GetComponent<Button>();
+            ColorBlock colors = categoriesButton.colors;
+            colors.highlightedColor = Color.Lerp(background.color, Color.white, 0.16f);
+            colors.pressedColor = Color.Lerp(background.color, Color.black, 0.16f);
+            colors.selectedColor = colors.highlightedColor;
+            categoriesButton.colors = colors;
+
+            GameObject labelObject = new("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            labelObject.transform.SetParent(buttonObject.transform, false);
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0.08f, 0.05f);
+            labelRect.anchorMax = new Vector2(0.94f, 0.95f);
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+            label.text = "CATEGORIES";
+            label.fontSize = 14;
+            label.fontStyle = FontStyles.Bold;
+            label.color = new Color(0.06f, 0.13f, 0.15f, 1f);
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+            ConfigureCategoriesButton(categoriesButton);
+        }
+
+        private static void ConfigureCategoriesButton(Button button)
+        {
+            if (button == null)
+                return;
+
+            RectTransform rect = button.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchorMin = new Vector2(0.06f, 0.86f);
+                rect.anchorMax = new Vector2(0.24f, 0.93f);
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+            }
+
+            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.text = "CATEGORIES";
+                label.fontSize = 14;
+                label.alignment = TextAlignmentOptions.Center;
+            }
+        }
+
+        private void NormalizeTopNavigationLayout()
+        {
+            SetAnchors(categoriesButton != null ? categoriesButton.GetComponent<RectTransform>() : null,
+                new Vector2(0.06f, 0.86f), new Vector2(0.24f, 0.93f));
+            SetAnchors(previousButton != null ? previousButton.GetComponent<RectTransform>() : null,
+                new Vector2(0.25f, 0.86f), new Vector2(0.34f, 0.93f));
+            SetAnchors(lessonDropdown != null ? lessonDropdown.GetComponent<RectTransform>() : null,
+                new Vector2(0.35f, 0.86f), new Vector2(0.78f, 0.93f));
+            SetAnchors(nextButton != null ? nextButton.GetComponent<RectTransform>() : null,
+                new Vector2(0.80f, 0.86f), new Vector2(0.94f, 0.93f));
+        }
+
+        private static void SetAnchors(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax)
+        {
+            if (rect == null)
+                return;
+
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
 
         public void Build(string prompt, string[] targetWords)
@@ -141,11 +271,50 @@ namespace FluentEcho.Views
             }
         }
 
+        public void SetLessonOptions(string[] lessonNames, int selectedIndex)
+        {
+            if (lessonDropdown == null)
+                return;
+
+            lessonDropdown.options.Clear();
+            if (lessonNames != null)
+            {
+                for (int i = 0; i < lessonNames.Length; i++)
+                    lessonDropdown.options.Add(new Dropdown.OptionData(lessonNames[i]));
+            }
+
+            int safeIndex = lessonDropdown.options.Count == 0
+                ? 0
+                : Mathf.Clamp(selectedIndex, 0, lessonDropdown.options.Count - 1);
+            lessonDropdown.SetValueWithoutNotify(safeIndex);
+            if (lessonDropdown.captionText != null && lessonDropdown.options.Count > 0)
+                lessonDropdown.captionText.text = lessonDropdown.options[safeIndex].text;
+        }
+
+        public void SetCategory(string categoryName, string categoryDescription)
+        {
+            if (selectedCategoryLabel != null)
+                selectedCategoryLabel.text = string.IsNullOrWhiteSpace(categoryName)
+                    ? "Practice Menu"
+                    : categoryName;
+
+            if (selectedCategoryDescriptionLabel != null)
+                selectedCategoryDescriptionLabel.text = string.IsNullOrWhiteSpace(categoryDescription)
+                    ? "Pick a lesson set and practice at your own pace."
+                    : categoryDescription;
+        }
+
+        public void SetCategoryScreenVisible(bool visible)
+        {
+            if (categoryScreen != null)
+                categoryScreen.SetActive(visible);
+        }
+
         public void SetProgressDetails(string details)
         {
             if (progressDetailsLabel != null)
                 progressDetailsLabel.text = string.IsNullOrWhiteSpace(details)
-                    ? "Recent attempts will appear here."
+                    ? "Your attempt history will appear after your first recording."
                     : details;
         }
 
@@ -170,14 +339,14 @@ namespace FluentEcho.Views
             }
 
             if (status.StartsWith("Whisper ready", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Ready when you are.";
+                statusLabel.text = "Ready to practice.";
             else if (status.StartsWith("Loading", StringComparison.OrdinalIgnoreCase)
                      || status.StartsWith("Warming", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Preparing local model...";
+                statusLabel.text = "Preparing speech model...";
             else if (status.StartsWith("Analyzing", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Analyzing your speech...";
+                statusLabel.text = "Checking your pronunciation...";
             else if (status.StartsWith("Excellent", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Answer accepted.";
+                statusLabel.text = "Great work. Answer accepted.";
             else
                 statusLabel.text = status;
         }
@@ -185,7 +354,7 @@ namespace FluentEcho.Views
         public void SetTranscript(string transcript)
         {
             transcriptLabel.text = string.IsNullOrWhiteSpace(transcript)
-                ? "Your recognized sentence will appear here."
+                ? "Your transcript will appear here."
                 : $"\"{transcript.Trim()}\"";
         }
 
@@ -198,7 +367,7 @@ namespace FluentEcho.Views
         public void SetListening(bool listening)
         {
             recordingIndicator.gameObject.SetActive(listening);
-            micButtonLabel.text = listening ? "STOP & CHECK" : "START SPEAKING";
+            micButtonLabel.text = listening ? "CHECK ANSWER" : "START SPEAKING";
         }
 
         public void SetSuccess(bool success)
@@ -209,7 +378,9 @@ namespace FluentEcho.Views
 
         public void SetMode(bool mockMode)
         {
-            mockModeToggle.SetIsOnWithoutNotify(mockMode);
+            if (mockModeToggle != null)
+                mockModeToggle.SetIsOnWithoutNotify(mockMode);
+
             modeLabel.text = mockMode ? "DEMO ENGINE" : "LOCAL WHISPER";
         }
 

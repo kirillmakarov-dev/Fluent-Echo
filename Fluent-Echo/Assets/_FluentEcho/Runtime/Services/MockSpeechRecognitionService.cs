@@ -33,7 +33,7 @@ namespace FluentEcho.Services
 
         public void Prepare()
         {
-            StatusChanged?.Invoke("Demo mode is ready. Press the microphone to simulate a correct answer.");
+            StatusChanged?.Invoke("Demo mode is ready. Press Start Speaking to preview a correct answer.");
         }
 
         public void StartListening()

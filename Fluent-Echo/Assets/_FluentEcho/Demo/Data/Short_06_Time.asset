@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4281b6398ed362f438e706340d1e917c, type: 3}
+  m_Name: What Time Is It
+  m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Data.SpeechExerciseSO
+  prompt: 'Ask: What time is it?'
+  targetWords:
+  - what
+  - time
+  - is
+  - it
+  acceptedPhrases: what time is it|could you tell me the time
+  progressKey: short_06_what_time_is_it
+  requireWordOrder: 1
+  allowFuzzyMatch: 1
+  silenceTimeoutSeconds: 2.5
+  referenceAudio: {fileID: 0}

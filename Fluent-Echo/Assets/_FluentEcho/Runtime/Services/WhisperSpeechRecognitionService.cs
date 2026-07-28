@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -21,10 +22,13 @@ namespace FluentEcho.Services
         [SerializeField] private float legacyStreamingStepSeconds = 1.25f;
         [SerializeField] private float legacyMicrophoneChunkSeconds = 0.25f;
         [SerializeField] private float legacyWarmupSeconds = 1.25f;
+        [SerializeField] private float stopWatchdogSeconds = 6f;
 
         private WhisperStream stream;
         private Task prepareTask;
+        private Coroutine stopWatchdog;
         private bool suppressStopEvent;
+        private bool finishRequested;
         private bool warmupCompleted;
         private float lastPrepareSeconds;
         private float lastWarmupSeconds;
@@ -115,6 +119,7 @@ namespace FluentEcho.Services
                 }
 
                 suppressStopEvent = false;
+                finishRequested = false;
                 stream.OnResultUpdated -= HandleTranscript;
                 stream.OnResultUpdated += HandleTranscript;
                 stream.OnStreamFinished -= HandleStreamFinished;
@@ -201,14 +206,14 @@ namespace FluentEcho.Services
             if (IsPrepareStale(generation))
                 return;
 
-            StatusChanged?.Invoke($"Loading speech engine ({profileLabel})...");
+            StatusChanged?.Invoke($"Loading speech model ({profileLabel})...");
 
             string modelPath = ResolveModelPath();
             string fullModelPath = ResolveFullModelPath(modelPath);
             if (!File.Exists(fullModelPath))
             {
                 RaiseError($"Whisper model is missing: {fullModelPath}");
-                StatusChanged?.Invoke("Whisper model is missing.");
+                StatusChanged?.Invoke("Speech model is missing.");
                 return;
             }
 
@@ -224,7 +229,7 @@ namespace FluentEcho.Services
                 catch (Exception exception)
                 {
                     RaiseError($"Whisper model failed to load: {exception.Message}");
-                    StatusChanged?.Invoke("Whisper model failed to load.");
+                    StatusChanged?.Invoke("Speech model failed to load.");
                     return;
                 }
             }
@@ -235,7 +240,7 @@ namespace FluentEcho.Services
             if (!whisperManager.IsLoaded)
             {
                 RaiseError($"Whisper could not load model: {fullModelPath}");
-                StatusChanged?.Invoke("Whisper could not load the selected model.");
+                StatusChanged?.Invoke("The selected speech model could not load.");
                 return;
             }
 
@@ -257,7 +262,7 @@ namespace FluentEcho.Services
             if (stream == null)
             {
                 RaiseError("Whisper stream could not be created.");
-                StatusChanged?.Invoke("Whisper stream could not be created.");
+                StatusChanged?.Invoke("Speech analysis could not start.");
                 return;
             }
 
@@ -357,7 +362,7 @@ namespace FluentEcho.Services
             if (whisperManager == null || !whisperManager.IsLoaded)
                 return false;
 
-            StatusChanged?.Invoke($"Warming up Whisper ({profileLabel})...");
+            StatusChanged?.Invoke($"Warming up speech model ({profileLabel})...");
             Stopwatch warmupStopwatch = Stopwatch.StartNew();
 
             int sampleRate = microphone != null ? microphone.frequency : 16000;
@@ -377,7 +382,7 @@ namespace FluentEcho.Services
             catch (Exception exception)
             {
                 RaiseError($"Whisper warm-up failed: {exception.Message}");
-                StatusChanged?.Invoke("Whisper warm-up failed.");
+                StatusChanged?.Invoke("Speech warm-up failed.");
                 return false;
             }
             finally
@@ -418,8 +423,9 @@ namespace FluentEcho.Services
 
         private void HandleTranscript(string transcript)
         {
-            if (!string.IsNullOrWhiteSpace(transcript))
-                TranscriptUpdated?.Invoke(transcript);
+            string sanitizedTranscript = SanitizeTranscript(transcript);
+            if (!string.IsNullOrWhiteSpace(sanitizedTranscript))
+                TranscriptUpdated?.Invoke(sanitizedTranscript);
         }
 
         private void HandleRecordStop(AudioChunk chunk)
@@ -428,39 +434,48 @@ namespace FluentEcho.Services
                 return;
 
             AnalysisStarted?.Invoke();
-            stream.OnStreamFinished -= HandleStreamFinished;
-            stream.OnStreamFinished += HandleStreamFinished;
+            EnsureStreamFinishedSubscription();
+            finishRequested = true;
+            StartStopWatchdog();
         }
 
         private void RequestFinish()
         {
+            finishRequested = true;
+            StartStopWatchdog();
+
             if (stream == null)
             {
                 CompleteStop();
                 return;
             }
 
-            stream.OnStreamFinished -= HandleStreamFinished;
-            stream.OnStreamFinished += HandleStreamFinished;
+            EnsureStreamFinishedSubscription();
 
             if (microphone != null && microphone.IsRecording)
                 microphone.StopRecord();
             else
-                stream.StopStream();
+                StopStreamSafely();
         }
 
         private void HandleStreamFinished(string finalTranscript)
         {
-            if (!string.IsNullOrWhiteSpace(finalTranscript))
-                TranscriptUpdated?.Invoke(finalTranscript);
+            string sanitizedTranscript = SanitizeTranscript(finalTranscript);
+            if (!string.IsNullOrWhiteSpace(sanitizedTranscript))
+                TranscriptUpdated?.Invoke(sanitizedTranscript);
 
             CompleteStop();
         }
 
         private void CompleteStop()
         {
+            if (!IsListening && !finishRequested)
+                return;
+
+            StopStopWatchdog();
             Unsubscribe();
             IsListening = false;
+            finishRequested = false;
 
             if (suppressStopEvent)
             {
@@ -478,6 +493,75 @@ namespace FluentEcho.Services
         }
 
         private bool IsPrepareStale(int generation) => generation != prepareGeneration;
+
+        private void EnsureStreamFinishedSubscription()
+        {
+            if (stream == null)
+                return;
+
+            stream.OnStreamFinished -= HandleStreamFinished;
+            stream.OnStreamFinished += HandleStreamFinished;
+        }
+
+        private void StopStreamSafely()
+        {
+            if (stream == null)
+                return;
+
+            try
+            {
+                stream.StopStream();
+            }
+            catch (Exception exception)
+            {
+                RaiseError($"Whisper stream failed to stop: {exception.Message}");
+                CompleteStop();
+            }
+        }
+
+        private void StartStopWatchdog()
+        {
+            if (stopWatchdog != null || !isActiveAndEnabled)
+                return;
+
+            stopWatchdog = StartCoroutine(CompleteStopIfStreamStalls());
+        }
+
+        private void StopStopWatchdog()
+        {
+            if (stopWatchdog == null)
+                return;
+
+            StopCoroutine(stopWatchdog);
+            stopWatchdog = null;
+        }
+
+        private IEnumerator CompleteStopIfStreamStalls()
+        {
+            yield return new WaitForSeconds(Mathf.Max(1f, stopWatchdogSeconds));
+            stopWatchdog = null;
+
+            if (!IsListening)
+                yield break;
+
+            StatusChanged?.Invoke("No clear speech was recognized. You can try again.");
+            CompleteStop();
+        }
+
+        private static string SanitizeTranscript(string transcript)
+        {
+            if (string.IsNullOrWhiteSpace(transcript))
+                return string.Empty;
+
+            string sanitized = transcript
+                .Replace("[BLANK_AUDIO]", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("(BLANK_AUDIO)", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Trim();
+
+            return string.Equals(sanitized, "blank audio", StringComparison.OrdinalIgnoreCase)
+                ? string.Empty
+                : sanitized;
+        }
 
         private void Unsubscribe()
         {

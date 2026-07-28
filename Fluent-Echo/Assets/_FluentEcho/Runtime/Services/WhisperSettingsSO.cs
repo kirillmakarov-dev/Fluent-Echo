@@ -217,13 +217,13 @@ namespace FluentEcho.Domain
         public string GetSummaryText()
         {
             if (totalWords <= 0)
-                return $"PROGRESS | {attempts} attempts";
+                return $"Progress: {attempts} attempts";
 
             string completion = $"{Math.Min(bestMatchedWords, totalWords)}/{totalWords}";
             string score = bestPronunciationScore > 0 ? $" | score {bestPronunciationScore}/100" : string.Empty;
             string attemptsText = attempts == 0 ? "no attempts yet" : $"{attempts} attempts";
             string successText = successfulAttempts > 0 ? $" | cleared {successfulAttempts}" : string.Empty;
-            return $"PROGRESS | best {completion}{score} | {attemptsText}{successText}";
+            return $"Progress: best {completion}{score} | {attemptsText}{successText}";
         }
 
         public string GetHistoryText(int maxEntries = 3)
@@ -251,9 +251,9 @@ namespace FluentEcho.Domain
                     : record.PronunciationScore > 0
                         ? $"{record.PronunciationScore}/100"
                         : $"{record.MatchedWords}/{Math.Max(1, record.ExpectedWords)}";
-                string status = record.IsComplete ? "cleared" : "retry";
+                string status = record.IsComplete ? "cleared" : "needs retry";
                 string transcriptPreview = Truncate(record.Transcript, 34);
-                lines.Add($"* {prefix} | {status} | {transcriptPreview}");
+                lines.Add($"- {prefix} | {status} | {transcriptPreview}");
             }
 
             return string.Join("\n", lines);
@@ -312,14 +312,14 @@ namespace FluentEcho.Domain
                 return string.Empty;
 
             string bestText = bestPronunciationScore > 0
-                ? $"best {bestPronunciationScore}/100 {bestPronunciationBand}".Trim()
-                : $"best {bestMatchedWords}/{Math.Max(1, totalWords)}";
+                ? $"Best score: {bestPronunciationScore}/100 {bestPronunciationBand}".Trim()
+                : $"Best match: {bestMatchedWords}/{Math.Max(1, totalWords)}";
 
             string lastText = !string.IsNullOrWhiteSpace(lastPronunciationSummary)
-                ? $"last {lastPronunciationSummary}"
+                ? $"Last attempt: {lastPronunciationSummary}"
                 : lastPronunciationScore > 0
-                    ? $"last {lastPronunciationScore}/100 {lastPronunciationBand}".Trim()
-                    : (string.IsNullOrWhiteSpace(lastTranscript) ? "last attempt pending" : $"last {lastTranscript}");
+                    ? $"Last attempt: {lastPronunciationScore}/100 {lastPronunciationBand}".Trim()
+                    : (string.IsNullOrWhiteSpace(lastTranscript) ? "Last attempt pending" : $"Last attempt: {lastTranscript}");
 
             return $"{bestText} | {lastText}";
         }

@@ -82,39 +82,4 @@ namespace FluentEcho.Data
         }
     }
 
-    [CreateAssetMenu(
-        fileName = "SpeechExerciseCatalog",
-        menuName = "Fluent Echo/Speech Exercise Catalog")]
-    public sealed class SpeechExerciseCatalogSO : ScriptableObject
-    {
-        [SerializeField] private SpeechExerciseSO[] exercises = Array.Empty<SpeechExerciseSO>();
-
-        public int Count => exercises == null ? 0 : exercises.Length;
-
-        public SpeechExerciseSO GetExercise(int index)
-        {
-            if (Count == 0)
-                return null;
-
-            index = Mathf.Clamp(index, 0, Count - 1);
-            return exercises[index];
-        }
-
-        public string[] GetDisplayNames()
-        {
-            if (Count == 0)
-                return Array.Empty<string>();
-
-            string[] names = new string[Count];
-            for (int i = 0; i < Count; i++)
-            {
-                SpeechExerciseSO exercise = exercises[i];
-                names[i] = exercise != null && !string.IsNullOrWhiteSpace(exercise.name)
-                    ? exercise.name
-                    : $"Lesson {i + 1}";
-            }
-
-            return names;
-        }
-    }
 }

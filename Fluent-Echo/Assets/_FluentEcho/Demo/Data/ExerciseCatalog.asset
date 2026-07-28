@@ -9,15 +9,73 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 96d2e3d9f902d144398045642136fb33, type: 3}
   m_Name: ExerciseCatalog
-  m_EditorClassIdentifier: FluentEcho.Runtime:FluentEcho.Data:SpeechExerciseCatalogSO
+  m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Data.SpeechExerciseCatalogSO
   exercises:
-  - {fileID: 11400000, guid: 7c19b505db71e514b8a842485f9f7b9c, type: 2}
-  - {fileID: 11400000, guid: cd5eaed755fa427e90677ec06778e63f, type: 2}
-  - {fileID: 11400000, guid: 7ac4b095ad8440d8967524499e28d8ac, type: 2}
-  - {fileID: 11400000, guid: 2a1fdf7c54014f5f83018a52ab75bb3f, type: 2}
-  - {fileID: 11400000, guid: 4d6be2e59e8a42e49bceacd37f7e3c22, type: 2}
-  - {fileID: 11400000, guid: a1b2c3d4e5f6478899aabbccddeeff01, type: 2}
-  - {fileID: 11400000, guid: a1b2c3d4e5f6478899aabbccddeeff02, type: 2}
-  - {fileID: 11400000, guid: a1b2c3d4e5f6478899aabbccddeeff03, type: 2}
+  - {fileID: 11400000, guid: 17133caebd502f142bf91d412a51cdf7, type: 2}
+  - {fileID: 11400000, guid: 33591935837ffd349a075126c0a85be2, type: 2}
+  - {fileID: 11400000, guid: 03c189dfdae54f740b6e15c6bc5ae5bf, type: 2}
+  - {fileID: 11400000, guid: 43a86cf273b5eb4498e895869f09c1b2, type: 2}
+  - {fileID: 11400000, guid: 1c3ecb17fa6b8bd498c0a82114659db7, type: 2}
+  - {fileID: 11400000, guid: 5b45d28d76a522e4b9357692cc045ad6, type: 2}
+  - {fileID: 11400000, guid: 4c14b14539b3e9947951a9f6675b7141, type: 2}
+  - {fileID: 11400000, guid: de32471ef7347fa4d8bfb6ab71a5f7cd, type: 2}
+  - {fileID: 11400000, guid: 059bb9e72177bfe4483b68d2ae85cf94, type: 2}
+  - {fileID: 11400000, guid: 0554f8135d89ba645b96157d7007ca4b, type: 2}
+  - {fileID: 11400000, guid: 7993f838caae3d34da13555de3b49b10, type: 2}
+  - {fileID: 11400000, guid: da4797da35d448c4dbe902e6d34a3bc6, type: 2}
+  - {fileID: 11400000, guid: 6f8d8ca404e77004687b2506c6d8d6b3, type: 2}
+  - {fileID: 11400000, guid: 82d9a07c7102e2a4b867c5092913ab9e, type: 2}
+  - {fileID: 11400000, guid: f5675b4c61279294fa35a9ff9925fa65, type: 2}
+  - {fileID: 11400000, guid: 01dc38aca68d36f4d8998833c10499bf, type: 2}
+  - {fileID: 11400000, guid: cf0ee575a6522ed43af3e4edc4bbd30b, type: 2}
+  - {fileID: 11400000, guid: 303995abbfd113c4588265a931b01bdd, type: 2}
+  - {fileID: 11400000, guid: a15a3f8caaf60b44daf00c7103320b3d, type: 2}
+  - {fileID: 11400000, guid: 89319bd2ebd2c004ba72b137b4119640, type: 2}
+  - {fileID: 11400000, guid: 148b57fc604509a40925b549dee566da, type: 2}
+  - {fileID: 11400000, guid: c0a300827ff561940b4e6e566cac4ab2, type: 2}
+  - {fileID: 11400000, guid: e1d96f1ffd9ee92489ddc88c1a1ff5a8, type: 2}
+  - {fileID: 11400000, guid: 9be806bd90ea61d4793c3eb24527efc0, type: 2}
+  - {fileID: 11400000, guid: 1140179728bde6b47ac3d520a4691a22, type: 2}
+  - {fileID: 11400000, guid: 51e930af859e1aa40a3dd567140d4c77, type: 2}
+  - {fileID: 11400000, guid: 090e982091a03f64ead9fb9a95bda893, type: 2}
+  - {fileID: 11400000, guid: 23e989288d0131d4e89414246d3b88f6, type: 2}
+  categories:
+  - displayName: Words
+    description: Start with focused single-word practice.
+    exercises:
+    - {fileID: 11400000, guid: 17133caebd502f142bf91d412a51cdf7, type: 2}
+    - {fileID: 11400000, guid: 33591935837ffd349a075126c0a85be2, type: 2}
+    - {fileID: 11400000, guid: 03c189dfdae54f740b6e15c6bc5ae5bf, type: 2}
+    - {fileID: 11400000, guid: 43a86cf273b5eb4498e895869f09c1b2, type: 2}
+    - {fileID: 11400000, guid: 1c3ecb17fa6b8bd498c0a82114659db7, type: 2}
+    - {fileID: 11400000, guid: 5b45d28d76a522e4b9357692cc045ad6, type: 2}
+    - {fileID: 11400000, guid: 4c14b14539b3e9947951a9f6675b7141, type: 2}
+    - {fileID: 11400000, guid: de32471ef7347fa4d8bfb6ab71a5f7cd, type: 2}
+    - {fileID: 11400000, guid: 059bb9e72177bfe4483b68d2ae85cf94, type: 2}
+    - {fileID: 11400000, guid: 0554f8135d89ba645b96157d7007ca4b, type: 2}
+  - displayName: Short Sentences
+    description: Build confidence with short, clear lines.
+    exercises:
+    - {fileID: 11400000, guid: 7993f838caae3d34da13555de3b49b10, type: 2}
+    - {fileID: 11400000, guid: da4797da35d448c4dbe902e6d34a3bc6, type: 2}
+    - {fileID: 11400000, guid: 6f8d8ca404e77004687b2506c6d8d6b3, type: 2}
+    - {fileID: 11400000, guid: 82d9a07c7102e2a4b867c5092913ab9e, type: 2}
+    - {fileID: 11400000, guid: f5675b4c61279294fa35a9ff9925fa65, type: 2}
+    - {fileID: 11400000, guid: 01dc38aca68d36f4d8998833c10499bf, type: 2}
+    - {fileID: 11400000, guid: cf0ee575a6522ed43af3e4edc4bbd30b, type: 2}
+    - {fileID: 11400000, guid: 303995abbfd113c4588265a931b01bdd, type: 2}
+    - {fileID: 11400000, guid: a15a3f8caaf60b44daf00c7103320b3d, type: 2}
+    - {fileID: 11400000, guid: 89319bd2ebd2c004ba72b137b4119640, type: 2}
+  - displayName: Challenge Sentences
+    description: Practice longer lines with smoother rhythm.
+    exercises:
+    - {fileID: 11400000, guid: 148b57fc604509a40925b549dee566da, type: 2}
+    - {fileID: 11400000, guid: c0a300827ff561940b4e6e566cac4ab2, type: 2}
+    - {fileID: 11400000, guid: e1d96f1ffd9ee92489ddc88c1a1ff5a8, type: 2}
+    - {fileID: 11400000, guid: 9be806bd90ea61d4793c3eb24527efc0, type: 2}
+    - {fileID: 11400000, guid: 1140179728bde6b47ac3d520a4691a22, type: 2}
+    - {fileID: 11400000, guid: 51e930af859e1aa40a3dd567140d4c77, type: 2}
+    - {fileID: 11400000, guid: 090e982091a03f64ead9fb9a95bda893, type: 2}
+    - {fileID: 11400000, guid: 23e989288d0131d4e89414246d3b88f6, type: 2}

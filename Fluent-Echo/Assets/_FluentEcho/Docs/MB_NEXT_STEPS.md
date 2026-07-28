@@ -14,6 +14,12 @@ This brief captures the practical path from the current prototype to a fuller po
 
 ## Recommended next steps
 
+### Current sprint roadmap
+
+Use `SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md` as the current implementation plan.
+It splits the next work into onboarding/error states, honest local pronunciation estimate, and portfolio case-study polish.
+The plan intentionally avoids paid APIs and keeps the scoring pipeline local and transparent.
+
 ### 1. Harden the transcription pipeline
 
 - Add visible input-level feedback so the user knows the microphone is active.

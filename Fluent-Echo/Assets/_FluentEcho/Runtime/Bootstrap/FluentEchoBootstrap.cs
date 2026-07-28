@@ -28,6 +28,7 @@ namespace FluentEcho.Bootstrap
         [SerializeField] private MockSpeechRecognitionService mockService;
         [SerializeField] private Dropdown exerciseDropdown;
         [SerializeField] private Dropdown whisperProfileDropdown;
+        [SerializeField] private string selectedCategoryPrefsKey = "FluentEcho.SelectedCategoryIndex";
         [SerializeField] private string selectedExercisePrefsKey = "FluentEcho.SelectedExerciseIndex";
         [SerializeField] private bool repairSceneUiOnStart;
         [SerializeField] private bool useMockByDefault;
@@ -98,7 +99,10 @@ namespace FluentEcho.Bootstrap
                 whisperService,
                 mockService,
                 useMockByDefault,
-                PlayReference);
+                PlayReference,
+                ResolveSelectedCategoryIndex(),
+                ResolveSelectedExerciseIndex(),
+                PersistPracticeSelection);
             presenter.Initialize();
         }
 
@@ -371,12 +375,6 @@ namespace FluentEcho.Bootstrap
 
             dropdown.options = options;
             dropdown.onValueChanged.RemoveAllListeners();
-            dropdown.onValueChanged.AddListener(index =>
-            {
-                PlayerPrefs.SetInt(selectedExercisePrefsKey, index);
-                PlayerPrefs.Save();
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            });
 
             dropdown.SetValueWithoutNotify(ResolveSelectedExerciseIndex());
             dropdown.gameObject.SetActive(true);
@@ -491,7 +489,7 @@ namespace FluentEcho.Bootstrap
                 label = CreateText(
                     view.transform,
                     "Progress",
-                    "PROGRESS | no attempts yet",
+                    "Progress: no attempts yet",
                     14,
                     FontStyles.Bold,
                     new Color(0.89f, 0.37f, 0.3f, 1f),
@@ -515,7 +513,7 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI label = MoveOrCreateText(
                 resultPanel,
                 "Progress Details",
-                "Recent attempts will appear here.",
+                "Your attempt history will appear after your first recording.",
                 11,
                 FontStyles.Normal,
                 new Color(0.20f, 0.20f, 0.20f, 1f),
@@ -556,7 +554,7 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI feedbackLabel = MoveOrCreateText(
                 resultPanel,
                 "Pronunciation Feedback",
-                "Score feedback will appear here.",
+                "Your coach tip will appear here.",
                 12,
                 FontStyles.Italic,
                 new Color(0.21f, 0.21f, 0.21f, 1f),
@@ -573,18 +571,41 @@ namespace FluentEcho.Bootstrap
 
         private SpeechExerciseSO ResolveSelectedExercise()
         {
+            int categoryIndex = ResolveSelectedCategoryIndex();
             int index = ResolveSelectedExerciseIndex();
-            SpeechExerciseSO selected = exerciseCatalog != null ? exerciseCatalog.GetExercise(index) : null;
+            SpeechExerciseSO selected = exerciseCatalog != null
+                ? exerciseCatalog.GetCategoryExercise(categoryIndex, index)
+                : null;
             return selected != null ? selected : exercise;
+        }
+
+        private int ResolveSelectedCategoryIndex()
+        {
+            if (exerciseCatalog == null || exerciseCatalog.CategoryCount == 0)
+                return 0;
+
+            int index = PlayerPrefs.GetInt(selectedCategoryPrefsKey, 0);
+            return Mathf.Clamp(index, 0, exerciseCatalog.CategoryCount - 1);
         }
 
         private int ResolveSelectedExerciseIndex()
         {
-            if (exerciseCatalog == null || exerciseCatalog.Count == 0)
+            if (exerciseCatalog == null)
                 return 0;
 
+            int exerciseCount = exerciseCatalog.GetCategoryExerciseCount(ResolveSelectedCategoryIndex());
+            if (exerciseCount == 0)
+                exerciseCount = exerciseCatalog.Count;
+
             int index = PlayerPrefs.GetInt(selectedExercisePrefsKey, 0);
-            return Mathf.Clamp(index, 0, exerciseCatalog.Count - 1);
+            return Mathf.Clamp(index, 0, Mathf.Max(0, exerciseCount - 1));
+        }
+
+        private void PersistPracticeSelection(int categoryIndex, int exerciseIndex)
+        {
+            PlayerPrefs.SetInt(selectedCategoryPrefsKey, categoryIndex);
+            PlayerPrefs.SetInt(selectedExercisePrefsKey, exerciseIndex);
+            PlayerPrefs.Save();
         }
 
         private static Dropdown CreateDropdown(

@@ -61,6 +61,7 @@
     <Compile Include="Assets\_FluentEcho\Runtime\Services\ISpeechRecognitionService.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Domain\SpeechAnswerMatcher.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\WhisperSpeechRecognitionService.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Data\SpeechExerciseCatalogSO.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\_FluentEcho\Runtime\FluentEcho.Runtime.asmdef" />

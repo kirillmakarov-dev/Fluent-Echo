@@ -20,6 +20,7 @@ namespace FluentEcho.Editor
         private const string Root = "Assets/_FluentEcho";
         private const string ScenePath = Root + "/Demo/Scenes/FluentEchoPrototype.unity";
         private const string ExerciseCatalogPath = Root + "/Demo/Data/ExerciseCatalog.asset";
+        private const string ExerciseDataPath = Root + "/Demo/Data";
         private const string FirstExercisePath = Root + "/Demo/Data/FirstLesson.asset";
         private const string SecondExercisePath = Root + "/Demo/Data/SecondLesson.asset";
         private const string ThirdExercisePath = Root + "/Demo/Data/ThirdLesson.asset";
@@ -62,6 +63,99 @@ namespace FluentEcho.Editor
         private static readonly Color ResultFill = Hex("F8F3E7");
         private static readonly Color ResultBorder = new(0.06f, 0.14f, 0.16f, 0.22f);
         private static readonly Color ResultAccent = new(0.27f, 0.87f, 0.68f, 0.96f);
+
+        private readonly struct ExerciseSpec
+        {
+            public ExerciseSpec(
+                string fileName,
+                string displayName,
+                string prompt,
+                string acceptedPhrases,
+                string progressKey,
+                bool requireWordOrder,
+                params string[] targetWords)
+            {
+                FileName = fileName;
+                DisplayName = displayName;
+                Prompt = prompt;
+                AcceptedPhrases = acceptedPhrases;
+                ProgressKey = progressKey;
+                RequireWordOrder = requireWordOrder;
+                TargetWords = targetWords;
+            }
+
+            public string FileName { get; }
+            public string DisplayName { get; }
+            public string Prompt { get; }
+            public string AcceptedPhrases { get; }
+            public string ProgressKey { get; }
+            public bool RequireWordOrder { get; }
+            public string[] TargetWords { get; }
+        }
+
+        private readonly struct CategorySpec
+        {
+            public CategorySpec(string displayName, string description, ExerciseSpec[] exercises)
+            {
+                DisplayName = displayName;
+                Description = description;
+                Exercises = exercises;
+            }
+
+            public string DisplayName { get; }
+            public string Description { get; }
+            public ExerciseSpec[] Exercises { get; }
+        }
+
+        private static readonly CategorySpec[] GuidedCategories =
+        {
+            new(
+                "Words",
+                "Start with focused single-word practice.",
+                new[]
+                {
+                    new ExerciseSpec("Words_01_Apple.asset", "Apple", "Say the word: Apple.", "apple", "words_01_apple", false, "apple"),
+                    new ExerciseSpec("Words_02_Window.asset", "Window", "Say the word: Window.", "window", "words_02_window", false, "window"),
+                    new ExerciseSpec("Words_03_Family.asset", "Family", "Say the word: Family.", "family", "words_03_family", false, "family"),
+                    new ExerciseSpec("Words_04_School.asset", "School", "Say the word: School.", "school", "words_04_school", false, "school"),
+                    new ExerciseSpec("Words_05_Water.asset", "Water", "Say the word: Water.", "water", "words_05_water", false, "water"),
+                    new ExerciseSpec("Words_06_Friend.asset", "Friend", "Say the word: Friend.", "friend", "words_06_friend", false, "friend"),
+                    new ExerciseSpec("Words_07_Morning.asset", "Morning", "Say the word: Morning.", "morning", "words_07_morning", false, "morning"),
+                    new ExerciseSpec("Words_08_Garden.asset", "Garden", "Say the word: Garden.", "garden", "words_08_garden", false, "garden"),
+                    new ExerciseSpec("Words_09_Question.asset", "Question", "Say the word: Question.", "question", "words_09_question", false, "question"),
+                    new ExerciseSpec("Words_10_Practice.asset", "Practice", "Say the word: Practice.", "practice", "words_10_practice", false, "practice")
+                }),
+            new(
+                "Short Sentences",
+                "Build confidence with short, clear lines.",
+                new[]
+                {
+                    new ExerciseSpec("Short_01_Dog.asset", "The Dog Is Big", "Say: The dog is big.", "the dog is big|the dog is large", "short_01_dog_is_big", true, "the", "dog", "is", "big|large"),
+                    new ExerciseSpec("Short_02_Cat.asset", "The Cat Is Small", "Say: The cat is small.", "the cat is small|the cat is little", "short_02_cat_is_small", true, "the", "cat", "is", "small|little"),
+                    new ExerciseSpec("Short_03_Book.asset", "I Like This Book", "Say: I like this book.", "i like this book|i like this one", "short_03_like_this_book", true, "i", "like", "this", "book|one"),
+                    new ExerciseSpec("Short_04_Apple.asset", "The Apple Is Red", "Say: The apple is red.", "the apple is red|the apple is bright red", "short_04_apple_is_red", true, "the", "apple", "is", "red|bright red"),
+                    new ExerciseSpec("Short_05_Ready.asset", "We Are Ready", "Say: We are ready to go.", "we are ready to go|we are all ready to go", "short_05_ready_to_go", true, "we", "are", "ready", "to", "go"),
+                    new ExerciseSpec("Short_06_Time.asset", "What Time Is It", "Ask: What time is it?", "what time is it|could you tell me the time", "short_06_what_time_is_it", true, "what", "time", "is", "it"),
+                    new ExerciseSpec("Short_07_Window.asset", "Open The Window", "Say: Please open the window.", "please open the window|open the window please", "short_07_open_window", true, "please", "open", "the", "window"),
+                    new ExerciseSpec("Short_08_Water.asset", "Need Water", "Say: I need a glass of water.", "i need a glass of water|could i have some water", "short_08_need_water", true, "i", "need", "a", "glass", "of", "water"),
+                    new ExerciseSpec("Short_09_School.asset", "I Walk To School", "Say: I walk to school.", "i walk to school|i go to school", "short_09_walk_to_school", true, "i", "walk|go", "to", "school"),
+                    new ExerciseSpec("Short_10_Friend.asset", "My Friend Is Here", "Say: My friend is here.", "my friend is here|my friend is there", "short_10_friend_is_here", true, "my", "friend", "is", "here|there")
+                }),
+            new(
+                "Challenge Sentences",
+                "Practice longer lines with smoother rhythm.",
+                new[]
+                {
+                    new ExerciseSpec("Challenge_01_Morning.asset", "Morning Tea", "Say: I usually drink tea before school.", "i usually drink tea before school|i usually have tea before school", "challenge_01_morning_tea", true, "i", "usually", "drink|have", "tea", "before", "school"),
+                    new ExerciseSpec("Challenge_02_Park.asset", "Going To The Park", "Say: My friend and I are going to the park after lunch.", "my friend and i are going to the park after lunch|my friend and i go to the park after lunch", "challenge_02_park_after_lunch", true, "my", "friend", "and", "i", "are", "going|go", "to", "the", "park", "after", "lunch"),
+                    new ExerciseSpec("Challenge_03_Window.asset", "Close The Window", "Say: Please close the window because it is cold outside.", "please close the window because it is cold outside|close the window because it is cold outside please", "challenge_03_close_window", true, "please", "close", "the", "window", "because", "it", "is", "cold", "outside"),
+                    new ExerciseSpec("Challenge_04_Homework.asset", "Homework First", "Say: I want to finish my homework before dinner.", "i want to finish my homework before dinner|i would like to finish my homework before dinner", "challenge_04_homework", true, "i", "want|would like", "to", "finish", "my", "homework", "before", "dinner"),
+                    new ExerciseSpec("Challenge_05_Question.asset", "Good Question", "Say: That is a good question, but I need more time.", "that is a good question but i need more time|that is a good question and i need more time", "challenge_05_good_question", true, "that", "is", "a", "good", "question", "but|and", "i", "need", "more", "time"),
+                    new ExerciseSpec("Challenge_06_Directions.asset", "Train Station", "Say: Could you show me the way to the train station?", "could you show me the way to the train station|can you show me the way to the train station", "challenge_06_train_station", true, "could|can", "you", "show", "me", "the", "way", "to", "the", "train", "station"),
+                    new ExerciseSpec("Challenge_07_Practice.asset", "Practice Every Day", "Say: I practice English every day to speak more clearly.", "i practice english every day to speak more clearly|i practise english every day to speak more clearly", "challenge_07_practice_every_day", true, "i", "practice|practise", "english", "every", "day", "to", "speak", "more", "clearly"),
+                    new ExerciseSpec("Challenge_08_Movie.asset", "Movie After Class", "Say: After class, we can watch a movie together.", "after class we can watch a movie together|after the class we can watch a movie together", "challenge_08_movie_after_class", true, "after", "class", "we", "can", "watch", "a", "movie", "together")
+                })
+        };
 
         [InitializeOnLoadMethod]
         private static void BuildOnFirstImport()
@@ -109,7 +203,7 @@ namespace FluentEcho.Editor
                 return;
             }
 
-            SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>(ExerciseCatalogPath);
+            SpeechExerciseCatalogSO catalog = CreateExerciseCatalog(out _);
             WhisperSettingsSO settings = AssetDatabase.LoadAssetAtPath<WhisperSettingsSO>(WhisperSettingsPath);
             RectTransform teacherCard = FindSceneRect(scene, "Teacher Card");
             RectTransform lessonCard = FindSceneRect(scene, "Lesson Card");
@@ -178,22 +272,40 @@ namespace FluentEcho.Editor
             settingsPanel.gameObject.SetActive(false);
 
             EnsureButton(canvasRoot, "Settings Toggle Button", "SETTINGS", new Vector2(0.83f, 0.90f), new Vector2(0.965f, 0.96f), SurfaceRaised, Cream);
+            RectTransform categoryScreen = EnsureCategoryScreen(
+                canvasRoot,
+                out Button wordsCategoryButton,
+                out Button shortSentencesCategoryButton,
+                out Button challengeCategoryButton);
 
             Dropdown lessonDropdown = FindSceneDropdown(scene, "Lesson Dropdown");
-            bool createdLessonDropdown = false;
             if (lessonDropdown == null)
             {
                 lessonDropdown = CreateDropdown(lessonCard, "Lesson Dropdown", new Vector2(0.17f, 0.86f), new Vector2(0.78f, 0.93f), "Describe the Dog");
-                createdLessonDropdown = true;
             }
 
             if (lessonDropdown.transform.parent != lessonCard)
                 lessonDropdown.transform.SetParent(lessonCard, false);
-            if (createdLessonDropdown)
-                SetAnchors(lessonDropdown.GetComponent<RectTransform>(), new Vector2(0.17f, 0.86f), new Vector2(0.78f, 0.93f));
-            SetDropdownOptions(lessonDropdown, catalog != null ? catalog.GetDisplayNames() : new[] { "Describe the Dog" });
+            SetAnchors(lessonDropdown.GetComponent<RectTransform>(), new Vector2(0.35f, 0.86f), new Vector2(0.78f, 0.93f));
+            SetDropdownOptions(lessonDropdown, catalog != null ? catalog.GetCategoryExerciseDisplayNames(0) : new[] { "Apple" });
             StyleDropdown(lessonDropdown, SurfaceRaised);
             lessonDropdown.gameObject.SetActive(true);
+
+            Button categoriesButton = EnsureButton(
+                lessonCard,
+                "Category Back Button",
+                "CATEGORIES",
+                new Vector2(0.06f, 0.86f),
+                new Vector2(0.24f, 0.93f),
+                Hex("F2ECDF"),
+                Ink);
+            EnsureIcon(categoriesButton.transform, "Categories Icon", ChevronLeftIconPath,
+                new Vector2(0.10f, 0.38f), new Vector2(0.18f, 0.62f), Ink);
+            SetButtonLabelInsets(categoriesButton, 0.24f, 0.96f);
+
+            RectTransform previousButtonRect = FindSceneRect(scene, "Lesson Previous Button");
+            if (previousButtonRect != null)
+                SetAnchors(previousButtonRect, new Vector2(0.25f, 0.86f), new Vector2(0.34f, 0.93f));
 
             Transform staleLessonTitle = lessonCard.Find("Lesson Title Panel");
             if (staleLessonTitle != null)
@@ -234,7 +346,7 @@ namespace FluentEcho.Editor
             TextMeshProUGUI progressDetails = EnsureText(
                 resultPanel,
                 "Progress Details",
-                "Recent attempts will appear here.",
+                "Your attempt history will appear after your first recording.",
                 17,
                 FontStyles.Normal,
                 Ink,
@@ -254,7 +366,7 @@ namespace FluentEcho.Editor
             TextMeshProUGUI pronunciationFeedback = EnsureText(
                 resultPanel,
                 "Pronunciation Feedback",
-                "Score feedback will appear here.",
+                "Your coach tip will appear here.",
                 18,
                 FontStyles.Italic,
                 Ink,
@@ -299,6 +411,14 @@ namespace FluentEcho.Editor
                 Set(viewObject, "resultCloseButton", resultCloseButton);
                 Set(viewObject, "resultTryAgainButton", resultTryAgainButton);
                 Set(viewObject, "resultNextButton", resultNextButton);
+                Set(viewObject, "categoriesButton", categoriesButton);
+                Set(viewObject, "wordsCategoryButton", wordsCategoryButton);
+                Set(viewObject, "shortSentencesCategoryButton", shortSentencesCategoryButton);
+                Set(viewObject, "challengeCategoryButton", challengeCategoryButton);
+                Set(viewObject, "lessonDropdown", lessonDropdown);
+                Set(viewObject, "categoryScreen", categoryScreen.gameObject);
+                Set(viewObject, "selectedCategoryLabel", FindDeep(categoryScreen, "Selected Category Label")?.GetComponent<TextMeshProUGUI>());
+                Set(viewObject, "selectedCategoryDescriptionLabel", FindDeep(categoryScreen, "Selected Category Description")?.GetComponent<TextMeshProUGUI>());
                 viewObject.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(view);
             }
@@ -316,8 +436,12 @@ namespace FluentEcho.Editor
             if (bootstrap != null)
             {
                 SerializedObject bootstrapObject = new(bootstrap);
+                Set(bootstrapObject, "exercise", catalog != null ? catalog.GetCategoryExercise(0, 0) : null);
+                Set(bootstrapObject, "exerciseCatalog", catalog);
                 Set(bootstrapObject, "exerciseDropdown", lessonDropdown);
                 Set(bootstrapObject, "whisperProfileDropdown", whisperProfileDropdown);
+                bootstrapObject.FindProperty("selectedCategoryPrefsKey").stringValue = "FluentEcho.SelectedCategoryIndex";
+                bootstrapObject.FindProperty("selectedExercisePrefsKey").stringValue = "FluentEcho.SelectedExerciseIndex";
                 bootstrapObject.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(bootstrap);
             }
@@ -325,6 +449,16 @@ namespace FluentEcho.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[FluentEcho] Current prototype scene UI synced for manual editing.");
+        }
+
+        public static void SyncPrototypeSceneAsset()
+        {
+            EnsureFolders();
+            EnsureTmpResources();
+            EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            SyncCurrentPrototypeSceneUi();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
 
         private static Camera CreateWorld()
@@ -388,7 +522,7 @@ namespace FluentEcho.Editor
 
             CreateText(root, "Brand", "FLUENT ECHO", 32, FontStyles.Bold, Cream,
                 new Vector2(0.045f, 0.90f), new Vector2(0.35f, 0.96f), TextAlignmentOptions.Left);
-            CreateText(root, "Subtitle", "PRIVATE OFFLINE PRONUNCIATION PRACTICE", 13, FontStyles.Bold, Mint,
+            CreateText(root, "Subtitle", "PRIVATE OFFLINE SPEECH PRACTICE", 13, FontStyles.Bold, Mint,
                 new Vector2(0.045f, 0.855f), new Vector2(0.48f, 0.895f), TextAlignmentOptions.Left);
 
             RectTransform mentorCard = CreatePanel(
@@ -406,7 +540,7 @@ namespace FluentEcho.Editor
             CreateText(mentorCard, "Teacher Name", "AVA  /  SPEECH COACH", 17, FontStyles.Bold, Mint,
                 new Vector2(0.08f, 0.30f), new Vector2(0.92f, 0.38f), TextAlignmentOptions.Left);
             CreateText(mentorCard, "Teacher Note",
-                "Your practice stays private. Voice is processed locally and never leaves this device.",
+                "Practice privately. Your voice is processed locally and never leaves this device.",
                 18, FontStyles.Normal, Cream,
                 new Vector2(0.08f, 0.12f), new Vector2(0.92f, 0.29f), TextAlignmentOptions.TopLeft);
             Button settingsToggleButton = CreateButton(
@@ -460,17 +594,23 @@ namespace FluentEcho.Editor
             ApplyRoundedSurface(lessonCard);
             Button lessonPreviousButton = CreateButton(
                 lessonCard, "Lesson Previous Button", "PREV",
-                new Vector2(0.06f, 0.86f), new Vector2(0.15f, 0.93f), Hex("F2ECDF"), Ink, out _);
+                new Vector2(0.25f, 0.86f), new Vector2(0.34f, 0.93f), Hex("F2ECDF"), Ink, out _);
             CreateIcon(lessonPreviousButton.transform, "Previous Icon", ChevronLeftIconPath,
                 new Vector2(0.12f, 0.38f), new Vector2(0.23f, 0.62f), Ink);
             SetButtonLabelInsets(lessonPreviousButton, 0.30f, 0.96f);
+            Button categoriesButton = CreateButton(
+                lessonCard, "Category Back Button", "CATEGORIES",
+                new Vector2(0.06f, 0.86f), new Vector2(0.24f, 0.93f), Hex("F2ECDF"), Ink, out _);
+            CreateIcon(categoriesButton.transform, "Categories Icon", ChevronLeftIconPath,
+                new Vector2(0.10f, 0.38f), new Vector2(0.18f, 0.62f), Ink);
+            SetButtonLabelInsets(categoriesButton, 0.24f, 0.96f);
             lessonDropdown = CreateDropdown(
                 lessonCard,
                 "Lesson Dropdown",
-                new Vector2(0.17f, 0.86f),
+                new Vector2(0.35f, 0.86f),
                 new Vector2(0.78f, 0.93f),
                 selectedExercise != null ? selectedExercise.name.ToUpperInvariant() : "LESSON 01");
-            SetDropdownOptions(lessonDropdown, catalog.GetDisplayNames());
+            SetDropdownOptions(lessonDropdown, catalog.GetCategoryExerciseDisplayNames(0));
             Button lessonNextButton = CreateButton(
                 lessonCard, "Lesson Next Button", "NEXT",
                 new Vector2(0.80f, 0.86f), new Vector2(0.94f, 0.93f), SurfaceRaised, Cream, out _);
@@ -478,7 +618,7 @@ namespace FluentEcho.Editor
                 new Vector2(0.78f, 0.38f), new Vector2(0.87f, 0.62f), Cream);
             SetButtonLabelInsets(lessonNextButton, 0.04f, 0.72f);
 
-            TextMeshProUGUI progressLabel = CreateText(lessonCard, "Progress", "Lesson 1 / 8", 14, FontStyles.Bold, Ink,
+            TextMeshProUGUI progressLabel = CreateText(lessonCard, "Progress", "Lesson 1 / 10", 14, FontStyles.Bold, Ink,
                 new Vector2(0.31f, 0.86f), new Vector2(0.43f, 0.93f), TextAlignmentOptions.Center);
             RectTransform progressTrack = CreatePanel(
                 lessonCard, "Lesson Progress Track", new Vector2(0.52f, 0.88f), new Vector2(0.68f, 0.91f), Hex("DED7C8"));
@@ -508,7 +648,7 @@ namespace FluentEcho.Editor
             CreateIcon(transcriptPanel, "Transcript Icon", WaveformIconPath,
                 new Vector2(0.04f, 0.72f), new Vector2(0.07f, 0.88f), Coral);
             TextMeshProUGUI transcript = CreateText(
-                transcriptPanel, "Transcript", "Your recognized sentence will appear here.", 24, FontStyles.Italic, Ink,
+                transcriptPanel, "Transcript", "Your transcript will appear here.", 24, FontStyles.Italic, Ink,
                 new Vector2(0.04f, 0.12f), new Vector2(0.96f, 0.64f), TextAlignmentOptions.Left);
 
             RectTransform statusRail = CreatePanel(
@@ -524,7 +664,7 @@ namespace FluentEcho.Editor
                 new Vector2(0.75f, 0.18f), new Vector2(0.98f, 0.82f), TextAlignmentOptions.Left);
 
             TextMeshProUGUI status = CreateText(
-                lessonCard, "Status", "Preparing local model...", 14, FontStyles.Normal, Ink,
+                lessonCard, "Status", "Preparing speech model...", 14, FontStyles.Normal, Ink,
                 new Vector2(0.11f, 0.23f), new Vector2(0.38f, 0.33f), TextAlignmentOptions.Left);
             TextMeshProUGUI modeLabel = CreateText(lessonCard, "Mode", "LOCAL WHISPER", 14, FontStyles.Bold, Ink,
                 new Vector2(0.47f, 0.23f), new Vector2(0.68f, 0.33f), TextAlignmentOptions.Left);
@@ -541,7 +681,7 @@ namespace FluentEcho.Editor
                 new Vector2(0.13f, 0.37f), new Vector2(0.17f, 0.63f), Ink);
             SetButtonLabelInsets(micButton, 0.22f, 0.96f);
             Button demoButton = CreateButton(
-                lessonCard, "Demo Button", "DEMO ANSWER",
+                lessonCard, "Demo Button", "SHOW DEMO",
                 new Vector2(0.50f, 0.07f), new Vector2(0.72f, 0.19f), Hex("F2ECDF"), Ink, out _);
             CreateIcon(demoButton.transform, "Demo Icon", ChatIconPath,
                 new Vector2(0.13f, 0.39f), new Vector2(0.20f, 0.61f), Ink);
@@ -554,7 +694,7 @@ namespace FluentEcho.Editor
             SetButtonLabelInsets(listenButton, 0.28f, 0.96f);
 
             Toggle mockToggle = CreateToggle(
-                settingsPanel, "Mock Mode Toggle", "Use deterministic demo engine",
+                settingsPanel, "Mock Mode Toggle", "Use demo engine",
                 new Vector2(0.55f, 0.04f), new Vector2(0.94f, 0.13f));
 
             Button retryButton = CreateButton(
@@ -582,13 +722,13 @@ namespace FluentEcho.Editor
                 new Vector2(0.14f, 0.36f), new Vector2(0.26f, 0.64f), Cream);
             SetButtonLabelInsets(resultCloseButton, 0.30f, 0.96f);
             TextMeshProUGUI progressDetails = CreateText(
-                success.rectTransform, "Progress Details", "Recent attempts will appear here.", 17, FontStyles.Normal, Ink,
+                success.rectTransform, "Progress Details", "Your attempt history will appear after your first recording.", 17, FontStyles.Normal, Ink,
                 new Vector2(0.06f, 0.50f), new Vector2(0.94f, 0.69f), TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationSummary = CreateText(
                 success.rectTransform, "Pronunciation Summary", string.Empty, 30, FontStyles.Bold, CoralInk,
                 new Vector2(0.06f, 0.34f), new Vector2(0.94f, 0.49f), TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationFeedback = CreateText(
-                success.rectTransform, "Pronunciation Feedback", "Score feedback will appear here.", 18, FontStyles.Italic, Ink,
+                success.rectTransform, "Pronunciation Feedback", "Your coach tip will appear here.", 18, FontStyles.Italic, Ink,
                 new Vector2(0.06f, 0.19f), new Vector2(0.94f, 0.33f), TextAlignmentOptions.Left);
             Button resultTryAgainButton = CreateButton(
                 success.rectTransform, "Result Try Again Button", "TRY AGAIN",
@@ -603,6 +743,12 @@ namespace FluentEcho.Editor
                 new Vector2(0.80f, 0.36f), new Vector2(0.89f, 0.64f), Ink);
             SetButtonLabelInsets(resultNextButton, 0.04f, 0.76f);
             success.gameObject.SetActive(false);
+
+            RectTransform categoryScreen = EnsureCategoryScreen(
+                root,
+                out Button wordsCategoryButton,
+                out Button shortSentencesCategoryButton,
+                out Button challengeCategoryButton);
 
             FluentEchoView view = lessonCard.gameObject.AddComponent<FluentEchoView>();
             SerializedObject serialized = new(view);
@@ -625,14 +771,22 @@ namespace FluentEcho.Editor
             Set(serialized, "listenButton", listenButton);
             Set(serialized, "previousButton", lessonPreviousButton);
             Set(serialized, "nextButton", lessonNextButton);
+            Set(serialized, "categoriesButton", categoriesButton);
             Set(serialized, "resultCloseButton", resultCloseButton);
             Set(serialized, "resultNextButton", resultNextButton);
             Set(serialized, "resultTryAgainButton", resultTryAgainButton);
+            Set(serialized, "wordsCategoryButton", wordsCategoryButton);
+            Set(serialized, "shortSentencesCategoryButton", shortSentencesCategoryButton);
+            Set(serialized, "challengeCategoryButton", challengeCategoryButton);
+            Set(serialized, "lessonDropdown", lessonDropdown);
             Set(serialized, "mockModeToggle", mockToggle);
             Set(serialized, "recordingIndicator", recordingIndicator);
             Set(serialized, "successPanel", success);
             Set(serialized, "successPanelGroup", successGroup);
             Set(serialized, "successPanelRect", success.rectTransform);
+            Set(serialized, "categoryScreen", categoryScreen.gameObject);
+            Set(serialized, "selectedCategoryLabel", FindDeep(categoryScreen, "Selected Category Label")?.GetComponent<TextMeshProUGUI>());
+            Set(serialized, "selectedCategoryDescriptionLabel", FindDeep(categoryScreen, "Selected Category Description")?.GetComponent<TextMeshProUGUI>());
             serialized.ApplyModifiedPropertiesWithoutUndo();
             view.ConfigureWordChipPrefab(chipPrefab);
             EditorUtility.SetDirty(view);
@@ -740,6 +894,7 @@ namespace FluentEcho.Editor
             SerializedObject bootstrapObject = new(bootstrap);
             Set(bootstrapObject, "exerciseCatalog", catalog);
             Set(bootstrapObject, "exerciseDropdown", lessonDropdown);
+            bootstrapObject.FindProperty("selectedCategoryPrefsKey").stringValue = "FluentEcho.SelectedCategoryIndex";
             bootstrapObject.FindProperty("selectedExercisePrefsKey").stringValue = "FluentEcho.SelectedExerciseIndex";
             Set(bootstrapObject, "whisperProfileDropdown", whisperProfileDropdown);
             bootstrapObject.ApplyModifiedPropertiesWithoutUndo();
@@ -747,96 +902,22 @@ namespace FluentEcho.Editor
 
         private static SpeechExerciseCatalogSO CreateExerciseCatalog(out SpeechExerciseSO selectedExercise)
         {
-            SpeechExerciseSO first = CreateExerciseAsset(
-                FirstExercisePath,
-                "Look at Ava and say: The dog is big.",
-                "the dog is big|the dog is large",
-                "lesson_01_describe_the_dog",
-                "Describe the Dog",
-                "the",
-                "dog",
-                "is",
-                "big|large");
-
-            SpeechExerciseSO second = CreateExerciseAsset(
-                SecondExercisePath,
-                "Say: The cat is small.",
-                "the cat is small|the cat is little",
-                "lesson_02_describe_the_cat",
-                "Describe the Cat",
-                "the",
-                "cat",
-                "is",
-                "small|little");
-
-            SpeechExerciseSO third = CreateExerciseAsset(
-                ThirdExercisePath,
-                "Say: I like this book.",
-                "i like this book|i like this one",
-                "lesson_03_like_this_book",
-                "Like This Book",
-                "i",
-                "like",
-                "this",
-                "book|one");
-
-            SpeechExerciseSO fourth = CreateExerciseAsset(
-                FourthExercisePath,
-                "Say: The apple is red.",
-                "the apple is red|the apple is bright red",
-                "lesson_04_the_apple_is_red",
-                "Describe the Apple",
-                "the",
-                "apple",
-                "is",
-                "red|bright red");
-
-            SpeechExerciseSO fifth = CreateExerciseAsset(
-                FifthExercisePath,
-                "Say: We are ready to go.",
-                "we are ready to go|we are all ready to go",
-                "lesson_05_ready_to_go",
-                "Ready to Go",
-                "we",
-                "are",
-                "ready",
-                "to",
-                "go");
-
-            SpeechExerciseSO sixth = CreateExerciseAsset(
-                SixthExercisePath,
-                "Ask: What time is it?",
-                "what time is it|could you tell me the time",
-                "lesson_06_ask_the_time",
-                "Ask the Time",
-                "what",
-                "time",
-                "is",
-                "it");
-
-            SpeechExerciseSO seventh = CreateExerciseAsset(
-                SeventhExercisePath,
-                "Say: Please open the window.",
-                "please open the window|open the window please",
-                "lesson_07_open_the_window",
-                "Open the Window",
-                "please",
-                "open",
-                "the",
-                "window");
-
-            SpeechExerciseSO eighth = CreateExerciseAsset(
-                EighthExercisePath,
-                "Say: I need a glass of water.",
-                "i need a glass of water|could i have some water",
-                "lesson_08_need_water",
-                "Need Water",
-                "i",
-                "need",
-                "a",
-                "glass",
-                "of",
-                "water");
+            var allExercises = new System.Collections.Generic.List<SpeechExerciseSO>();
+            SpeechExerciseSO first = null;
+            SpeechExerciseSO[][] categoryExercises = new SpeechExerciseSO[GuidedCategories.Length][];
+            for (int categoryIndex = 0; categoryIndex < GuidedCategories.Length; categoryIndex++)
+            {
+                CategorySpec category = GuidedCategories[categoryIndex];
+                categoryExercises[categoryIndex] = new SpeechExerciseSO[category.Exercises.Length];
+                for (int exerciseIndex = 0; exerciseIndex < category.Exercises.Length; exerciseIndex++)
+                {
+                    ExerciseSpec spec = category.Exercises[exerciseIndex];
+                    SpeechExerciseSO exercise = CreateExerciseAsset(ExerciseDataPath + "/" + spec.FileName, spec);
+                    categoryExercises[categoryIndex][exerciseIndex] = exercise;
+                    allExercises.Add(exercise);
+                    first ??= exercise;
+                }
+            }
 
             SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>(ExerciseCatalogPath);
             if (catalog == null)
@@ -847,20 +928,40 @@ namespace FluentEcho.Editor
 
             SerializedObject serialized = new(catalog);
             SerializedProperty exercises = serialized.FindProperty("exercises");
-            exercises.arraySize = 8;
-            exercises.GetArrayElementAtIndex(0).objectReferenceValue = first;
-            exercises.GetArrayElementAtIndex(1).objectReferenceValue = second;
-            exercises.GetArrayElementAtIndex(2).objectReferenceValue = third;
-            exercises.GetArrayElementAtIndex(3).objectReferenceValue = fourth;
-            exercises.GetArrayElementAtIndex(4).objectReferenceValue = fifth;
-            exercises.GetArrayElementAtIndex(5).objectReferenceValue = sixth;
-            exercises.GetArrayElementAtIndex(6).objectReferenceValue = seventh;
-            exercises.GetArrayElementAtIndex(7).objectReferenceValue = eighth;
+            exercises.arraySize = allExercises.Count;
+            for (int i = 0; i < allExercises.Count; i++)
+                exercises.GetArrayElementAtIndex(i).objectReferenceValue = allExercises[i];
+
+            SerializedProperty categories = serialized.FindProperty("categories");
+            categories.arraySize = GuidedCategories.Length;
+            for (int categoryIndex = 0; categoryIndex < GuidedCategories.Length; categoryIndex++)
+            {
+                SerializedProperty categoryProperty = categories.GetArrayElementAtIndex(categoryIndex);
+                categoryProperty.FindPropertyRelative("displayName").stringValue = GuidedCategories[categoryIndex].DisplayName;
+                categoryProperty.FindPropertyRelative("description").stringValue = GuidedCategories[categoryIndex].Description;
+
+                SerializedProperty categoryItems = categoryProperty.FindPropertyRelative("exercises");
+                categoryItems.arraySize = categoryExercises[categoryIndex].Length;
+                for (int exerciseIndex = 0; exerciseIndex < categoryExercises[categoryIndex].Length; exerciseIndex++)
+                    categoryItems.GetArrayElementAtIndex(exerciseIndex).objectReferenceValue = categoryExercises[categoryIndex][exerciseIndex];
+            }
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(catalog);
 
             selectedExercise = first;
             return catalog;
+        }
+
+        private static SpeechExerciseSO CreateExerciseAsset(string path, ExerciseSpec spec)
+        {
+            return CreateExerciseAsset(
+                path,
+                spec.Prompt,
+                spec.AcceptedPhrases,
+                spec.ProgressKey,
+                spec.DisplayName,
+                spec.RequireWordOrder,
+                spec.TargetWords);
         }
 
         private static SpeechExerciseSO CreateExerciseAsset(
@@ -869,6 +970,7 @@ namespace FluentEcho.Editor
             string acceptedPhrases,
             string progressKey,
             string displayName,
+            bool requireWordOrder,
             params string[] words)
         {
             SpeechExerciseSO exercise = AssetDatabase.LoadAssetAtPath<SpeechExerciseSO>(path);
@@ -884,7 +986,7 @@ namespace FluentEcho.Editor
             serialized.FindProperty("prompt").stringValue = prompt;
             serialized.FindProperty("acceptedPhrases").stringValue = acceptedPhrases;
             serialized.FindProperty("progressKey").stringValue = progressKey;
-            serialized.FindProperty("requireWordOrder").boolValue = true;
+            serialized.FindProperty("requireWordOrder").boolValue = requireWordOrder;
             serialized.FindProperty("allowFuzzyMatch").boolValue = true;
             serialized.FindProperty("silenceTimeoutSeconds").floatValue = 2.5f;
 
@@ -1224,6 +1326,7 @@ namespace FluentEcho.Editor
 
             if (button.transform.parent != parent)
                 button.transform.SetParent(parent, false);
+            SetAnchors(button.GetComponent<RectTransform>(), anchorMin, anchorMax);
             Image image = button.GetComponent<Image>();
             if (image != null)
             {
@@ -1239,6 +1342,96 @@ namespace FluentEcho.Editor
             }
 
             return button;
+        }
+
+        private static RectTransform EnsureCategoryScreen(
+            Transform root,
+            out Button wordsButton,
+            out Button shortSentencesButton,
+            out Button challengeButton)
+        {
+            RectTransform screen = root.Find("Category Screen") as RectTransform;
+            if (screen == null)
+            {
+                screen = CreatePanel(root, "Category Screen", new Vector2(0.335f, 0.075f), new Vector2(0.965f, 0.88f), Cream);
+            }
+
+            SetAnchors(screen, new Vector2(0.335f, 0.075f), new Vector2(0.965f, 0.88f));
+            Image image = screen.GetComponent<Image>();
+            if (image != null)
+                image.color = Cream;
+            ApplyRoundedSurface(screen);
+            ApplyPanelFrame(screen, new Color(0.06f, 0.14f, 0.16f, 0.12f));
+
+            EnsureText(screen, "Category Eyebrow", "PRACTICE MENU", 13, FontStyles.Bold, MintInk,
+                new Vector2(0.06f, 0.84f), new Vector2(0.94f, 0.90f), TextAlignmentOptions.Left);
+            EnsureText(screen, "Category Title", "Choose your practice path.", 42, FontStyles.Bold, Ink,
+                new Vector2(0.06f, 0.72f), new Vector2(0.94f, 0.84f), TextAlignmentOptions.Left);
+            EnsureText(
+                screen,
+                "Category Description",
+                "Start with words, build rhythm with short sentences, then move into longer fluency challenges.",
+                18,
+                FontStyles.Normal,
+                Ink,
+                new Vector2(0.06f, 0.63f),
+                new Vector2(0.88f, 0.72f),
+                TextAlignmentOptions.Left);
+            EnsureText(screen, "Selected Category Label", "Practice Menu", 15, FontStyles.Bold, MintInk,
+                new Vector2(0.06f, 0.05f), new Vector2(0.36f, 0.10f), TextAlignmentOptions.Left);
+            EnsureText(
+                screen,
+                "Selected Category Description",
+                "Pick a path to begin.",
+                13,
+                FontStyles.Normal,
+                Ink,
+                new Vector2(0.38f, 0.05f),
+                new Vector2(0.94f, 0.10f),
+                TextAlignmentOptions.Right);
+
+            wordsButton = EnsureButton(
+                screen,
+                "Words Category Button",
+                "WORDS",
+                new Vector2(0.06f, 0.26f),
+                new Vector2(0.33f, 0.56f),
+                Mint,
+                Ink);
+            EnsureText(wordsButton.transform, "Description", "10 focused words", 14, FontStyles.Bold, Ink,
+                new Vector2(0.10f, 0.16f), new Vector2(0.90f, 0.34f), TextAlignmentOptions.Center);
+            EnsureIcon(wordsButton.transform, "Category Icon", MicrophoneIconPath,
+                new Vector2(0.42f, 0.58f), new Vector2(0.58f, 0.78f), Ink);
+
+            shortSentencesButton = EnsureButton(
+                screen,
+                "Short Sentences Category Button",
+                "SHORT SENTENCES",
+                new Vector2(0.365f, 0.26f),
+                new Vector2(0.635f, 0.56f),
+                Hex("F2ECDF"),
+                Ink);
+            EnsureText(shortSentencesButton.transform, "Description", "10 short lines", 14, FontStyles.Bold, Ink,
+                new Vector2(0.10f, 0.16f), new Vector2(0.90f, 0.34f), TextAlignmentOptions.Center);
+            EnsureIcon(shortSentencesButton.transform, "Category Icon", ChatIconPath,
+                new Vector2(0.42f, 0.58f), new Vector2(0.58f, 0.78f), Ink);
+
+            challengeButton = EnsureButton(
+                screen,
+                "Challenge Category Button",
+                "CHALLENGE",
+                new Vector2(0.67f, 0.26f),
+                new Vector2(0.94f, 0.56f),
+                SurfaceRaised,
+                Cream);
+            EnsureText(challengeButton.transform, "Description", "8 fluency lines", 14, FontStyles.Bold, Cream,
+                new Vector2(0.10f, 0.16f), new Vector2(0.90f, 0.34f), TextAlignmentOptions.Center);
+            EnsureIcon(challengeButton.transform, "Category Icon", WaveformIconPath,
+                new Vector2(0.42f, 0.58f), new Vector2(0.58f, 0.78f), Cream);
+
+            screen.gameObject.SetActive(true);
+            screen.SetAsLastSibling();
+            return screen;
         }
 
         private static void ConfigureCoachPortrait(Scene scene)
