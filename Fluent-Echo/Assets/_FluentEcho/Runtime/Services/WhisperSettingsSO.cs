@@ -274,25 +274,16 @@ namespace FluentEcho.Domain
 
             int limit = Math.Max(1, maxEntries);
             int count = Math.Min(limit, attemptHistory.Count);
-            var lines = new List<string>(count + 1);
+            var lines = new List<string>(count + 2);
             string header = BuildHistoryHeader();
             if (!string.IsNullOrWhiteSpace(header))
                 lines.Add(header);
 
+            lines.Add("Recent attempts:");
             for (int i = 0; i < count; i++)
             {
                 LessonAttemptRecord record = attemptHistory[i];
-                string prefix = !string.IsNullOrWhiteSpace(record.PronunciationSummary)
-                    ? record.PronunciationSummary
-                    : record.PronunciationScore > 0
-                        ? $"{record.PronunciationScore}/100"
-                        : $"{record.MatchedWords}/{Math.Max(1, record.ExpectedWords)}";
-                string confidence = !string.IsNullOrWhiteSpace(record.PronunciationConfidenceBand)
-                    ? $" | confidence {record.PronunciationConfidenceBand}"
-                    : string.Empty;
-                string status = record.IsComplete ? "cleared" : "needs retry";
-                string transcriptPreview = Truncate(record.Transcript, 34);
-                lines.Add($"- {prefix}{confidence} | {status} | {transcriptPreview}");
+                lines.Add(BuildHistoryEntryText(record, i + 1));
             }
 
             return string.Join("\n", lines);
@@ -347,6 +338,21 @@ namespace FluentEcho.Domain
                 return text;
 
             return text.Substring(0, Math.Max(0, maxLength - 3)) + "...";
+        }
+
+        private static string BuildHistoryEntryText(LessonAttemptRecord record, int entryNumber)
+        {
+            string scoreText = !string.IsNullOrWhiteSpace(record.PronunciationSummary)
+                ? record.PronunciationSummary
+                : record.PronunciationScore > 0
+                    ? $"{record.PronunciationScore}/100"
+                    : $"{record.MatchedWords}/{Math.Max(1, record.ExpectedWords)}";
+            string confidenceText = !string.IsNullOrWhiteSpace(record.PronunciationConfidenceBand)
+                ? $" | confidence {record.PronunciationConfidenceBand}"
+                : string.Empty;
+            string statusText = record.IsComplete ? "cleared" : "needs retry";
+            string transcriptPreview = Truncate(record.Transcript, 34);
+            return $"{entryNumber}. {scoreText}{confidenceText} | {statusText} | {transcriptPreview}";
         }
 
         private string BuildHistoryHeader()
