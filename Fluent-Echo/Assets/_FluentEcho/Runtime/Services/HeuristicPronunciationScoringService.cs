@@ -165,6 +165,9 @@ namespace FluentEcho.Services
             string focus = BuildFocusText(expectedWords, matchResult.MatchedWords);
             if (missingCount > 0)
             {
+                if (missingCount == 1 && !string.IsNullOrWhiteSpace(focus))
+                    return $"Missing 1 word. Repeat \"{focus}\" once, then say the full line again.";
+
                 string suffix = string.IsNullOrWhiteSpace(focus) ? string.Empty : $" Focus on {focus}.";
                 return $"Missing {missingCount} word{PluralSuffix(missingCount)}.{suffix}";
             }

@@ -224,8 +224,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.MissingWordCount, Is.EqualTo(1));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
                 Assert.That(score.ConfidenceReason, Does.Contain("Missing 1 word"));
-                Assert.That(score.FeedbackText, Does.Contain("Missing 1 word"));
-                Assert.That(score.FeedbackText, Does.Contain("Focus on big"));
+                Assert.That(score.FeedbackText, Is.EqualTo("Missing 1 word. Repeat \"big\" once, then say the full line again."));
                 Assert.That(score.WordScores[3].Score, Is.LessThan(score.WordScores[0].Score));
                 Assert.That(score.WordScores[3].Kind, Is.EqualTo(PronunciationMatchKind.Missing));
             }
