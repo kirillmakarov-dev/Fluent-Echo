@@ -29,6 +29,7 @@ The next step is to add a separate scoring layer, not to rewrite Whisper.
 - Add future phoneme-aware logic as an optional service boundary.
 - Use a `NoOpPhonemeAlignmentService` as the explicit default until a real scorer is wired.
 - Allow the bootstrap inspector to switch into a preview alignment mode for demos and testing.
+- Keep the preview render contract explicit: `PhonemeAlignmentResult` exposes `DisplayTitle` and `HasRenderablePreview`, and the formatter only renders when that contract says it should.
 - Keep the UI honest about what is estimated and what is actually measured.
 - Keep roadmap text out of post-attempt result details unless a real alignment signal exists.
 - Keep the preview block compact, labeled as `Alignment preview (demo only)`, and clearly distinct from true phoneme scoring.
@@ -113,6 +114,7 @@ When a future phoneme-aware scorer is introduced:
 
 - Add the future service interface.
 - Add a result model that can carry phoneme or segment-level details.
+- Keep preview rendering a simple contract-driven step by exposing `DisplayTitle` and `HasRenderablePreview`.
 - Keep the existing heuristic scorer untouched as the default.
 - Keep the explicit no-op fallback available so the build stays predictable before the future scorer ships.
 - Keep the preview alignment mode separate from true phoneme scoring so the demo story stays honest.
@@ -143,6 +145,7 @@ When a future phoneme-aware scorer is introduced:
 - The heuristic scorer remains usable until the new scorer exists.
 - The UI never claims capabilities that are not implemented.
 - The roadmap gives a reviewer a believable engineering path from estimate to assessment.
+- The preview block is explicitly contract-driven and not hidden view logic.
 
 ## Out Of Scope For Now
 
