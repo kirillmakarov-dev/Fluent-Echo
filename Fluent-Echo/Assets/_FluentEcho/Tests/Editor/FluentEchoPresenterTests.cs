@@ -179,6 +179,7 @@ namespace FluentEcho.Tests
 
                 Assert.That(view.LastPronunciationFeedback, Does.Not.Contain(FluentEchoCopy.PhonemeRoadmapText));
                 Assert.That(view.LastProgressDetails, Does.Not.Contain(FluentEchoCopy.PhonemeRoadmapText));
+                Assert.That(view.LastProgressDetails, Does.Not.Contain("Alignment preview (demo only):"));
             }
             finally
             {
