@@ -33,8 +33,11 @@ namespace FluentEcho.Presentation
         public const string MicrophoneNotFoundTitle = "Microphone not found";
         public const string MicrophonePermissionNeededStatus = "Microphone permission needed.";
         public const string MicrophonePermissionNeededTitle = "Microphone permission needed";
+        public const string MicrophonePermissionNeededBody = "Allow microphone access in Windows privacy settings, then try again. You can also confirm the input device in Settings.";
         public const string SpeechModelMissingStatus = "Speech model missing.";
         public const string SpeechModelMissingTitle = "Speech model missing";
+        public const string SpeechModelMissingBody = "Add the local Whisper model to StreamingAssets/Whisper, then open Settings to check the profile path.";
+        public const string MicrophoneNotFoundBody = "Connect a microphone or choose another input in Settings. Fluent Echo needs an input device before it can check your answer.";
         public const string NextMissionPrompt = "Choose NEXT MISSION to continue, or TRY AGAIN to improve the score.";
 
         public static string BuildProgressSummary(int totalWords)

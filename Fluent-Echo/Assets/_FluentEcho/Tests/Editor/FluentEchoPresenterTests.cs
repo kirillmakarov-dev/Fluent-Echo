@@ -173,6 +173,8 @@ namespace FluentEcho.Tests
                 Assert.That(view.NoticeVisible, Is.True);
                 Assert.That(view.NoticeTitle, Is.EqualTo("Microphone not found"));
                 Assert.That(view.NoticeActionLabel, Is.EqualTo("OPEN SETTINGS"));
+                Assert.That(view.NoticeBody, Does.Contain("Connect a microphone"));
+                Assert.That(view.NoticeBody, Does.Contain("Settings"));
 
                 view.RaiseNoticeConfirmed();
 
@@ -204,6 +206,8 @@ namespace FluentEcho.Tests
                 Assert.That(view.NoticeVisible, Is.True);
                 Assert.That(view.NoticeTitle, Is.EqualTo("Microphone permission needed"));
                 Assert.That(view.NoticeActionLabel, Is.EqualTo("OPEN SETTINGS"));
+                Assert.That(view.NoticeBody, Does.Contain("privacy settings"));
+                Assert.That(view.NoticeBody, Does.Contain("Settings"));
 
                 view.RaiseNoticeConfirmed();
 
@@ -235,6 +239,8 @@ namespace FluentEcho.Tests
                 Assert.That(view.NoticeVisible, Is.True);
                 Assert.That(view.NoticeTitle, Is.EqualTo("Speech model missing"));
                 Assert.That(view.NoticeActionLabel, Is.EqualTo("OPEN SETTINGS"));
+                Assert.That(view.NoticeBody, Does.Contain("StreamingAssets/Whisper"));
+                Assert.That(view.NoticeBody, Does.Contain("profile path"));
 
                 view.RaiseNoticeConfirmed();
 

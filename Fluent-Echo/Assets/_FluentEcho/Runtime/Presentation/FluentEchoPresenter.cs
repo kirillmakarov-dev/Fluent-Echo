@@ -588,7 +588,7 @@ namespace FluentEcho.Presentation
                 pendingNoticeAction = NoticeAction.OpenSettings;
                 view.ShowNotice(
                     FluentEchoCopy.MicrophoneNotFoundTitle,
-                    "Connect a microphone or choose another input in Settings. Fluent Echo needs an input device before it can check your answer.",
+                    FluentEchoCopy.MicrophoneNotFoundBody,
                     "OPEN SETTINGS");
                 view.SetStatus(FluentEchoCopy.MicrophoneNotFoundStatus);
                 return;
@@ -600,7 +600,7 @@ namespace FluentEcho.Presentation
                 pendingNoticeAction = NoticeAction.OpenSettings;
                 view.ShowNotice(
                     FluentEchoCopy.MicrophonePermissionNeededTitle,
-                    "Allow microphone access in Windows privacy settings, then try again. You can also confirm the input device in Settings.",
+                    FluentEchoCopy.MicrophonePermissionNeededBody,
                     "OPEN SETTINGS");
                 view.SetStatus(FluentEchoCopy.MicrophonePermissionNeededStatus);
                 return;
@@ -612,7 +612,7 @@ namespace FluentEcho.Presentation
                 pendingNoticeAction = NoticeAction.OpenSettings;
                 view.ShowNotice(
                     FluentEchoCopy.SpeechModelMissingTitle,
-                    "Add the local Whisper model to StreamingAssets/Whisper, then open Settings to check the profile path.",
+                    FluentEchoCopy.SpeechModelMissingBody,
                     "OPEN SETTINGS");
                 view.SetStatus(FluentEchoCopy.SpeechModelMissingStatus);
                 return;
