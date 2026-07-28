@@ -749,6 +749,12 @@ namespace FluentEcho.Presentation
                     lines.Add(bestAttempt);
                 }
 
+                if (progress != null)
+                {
+                    lines.Add("Progress summary:");
+                    lines.Add(progress.GetSummaryText());
+                }
+
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
                 {
                     lines.Add(string.Empty);
