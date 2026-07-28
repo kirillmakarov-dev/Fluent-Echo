@@ -1242,6 +1242,7 @@ namespace FluentEcho.Tests
                 Assert.That(mockService.PrepareCalls, Is.EqualTo(1));
                 Assert.That(view.LastMockMode, Is.True);
                 Assert.That(view.LastStatus, Does.Contain("Demo mode is ready"));
+                Assert.That(view.LastStatus, Does.Contain("demo answer"));
                 Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
                 Assert.That(view.LastListeningState, Is.False);
             }

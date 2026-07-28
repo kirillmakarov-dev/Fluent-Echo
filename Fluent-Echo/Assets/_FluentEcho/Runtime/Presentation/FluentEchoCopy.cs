@@ -16,7 +16,7 @@ namespace FluentEcho.Presentation
         public const string OnboardingPracticePathsBody = "Words build clarity, short sentences build rhythm, and challenge sentences build fluency. Your voice stays local either way.";
         public const string PhonemeRoadmapText = "True phoneme scoring is planned for a future sprint.";
         public const string ReadyToPracticeStatus = "Ready to practice.";
-        public const string DemoModeReadyStatus = "Demo mode is ready. Press Start Speaking to preview a correct answer.";
+        public const string DemoModeReadyStatus = "Demo mode is ready. Press Start Speaking to preview the demo answer.";
         public const string PreparingSpeechModelStatus = "Preparing speech model...";
         public const string LoadingSpeechEngineStatus = "Loading speech engine...";
         public const string ExcellentResultStatus = "Excellent. Every target word was recognized.";
