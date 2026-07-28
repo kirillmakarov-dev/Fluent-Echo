@@ -140,6 +140,60 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void HistoryText_WithMultipleAttempts_ShowsVisibleCountSummary()
+        {
+            string key = $"lesson_test_{Guid.NewGuid():N}";
+            LessonProgressRepository.Clear(key);
+
+            LessonProgressState state = LessonProgressRepository.Load(key, 4);
+
+            try
+            {
+                state.RecordAttempt(
+                    "the dog is big",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    4,
+                    94,
+                    "strong",
+                    "PRONUNCIATION ESTIMATE | 94/100 | HIGH",
+                    "high",
+                    92,
+                    "All target words matched cleanly, with no extra words.");
+                state.RecordAttempt(
+                    "the dog is",
+                    new SpeechMatchResult(false, new[] { true, true, true, false }),
+                    4,
+                    68,
+                    "steady",
+                    "PRONUNCIATION ESTIMATE | 68/100 | HIGH",
+                    "high",
+                    79,
+                    "Missing 1 word, so confidence stays cautious.");
+                state.RecordAttempt(
+                    "dog is big",
+                    new SpeechMatchResult(false, new[] { false, true, true, true }),
+                    4,
+                    55,
+                    "developing",
+                    "PRONUNCIATION ESTIMATE | 55/100 | MEDIUM",
+                    "medium",
+                    64,
+                    "Missing 1 word, so confidence stays cautious.");
+
+                string history = state.GetHistoryText(2);
+                Assert.That(history, Does.Contain("History: 3 attempts | showing last 2 | cleared 1"));
+                Assert.That(history, Does.Contain("Recent attempts:"));
+                Assert.That(history, Does.Contain("1."));
+                Assert.That(history, Does.Contain("2."));
+                Assert.That(history, Does.Not.Contain("3."));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(key);
+            }
+        }
+
+        [Test]
         public void EmptyProgressState_ShowsReadyCopy()
         {
             string key = $"lesson_test_{Guid.NewGuid():N}";
