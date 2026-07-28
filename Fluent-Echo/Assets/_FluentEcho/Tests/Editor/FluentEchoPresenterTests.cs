@@ -369,6 +369,55 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void PreviousPress_SwitchesToPreviousExerciseAndPersistsSelection()
+        {
+            SpeechExerciseSO first = CreateExercise("word_01", "Say the first word.", "lesson_test_word_04_prev");
+            SpeechExerciseSO second = CreateExercise("word_02", "Say the second word.", "lesson_test_word_05_prev");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { first, second });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            int persistedCategory = -1;
+            int persistedExercise = -1;
+            var presenter = new FluentEchoPresenter(
+                second,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                0,
+                1,
+                (categoryIndex, exerciseIndex) =>
+                {
+                    persistedCategory = categoryIndex;
+                    persistedExercise = exerciseIndex;
+                });
+
+            try
+            {
+                presenter.Initialize();
+                string initialPrompt = view.LastPrompt;
+
+                view.RaisePreviousPressed();
+
+                Assert.That(view.LastPrompt, Is.Not.EqualTo(initialPrompt));
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the first word."));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(2));
+                Assert.That(persistedCategory, Is.EqualTo(0));
+                Assert.That(persistedExercise, Is.EqualTo(0));
+                Assert.That(view.LessonOptions, Is.EqualTo(new[] { "word_01", "word_02" }));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(first);
+                UnityEngine.Object.DestroyImmediate(second);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void CategorySelection_SwitchesCategoryAndResetsExerciseIndex()
         {
             SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_word_06");
