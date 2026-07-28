@@ -6,6 +6,7 @@ Fluent Echo is a private, local English speech-practice app built in Unity.
 The user starts on a category screen, chooses Words, Short Sentences, or Challenge Sentences, records a response, gets a local transcript from Whisper, and sees an honest practice score with clear coaching feedback.
 The result panel separates practice score, confidence, word match, rhythm, and a focused next step so the feedback reads like a coach, not a log.
 On the final lesson, the panel keeps the same structure but only shows the actions that make sense for that lesson, so the flow stays clean and easy to present.
+For internal demos, the inspector can optionally enable an `Alignment preview` block, but the public story stays honest: the app is still not claiming true phoneme scoring yet.
 
 The product story is intentionally simple:
 
@@ -13,6 +14,7 @@ The product story is intentionally simple:
 - the app does not require paid APIs;
 - the UI is explicit about what Whisper can and cannot do;
 - the result flow feels like a learning app, not a debug console.
+- demo preview modes stay clearly separated from the real user-facing scoring claim.
 
 ## Problem
 
@@ -44,6 +46,7 @@ This project solves that by keeping the whole feedback loop local and transparen
 - a final-lesson result panel that hides unnecessary navigation and keeps the flow focused;
 - coach-style feedback with visible word match, rhythm, confidence, and focus-next signals;
 - separate settings, category, and result panels.
+- an optional inspector-only alignment preview for demos, which is explicitly framed as preview, not phoneme assessment.
 
 ## Architecture in One Glance
 
@@ -93,6 +96,7 @@ The next natural step is a stronger scoring pipeline:
 - eventually phoneme-aware scoring or a dedicated scorer service.
 
 The current build already stays honest by presenting transcript, practice score, confidence, word match, rhythm, and focus-next feedback as separate pieces of information.
+When preview mode is enabled for a demo, it stays clearly labeled as preview so the reviewer can see the architectural path without being misled.
 
 For the current portfolio phase, the important win is a stable local loop:
 
