@@ -9,7 +9,7 @@ This brief captures the practical path from the current prototype to a fuller po
 - Lesson navigation across multiple exercises.
 - An expanded eight-lesson catalog with different prompt shapes.
 - Progress persistence.
-- A heuristic pronunciation score MVP.
+- A heuristic pronunciation estimate MVP.
 - Editor-safe CPU fallback for Whisper.
 
 ## Recommended next steps
@@ -50,12 +50,19 @@ The plan intentionally avoids paid APIs and keeps the scoring pipeline local and
 - Add lip sync and facial reaction states.
 - Turn one lesson into a demo-quality showcase scene with strong visual hierarchy.
 
+### 6. Keep the portfolio story readable
+
+- Keep `MB_ARCHITECTURE.md` aligned with the current onboarding, honest scoring, and panel layout.
+- Make sure the case-study story fits a one-minute explanation: privacy, local Whisper, transparent estimate, coach-style feedback.
+- Keep the docs focused on what a reviewer needs to see first, not on internal implementation details.
+
 ## Implementation order
 
 1. Stabilize the current interaction loop.
 2. Improve progress.
 3. Swap in real pronunciation scoring.
 4. Finish portfolio polish and visual presentation.
+5. Keep the docs and case-study narrative aligned with the current build.
 
 ## Working principle
 
