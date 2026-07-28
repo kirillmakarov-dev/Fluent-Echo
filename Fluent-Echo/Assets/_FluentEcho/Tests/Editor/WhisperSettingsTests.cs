@@ -239,6 +239,32 @@ namespace FluentEcho.Tests
             }
         }
 
+        [Test]
+        public void EmptyTranscript_ProducesLowConfidenceEstimate()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    string.Empty,
+                    new SpeechMatchResult(false, new[] { false, false, false, false }),
+                    0f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.OverallScore, Is.EqualTo(0));
+                Assert.That(score.ConfidenceBand, Is.EqualTo("low"));
+                Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
+                Assert.That(score.SummaryText, Does.Contain("LOW"));
+                Assert.That(score.FeedbackText, Does.Contain("pause"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
         private static SpeechExerciseSO CreateExercise(string secondWord = "dog")
         {
             SpeechExerciseSO exercise = ScriptableObject.CreateInstance<SpeechExerciseSO>();
