@@ -538,7 +538,7 @@ namespace FluentEcho.Bootstrap
 
             TextMeshProUGUI summaryLabel = MoveOrCreateText(
                 resultPanel,
-                "Practice Score",
+                "Pronunciation Estimate",
                 FluentEchoCopy.FirstPronunciationSummary,
                 14,
                 FontStyles.Bold,
@@ -546,7 +546,7 @@ namespace FluentEcho.Bootstrap
                 new Vector2(0.04f, 0.34f),
                 new Vector2(0.96f, 0.48f),
                 TextAlignmentOptions.Left,
-                new[] { "Pronunciation Summary", "Practice Score" });
+                new[] { "Pronunciation Summary", "Practice Score", "Pronunciation Estimate" });
 
             summaryLabel.color = new Color(0.89f, 0.37f, 0.30f, 1f);
             TextMeshProUGUI feedbackLabel = MoveOrCreateText(
