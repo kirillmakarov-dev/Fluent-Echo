@@ -14,6 +14,18 @@ This brief captures the practical path from the current prototype to a fuller po
 - Editor-safe CPU fallback for Whisper.
 - Separate scene-owned panels for settings and result feedback.
 
+## Current status
+
+The active build already covers the core playable loop and the sprint work has moved from "make it work" to "make it easy to present."
+
+- Sprint 0: scene-owned UI and layout lock-down is complete.
+- Sprint 1: onboarding and friendly error states is complete.
+- Sprint 2: honest local pronunciation estimate is complete.
+- Sprint 3: lesson catalog, progress, and navigation is complete.
+- Sprint 4: portfolio case-study polish is the current focus.
+
+The next code sprint after docs polish should be a stronger pronunciation-scoring pipeline that stays local and honest.
+
 ## Recommended next steps
 
 ### Current sprint roadmap
@@ -28,6 +40,12 @@ It now breaks the work into:
 - portfolio case-study polish.
 
 The plan intentionally avoids paid APIs and keeps the scoring pipeline local and transparent.
+
+For the next implementation pass, keep the order simple:
+
+1. Finish portfolio-facing documentation and demo narration.
+2. Preserve the stable result and settings flow.
+3. Improve the local scoring pipeline only after the presentation layer is fully clear.
 
 ### 1. Keep the interaction loop stable
 

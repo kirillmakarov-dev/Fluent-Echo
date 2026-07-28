@@ -71,6 +71,8 @@ Say:
 
 > This is intentionally a learning flow, not a debug dump. It tells the user what happened and what to try next.
 
+If you are on the final lesson, note that `NEXT MISSION` will not be shown, so the user can only close the result or try again.
+
 ### 6. Show Progress
 
 Move to another lesson or category.
