@@ -709,6 +709,7 @@ namespace FluentEcho.Presentation
 
             if (lastPronunciationScore.IsAvailable)
             {
+                lines.Add("Current attempt:");
                 lines.Add(
                     $"Pronunciation estimate: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
                 lines.Add(
@@ -727,7 +728,9 @@ namespace FluentEcho.Presentation
 
                 if (progress != null && progress.BestPronunciationScore > 0)
                 {
-                    string bestAttempt = $"Best estimate so far: {progress.BestPronunciationScore}/100";
+                    lines.Add("Best attempt so far:");
+
+                    string bestAttempt = $"Estimate {progress.BestPronunciationScore}/100";
                     if (!string.IsNullOrWhiteSpace(progress.BestPronunciationConfidenceBand))
                         bestAttempt += $" | confidence {Capitalize(progress.BestPronunciationConfidenceBand)}";
 
@@ -740,7 +743,8 @@ namespace FluentEcho.Presentation
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
                 {
                     lines.Add(string.Empty);
-                    lines.Add($"Coach tip: {lastPronunciationScore.FeedbackText}");
+                    lines.Add("Coach tip:");
+                    lines.Add(lastPronunciationScore.FeedbackText);
                 }
             }
 
@@ -780,6 +784,7 @@ namespace FluentEcho.Presentation
 
             var lines = new System.Collections.Generic.List<string>
             {
+                "Current attempt:",
                 $"Pronunciation estimate: {score.OverallScore}/100 | {score.BandLabel}",
                 $"Recognition confidence: {Capitalize(score.ConfidenceBand)}",
                 $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
@@ -791,6 +796,7 @@ namespace FluentEcho.Presentation
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
                 lines.Add(wordBreakdown);
 
+            lines.Add("Coach tip:");
             lines.Add(focus);
             if (!string.IsNullOrWhiteSpace(score.FeedbackText))
                 lines.Add(score.FeedbackText);
