@@ -16,6 +16,7 @@ namespace FluentEcho.Tests
             Assert.That(result.IsAvailable, Is.False);
             Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
             Assert.That(result.DisplayTitle, Is.EqualTo("Alignment unavailable:"));
+            Assert.That(result.HasRenderablePreview, Is.False);
             Assert.That(result.AlignmentScore, Is.EqualTo(0));
             Assert.That(result.ConfidenceBand, Is.EqualTo("unavailable"));
             Assert.That(result.SummaryText, Does.Contain("not active yet"));
@@ -64,6 +65,7 @@ namespace FluentEcho.Tests
             Assert.That(result.IsAvailable, Is.False);
             Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
             Assert.That(result.DisplayTitle, Is.EqualTo("Alignment unavailable:"));
+            Assert.That(result.HasRenderablePreview, Is.False);
             Assert.That(result.AlignmentScore, Is.EqualTo(0));
             Assert.That(result.SummaryText, Does.Contain("not active yet"));
             Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
@@ -103,6 +105,7 @@ namespace FluentEcho.Tests
             Assert.That(result.IsAvailable, Is.True);
             Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Preview));
             Assert.That(result.DisplayTitle, Is.EqualTo("Alignment preview (demo only):"));
+            Assert.That(result.HasRenderablePreview, Is.True);
             Assert.That(result.AlignmentScore, Is.GreaterThan(0));
             Assert.That(result.SummaryText, Does.Contain("preview"));
             Assert.That(result.EvidenceText, Does.Contain("Preview mode"));

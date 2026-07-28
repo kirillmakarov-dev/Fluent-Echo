@@ -10,7 +10,7 @@ namespace FluentEcho.Presentation
             if (alignment == null)
                 return string.Empty;
 
-            if (!alignment.IsAvailable)
+            if (!alignment.HasRenderablePreview)
                 return string.Empty;
 
             var lines = new List<string>

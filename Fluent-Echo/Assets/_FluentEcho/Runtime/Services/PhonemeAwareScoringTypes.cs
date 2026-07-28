@@ -180,6 +180,8 @@ namespace FluentEcho.Services
 
         public bool IsPreview => Source == PhonemeAlignmentSource.Preview;
 
+        public bool HasRenderablePreview => IsAvailable && IsPreview;
+
         public string DisplayTitle => Source == PhonemeAlignmentSource.Preview
             ? "Alignment preview (demo only):"
             : "Alignment unavailable:";
