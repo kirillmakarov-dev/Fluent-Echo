@@ -52,7 +52,7 @@ Use Demo Mode or start a real attempt.
 
 Say:
 
-> Here the app gets a transcript locally, then turns it into a transparent pronunciation estimate and a short coaching tip.
+> Here the app gets a transcript locally, then turns it into a transparent pronunciation estimate with clear confidence, word match, rhythm, and a focused next step.
 
 Let the result panel appear.
 
@@ -62,9 +62,9 @@ Highlight:
 
 - practice score;
 - confidence;
-- matched words;
-- rhythm and word focus;
-- coach tip;
+- word match;
+- rhythm;
+- focus next;
 - `TRY AGAIN`, `NEXT MISSION`, and `CLOSE`.
 
 Say:
@@ -83,7 +83,7 @@ Say:
 
 Say:
 
-> The current scorer is a heuristic estimate based on transcript quality, rhythm, and word focus. The UI also says that true phoneme scoring is still a roadmap item, so the app stays honest about what it does today.
+> The current scorer is a heuristic estimate based on transcript quality, confidence, rhythm, and word match. The UI also says that true phoneme scoring is still a roadmap item, so the app stays honest about what it does today.
 
 ## Shot List
 

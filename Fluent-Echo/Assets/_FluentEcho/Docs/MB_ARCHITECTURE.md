@@ -26,6 +26,7 @@ The key promise is privacy:
 - onboarding and user-friendly failure states;
 - a heuristic pronunciation estimate that is explicitly presented as a practice score, not true phoneme scoring;
 - a clear separation between the main result flow and the future phoneme-scoring roadmap;
+- a result panel that separates practice score, confidence, word match, rhythm, and focus-next guidance;
 - a result flow that supports retry, close, and next mission actions;
 - inspector-friendly scene-owned UI wiring.
 
@@ -148,7 +149,7 @@ Edit-mode coverage currently focuses on:
 6. Whisper returns transcript text.
 7. The matcher checks word coverage and accepted phrases.
 8. The heuristic scorer produces a local pronunciation estimate and confidence band.
-9. The view shows transcript, word highlighting, progress, and coach-style feedback.
+9. The view shows transcript, word highlighting, progress, and a result panel broken into practice score, confidence, word match, rhythm, and focus-next guidance.
 10. The user can retry, close the result panel, move to the next mission, or return to categories.
 
 ## User-Facing Panels
@@ -169,7 +170,7 @@ The app now uses language that is intentionally careful:
 
 - `Practice Score` and `Pronunciation estimate` language instead of a claim of full phoneme scoring;
 - `Recognition confidence` instead of pretending the model knows accent quality;
-- `Transcript match`, `Rhythm`, and `Word focus` as visible sub-signals;
+- `Transcript match`, `Word match`, `Rhythm`, and `Word focus` as visible sub-signals;
 - a clear path for future phoneme-level scoring without pretending it exists today.
 
 The current scorer is useful for MVP feedback and portfolio demonstration, but it should be treated as an estimate pipeline.

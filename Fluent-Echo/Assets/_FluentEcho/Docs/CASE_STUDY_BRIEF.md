@@ -4,6 +4,7 @@
 
 Fluent Echo is a private, local English speech-practice app built in Unity.
 The user chooses a practice category, records a response, gets a local transcript from Whisper, and sees an honest practice score with clear coaching feedback.
+The result panel separates practice score, confidence, word match, rhythm, and a focused next step so the feedback reads like a coach, not a log.
 
 The product story is intentionally simple:
 
@@ -38,7 +39,7 @@ This project solves that by keeping the whole feedback loop local and transparen
 - progress persistence;
 - a transparent pronunciation estimate pipeline;
 - a clear practice-score result panel with retry, close, and next-mission actions;
-- coach-style feedback and retry flow;
+- coach-style feedback with visible word match, rhythm, confidence, and focus-next signals;
 - separate settings, category, and result panels.
 
 ## Architecture in One Glance
@@ -56,7 +57,7 @@ The code is split into:
 ## Limitations
 
 The current scoring is a heuristic estimate.
-It uses transcript match, confidence, rhythm, and word-level signals.
+It uses transcript match, confidence, rhythm, and word match signals.
 It does not perform true phoneme-level pronunciation assessment yet.
 The UI says that plainly instead of implying the feature already exists.
 
@@ -76,7 +77,7 @@ That limitation is shown honestly in the UI and in the roadmap.
 2. Show the privacy/onboarding message.
 3. Pick a practice category.
 4. Record a sample answer.
-5. Show transcript, practice score, confidence, rhythm, and coaching feedback.
+5. Show transcript, practice score, confidence, word match, rhythm, and focus-next feedback.
 6. Show retry, close, or next mission.
 
 ## Future Direction
@@ -86,6 +87,8 @@ The next natural step is a stronger scoring pipeline:
 - better confidence interpretation;
 - more honest feedback wording;
 - eventually phoneme-aware scoring or a dedicated scorer service.
+
+The current build already stays honest by presenting transcript, practice score, confidence, word match, rhythm, and focus-next feedback as separate pieces of information.
 
 For the current portfolio phase, the important win is a stable local loop:
 
