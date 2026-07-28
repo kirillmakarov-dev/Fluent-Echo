@@ -38,7 +38,7 @@ This project solves that by keeping the whole feedback loop local and transparen
 - local Whisper transcription;
 - category-first lesson navigation;
 - three distinct practice paths with multiple lessons each;
-- progress persistence;
+- progress persistence with best / last match-quality breakdowns;
 - a transparent pronunciation estimate pipeline;
 - a clear practice-score result panel with retry, close, and next-mission actions;
 - a final-lesson result panel that hides unnecessary navigation and keeps the flow focused;

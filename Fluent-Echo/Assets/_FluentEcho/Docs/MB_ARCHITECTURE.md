@@ -26,6 +26,7 @@ The key promise is privacy:
 - onboarding and user-friendly failure states;
 - a heuristic pronunciation estimate that is explicitly presented as a practice score, not true phoneme scoring;
 - a clear separation between the main result flow and the future phoneme-scoring roadmap;
+- persisted lesson progress that now stores the best and last match quality breakdown as exact / approximate / missed counts;
 - a result panel that separates practice score, confidence, word match, rhythm, and focus-next guidance;
 - a result flow that supports retry, close, and next mission actions;
 - inspector-friendly scene-owned UI wiring.
@@ -149,8 +150,9 @@ Edit-mode coverage currently focuses on:
 6. Whisper returns transcript text.
 7. The matcher checks word coverage and accepted phrases.
 8. The heuristic scorer produces a local pronunciation estimate and confidence band.
-9. The view shows transcript, word highlighting, progress, and a result panel broken into practice score, confidence, word match, rhythm, and focus-next guidance.
-10. The user can retry, close the result panel, move to the next mission, or return to categories.
+9. The progress layer stores the attempt history, including best and last match quality breakdowns.
+10. The view shows transcript, word highlighting, progress, and a result panel broken into practice score, confidence, word match, rhythm, match-quality summary, and focus-next guidance.
+11. The user can retry, close the result panel, move to the next mission, or return to categories.
 
 ## User-Facing Panels
 

@@ -16,6 +16,7 @@ It is intentionally short and execution-oriented so the next sprint can start fr
 - Separate scene-owned panels for settings and result feedback.
 - Category-first lesson flow with multiple exercises per path.
 - `Next` / `Prev` navigation and per-lesson progress persistence.
+- Saved progress now keeps best and last match quality breakdowns as exact / approximate / missed counts.
 
 ## Current status
 
@@ -62,6 +63,7 @@ For the next implementation pass, keep the order simple:
 ### 2. Improve progress tracking
 
 - Store best pronunciation estimate, best transcript, and per-lesson attempt history.
+- Keep the exact / approximate / missed match-quality breakdown visible in progress summaries and history entries.
 - Show a clearer results summary when a lesson is cleared.
 - Add lightweight progression rules for unlocking or sequencing lessons.
 
