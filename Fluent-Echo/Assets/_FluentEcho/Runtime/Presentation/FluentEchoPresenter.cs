@@ -725,6 +725,18 @@ namespace FluentEcho.Presentation
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
                     lines.Add(wordBreakdown);
 
+                if (progress != null && progress.BestPronunciationScore > 0)
+                {
+                    string bestAttempt = $"Best attempt so far: {progress.BestPronunciationScore}/100";
+                    if (!string.IsNullOrWhiteSpace(progress.BestPronunciationConfidenceBand))
+                        bestAttempt += $" | confidence {Capitalize(progress.BestPronunciationConfidenceBand)}";
+
+                    if (!string.IsNullOrWhiteSpace(progress.BestTranscript))
+                        bestAttempt += $" | \"{progress.BestTranscript}\"";
+
+                    lines.Add(bestAttempt);
+                }
+
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
                 {
                     lines.Add(string.Empty);
