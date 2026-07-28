@@ -552,7 +552,7 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI feedbackLabel = MoveOrCreateText(
                 resultPanel,
                 "Coach Tip",
-                "Your coach tip will appear here.",
+                "Your first coaching tip will appear here.",
                 12,
                 FontStyles.Italic,
                 new Color(0.21f, 0.21f, 0.21f, 1f),

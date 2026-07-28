@@ -785,7 +785,7 @@ namespace FluentEcho.Presentation
         }
 
         private static string BuildUnavailablePronunciationDetails() =>
-            "Speak once to generate the first local estimate.\nPhoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.";
+            "Speak once to generate the first local estimate.\nYour first coaching tip will appear here.\nPhoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.";
 
         private static string Capitalize(string value)
         {
