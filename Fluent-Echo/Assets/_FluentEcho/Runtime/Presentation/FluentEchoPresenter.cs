@@ -728,7 +728,16 @@ namespace FluentEcho.Presentation
 
                 if (progress != null && progress.BestPronunciationScore > 0)
                 {
-                    lines.Add("Best attempt so far:");
+                    bool isNewBestAttempt =
+                        progress.BestPronunciationScore == lastPronunciationScore.OverallScore
+                        && string.Equals(
+                            progress.BestTranscript?.Trim(),
+                            session.Transcript?.Trim(),
+                            StringComparison.Ordinal);
+
+                    lines.Add(isNewBestAttempt
+                        ? "Best attempt so far: this attempt is the new best."
+                        : "Best attempt so far:");
 
                     string bestAttempt = $"Estimate {progress.BestPronunciationScore}/100";
                     if (!string.IsNullOrWhiteSpace(progress.BestPronunciationConfidenceBand))
