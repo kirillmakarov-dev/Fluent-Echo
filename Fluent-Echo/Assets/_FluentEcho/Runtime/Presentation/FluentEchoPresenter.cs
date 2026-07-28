@@ -833,6 +833,8 @@ namespace FluentEcho.Presentation
             int clearedLessons = 0;
             int bestScore = 0;
             int totalAttempts = 0;
+            int attemptedLessons = 0;
+            int totalBestScore = 0;
             string bestConfidenceBand = string.Empty;
 
             for (int i = 0; i < exerciseCount; i++)
@@ -846,6 +848,12 @@ namespace FluentEcho.Presentation
                     exercise.GetDisplayWords().Length);
 
                 totalAttempts += lessonProgress.Attempts;
+                if (lessonProgress.Attempts > 0)
+                {
+                    attemptedLessons++;
+                    totalBestScore += lessonProgress.BestPronunciationScore;
+                }
+
                 if (lessonProgress.SuccessfulAttempts > 0)
                     clearedLessons++;
 
@@ -861,6 +869,8 @@ namespace FluentEcho.Presentation
                 summary += $" | best score {bestScore}/100";
             if (!string.IsNullOrWhiteSpace(bestConfidenceBand))
                 summary += $" | confidence {bestConfidenceBand}";
+            if (attemptedLessons > 0)
+                summary += $" | avg best score {Mathf.RoundToInt((float) totalBestScore / attemptedLessons)}/100";
             if (totalAttempts > 0)
                 summary += $" | {totalAttempts} attempts";
 
