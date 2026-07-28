@@ -1,64 +1,65 @@
 # Fluent Echo Prototype
 
-## Зачем нужен прототип
+## Why This Prototype Exists
 
-Fluent Echo - автономный portfolio vertical slice для практики английской речи.
-Проект показывает локальное распознавание голоса в Unity, отделённое от UI и
-логики проверки ответа. Сейчас используется 2D-интерфейс внутри 3D URP-проекта,
-поэтому позднее можно добавить полноценного говорящего персонажа и окружение.
+Fluent Echo is a local, portfolio-oriented speech practice vertical slice for English pronunciation and speaking practice.
+It shows local speech recognition in Unity, clean scene-owned UI wiring, and a transparent feedback pipeline.
 
-## Что уже работает
+The project is intentionally built as a 2D interface inside a 3D URP project so the visual layer can later evolve into a fuller character-driven presentation.
 
-- Готовая сцена: `Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`.
-- Упражнение: произнести `The dog is big`.
-- Локальное распознавание речи через Whisper без отправки записи в облако.
-- Автоматическая остановка после паузы и вывод распознанного текста.
-- Проверка обязательных слов, их порядка, альтернатив `big|large` и небольших
-  ошибок распознавания.
-- Подсветка правильно распознанных слов, результат и повторная попытка.
-- Детерминированный Demo Mode для проверки интерфейса без микрофона.
-- ScriptableObject-конфигурация урока:
-  `Assets/_FluentEcho/Demo/Data/FirstLesson.asset`.
-- Editor-тесты для основной логики сопоставления текста.
+## What Already Works
 
-## Основные части
+- Ready scene: `Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`
+- Practice flow: say `The dog is big`
+- Local speech recognition through Whisper without sending audio to the cloud
+- Automatic pause detection and recognized-text output
+- Word coverage checking, accepted alternatives like `big|large`, and small recognition errors
+- Correct word highlighting, result flow, and retry support
+- Deterministic Demo Mode for UI verification without a microphone
+- ScriptableObject lesson configuration
+- Editor tests for the core matching logic
 
-- `Runtime/Data` - данные упражнений.
-- `Runtime/Domain` - независимые от Unity UI правила проверки и состояние сессии.
-- `Runtime/Services` - общий интерфейс распознавания, Whisper и mock-реализации.
-- `Runtime/Presentation` - Presenter, связывающий упражнение, сервис и View.
-- `Runtime/Views` - Unity UI и карточки слов.
-- `Runtime/Bootstrap` - сборка зависимостей сцены.
-- `Editor/FluentEchoPrototypeBuilder.cs` - полная пересборка demo-сцены.
-- `Tests/Editor` - тесты `SpeechAnswerMatcher`.
+## Core Structure
 
-Whisper-модель находится в
-`Assets/StreamingAssets/Whisper/ggml-tiny.en.bin`.
+- `Runtime/Data` - lesson data
+- `Runtime/Domain` - Unity-independent matching rules and session state
+- `Runtime/Services` - speech recognition interface, Whisper, and mock implementations
+- `Runtime/Presentation` - presenter that connects lesson, service, and view
+- `Runtime/Views` - Unity UI and word chips
+- `Runtime/Bootstrap` - scene dependency wiring
+- `Editor/FluentEchoPrototypeBuilder.cs` - full demo-scene rebuild
+- `Tests/Editor` - edit-mode tests for the matcher, scoring, and presenter flows
 
-## Как проверить
+## Whisper Model
 
-1. Если Unity предложит перечитать изменённую сцену с диска, выберите `Reload`.
-2. При необходимости выполните `Tools > Fluent Echo > Rebuild Prototype`.
-3. Откройте `FluentEchoPrototype` и нажмите Play.
-4. Нажмите `RUN DEMO ANSWER`.
-5. Через короткую паузу должны появиться фраза `the dog is big`, зелёные карточки
-   всех слов и статус `ANSWER ACCEPTED`.
-6. Нажмите `NEW ATTEMPT`, чтобы сбросить упражнение.
-7. Выключите `Use deterministic demo engine`.
-8. Нажмите `START SPEAKING`, произнесите `The dog is big` и сделайте паузу.
-9. Whisper должен вывести текст, подсветить слова и завершить упражнение.
+The Whisper model is stored in:
 
-Если Windows или Unity запросит разрешение на микрофон, его нужно выдать вручную.
-Первое включение Whisper может занять несколько секунд, пока модель загружается.
+`Assets/StreamingAssets/Whisper/ggml-tiny.en.bin`
 
-Доменные тесты можно запустить через
-`Window > General > Test Runner > EditMode > Run All`. Ожидаемый результат:
-пять пройденных тестов в `SpeechAnswerMatcherTests`.
+## How To Verify
 
-## Текущее ограничение
+1. If Unity asks to reload the changed scene from disk, choose `Reload`.
+2. If needed, run `Tools > Fluent Echo > Rebuild Prototype`.
+3. Open `FluentEchoPrototype` and press Play.
+4. Press `RUN DEMO ANSWER`.
+5. After a short pause, `the dog is big` should appear, the word chips should turn green, and the status should read `ANSWER ACCEPTED`.
+6. Press `NEW ATTEMPT` to reset the exercise.
+7. Turn off `Use deterministic demo engine`.
+8. Press `START SPEAKING`, say `The dog is big`, and pause.
+9. Whisper should output text, highlight words, and complete the exercise.
 
-Прототип проверяет текст, полученный от speech-to-text, а не качество отдельных
-фонем. Профессиональную оценку произношения, ударения и уверенности следует
-добавлять отдельным pronunciation-scoring сервисом, не меняя UI и Presenter.
+If Windows or Unity asks for microphone permission, grant it manually.
+The first Whisper warm-up can take a few seconds while the model loads.
 
-Подробный план развития находится в `IMPROVEMENT_ROADMAP.md`.
+Edit-mode tests can be run through `Window > General > Test Runner > EditMode > Run All`.
+The expected result is the full edit-mode test set passing.
+
+## Current Limitation
+
+The prototype checks transcript quality, not phoneme quality.
+Professional pronunciation, stress, and accent scoring should be added through a separate scoring service without changing the UI or presenter boundary.
+
+## Case Study
+
+For a portfolio explanation, start with `CASE_STUDY_BRIEF.md`.
+It gives a one-minute story, the core architecture, the limitations, and the next steps for a reviewer.

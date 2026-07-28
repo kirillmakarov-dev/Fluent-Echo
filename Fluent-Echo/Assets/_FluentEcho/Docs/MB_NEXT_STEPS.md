@@ -64,6 +64,7 @@ The plan intentionally avoids paid APIs and keeps the scoring pipeline local and
 ### 6. Keep the portfolio story readable
 
 - Keep `MB_ARCHITECTURE.md` aligned with the current onboarding, honest scoring, and panel layout.
+- Keep `CASE_STUDY_BRIEF.md` as the short portfolio-facing summary.
 - Make sure the case-study story fits a one-minute explanation: privacy, local Whisper, transparent estimate, coach-style feedback.
 - Keep the docs focused on what a reviewer needs to see first, not on internal implementation details.
 
