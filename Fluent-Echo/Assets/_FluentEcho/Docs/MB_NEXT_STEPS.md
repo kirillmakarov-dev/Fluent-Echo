@@ -5,25 +5,36 @@ This brief captures the practical path from the current prototype to a fuller po
 ## What is already in place
 
 - Local microphone capture with device selection.
-- Whisper transcription with quality profiles.
+- Whisper transcription with warm-up and quality profiles.
 - Lesson navigation across multiple exercises.
-- An expanded eight-lesson catalog with different prompt shapes.
+- A multi-category lesson catalog.
 - Progress persistence.
 - A heuristic pronunciation estimate MVP.
 - Editor-safe CPU fallback for Whisper.
+- Separate scene-owned panels for settings and result feedback.
 
 ## Recommended next steps
 
 ### Current sprint roadmap
 
 Use `SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md` as the current implementation plan.
-It splits the next work into onboarding/error states, honest local pronunciation estimate, and portfolio case-study polish.
+It now breaks the work into:
+
+- scene-owned UI and layout lock-down;
+- onboarding and friendly error states;
+- honest local pronunciation estimate;
+- lesson catalog, progress, and navigation;
+- portfolio case-study polish.
+
 The plan intentionally avoids paid APIs and keeps the scoring pipeline local and transparent.
 
-### 1. Harden the transcription pipeline
+### 1. Keep the interaction loop stable
 
-- Add visible input-level feedback so the user knows the microphone is active.
-- Keep refining cancellation and restart behavior.
+- Preserve scene-owned UI positions.
+- Keep microphone selection visible and editable in the scene.
+- Keep Whisper profile selection visible and editable in the scene.
+- Keep settings separate from the lesson flow.
+- Keep the result panel separate from the practice panel.
 - Validate that switching lessons, mic devices, and Whisper profiles remains stable across repeated attempts.
 
 ### 2. Improve progress tracking

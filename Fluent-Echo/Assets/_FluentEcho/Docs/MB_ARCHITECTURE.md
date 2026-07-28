@@ -25,7 +25,39 @@ The key promise is privacy:
 - progress persistence per lesson;
 - onboarding and user-friendly failure states;
 - a heuristic pronunciation estimate that is explicitly presented as an estimate, not true phoneme scoring;
-- a result flow that supports retry, close, and next mission actions.
+- a result flow that supports retry, close, and next mission actions;
+- inspector-friendly scene-owned UI wiring.
+
+## Scene Ownership and Wiring
+
+The visual layout should be controlled from the scene, not hidden runtime recreation.
+
+### Scene-owned UI elements
+
+- microphone dropdown;
+- Whisper profile dropdown;
+- lesson/category navigation;
+- settings panel;
+- result panel;
+- onboarding / notice overlays;
+- practice buttons and status text.
+
+### What bootstrap should do
+
+- resolve references that are already placed in the scene;
+- bind missing callbacks;
+- restore persisted selections;
+- initialize services;
+- keep the app functional when the scene is reloaded.
+
+### What bootstrap should not do
+
+- silently replace the panel layout with a different arrangement;
+- move panels to new positions after Play mode starts unless a specific flow requires it;
+- hide designer changes behind a code-driven layout reset.
+
+This distinction matters because the scene should remain editable by hand.
+A designer or developer should be able to move a panel, change anchors, or restyle a button in Edit mode and see the same composition in Play mode.
 
 ## Layer Map
 
@@ -40,19 +72,19 @@ ScriptableObject content and cataloging:
 
 Pure logic and session state:
 
-- `SpeechAnswerMatcher` compares the transcript with the lesson target.
-- `SpeechSession` tracks whether the app is idle, listening, analyzing, retrying, cancelling, or in error.
+- `SpeechAnswerMatcher` compares the transcript with the lesson target;
+- `SpeechSession` tracks whether the app is idle, listening, analyzing, retrying, cancelling, or in error;
 - `SpeechMatchResult` carries the transcript-match flags and completion state.
 
 ### `Runtime/Services`
 
 Infrastructure and scoring:
 
-- `ISpeechRecognitionService` defines the speech pipeline contract.
-- `WhisperSpeechRecognitionService` runs the local Whisper transcription flow.
-- `MockSpeechRecognitionService` provides deterministic demo mode behavior.
-- `WhisperSettingsSO` stores model/profile configuration and progress-friendly lesson history data.
-- `LessonProgressRepository` persists progress in `PlayerPrefs`.
+- `ISpeechRecognitionService` defines the speech pipeline contract;
+- `WhisperSpeechRecognitionService` runs the local Whisper transcription flow;
+- `MockSpeechRecognitionService` provides deterministic demo mode behavior;
+- `WhisperSettingsSO` stores model/profile configuration and progress-friendly lesson history data;
+- `LessonProgressRepository` persists progress in `PlayerPrefs`;
 - `IPronunciationScoringService` and `HeuristicPronunciationScoringService` compute the current local pronunciation estimate.
 
 Important note:
@@ -103,6 +135,7 @@ Edit-mode coverage currently focuses on:
 - `SpeechSessionTests`
 - `WhisperSettingsTests`
 - `PronunciationScoringServiceTests`
+- `FluentEchoPresenterTests`
 
 ## Runtime Flow
 

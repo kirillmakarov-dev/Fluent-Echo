@@ -1,32 +1,66 @@
-# Fluent Echo Sprint Roadmap - Local Scoring and Onboarding
+# Fluent Echo Sprint Roadmap
 
-This roadmap describes the next portfolio-quality work without paid APIs.
-The goal is to make Fluent Echo feel like a finished local speech-practice app while staying honest about what local Whisper can and cannot score.
+This roadmap is the working plan for turning the current prototype into a polished, honest, local speech-practice app without paid APIs.
 
 ## Product Goal
 
-Bring the project from a strong prototype to a polished portfolio vertical slice:
+Ship a portfolio-ready Unity vertical slice that feels stable, readable, and intentional:
 
-`open app -> understand privacy -> choose practice path -> record -> get clear feedback -> retry or continue`
+`open app -> understand privacy -> choose a practice path -> record -> get feedback -> retry or continue`
 
-The app should not claim true phoneme-level pronunciation assessment until a real phoneme/alignment scorer exists.
-Instead, it should present the current local scoring as a transparent pronunciation estimate based on recognition quality, word matching, rhythm, and attempt history.
+The app should stay honest about what local Whisper can do. It can produce transcripts and confidence signals, but it should not pretend to do phoneme-level pronunciation scoring until a real scorer exists.
 
 ## Constraints
 
 - No paid APIs.
 - No cloud speech processing.
 - Keep audio local.
-- Keep the current architecture separation: Data, Domain, Services, Presentation, Views, Bootstrap.
-- Preserve inspector-driven UI wiring where possible.
+- Keep the current architecture split: Data, Domain, Services, Presentation, Views, Bootstrap.
+- Prefer inspector-owned scene wiring over runtime recreation.
 - Do not hide limitations from the user or the portfolio case study.
+
+## Sprint 0 - Scene-Owned UI and Layout Lock-Down
+
+### Objective
+
+Make the scene itself the source of truth for the visual layout.
+The user should be able to move panels, anchors, fonts, colors, and spacing in the scene without the bootstrap code silently rebuilding the UI into a different shape.
+
+### Scope
+
+- Keep microphone, Whisper profile, lesson selector, settings, and result panel as scene-owned objects.
+- Remove any remaining runtime positioning that re-centers or reflows the main UI after Play mode starts.
+- Ensure the top-level panels stay where they are placed in Edit mode.
+- Keep the lesson dropdown, category screen, and settings panel visually separated.
+- Keep the result panel as its own overlay instead of a tiny inline text block.
+- Keep all current icons and button styles, but let the scene own their positions and sizes.
+
+### Acceptance Criteria
+
+- Moving a panel in Edit mode keeps that position in Play mode unless the scene explicitly changes it.
+- Stopping Play mode does not snap back the result panel or settings panel because of hidden code-driven layout reset.
+- The lesson dropdown still works after a reload.
+- The settings panel can be opened and closed without breaking the lesson flow.
+
+### Suggested Files
+
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Bootstrap/FluentEchoBootstrap.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Views/FluentEchoView.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Presentation/FluentEchoPresenter.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`
+
+### Verify After Sprint
+
+- Open the scene in Edit mode and confirm the UI hierarchy matches the intended Play mode layout.
+- Run Play mode and confirm the layout is not rebuilt into a different shape.
+- Confirm the buttons and dropdowns remain clickable.
 
 ## Sprint 1 - Polished Onboarding and Error States
 
 ### Objective
 
 Make the first launch and failure states understandable for a new user.
-The user should always know what is happening, what to press next, and how to fix microphone/model problems.
+The user should always know what is happening, what to press next, and how to fix microphone or model problems.
 
 ### Scope
 
@@ -56,7 +90,7 @@ The user should always know what is happening, what to press next, and how to fi
 
 ### Error and Empty States
 
-Use these product-facing messages instead of technical logs:
+Use product-facing messages instead of technical logs:
 
 - No microphone:
   - Title: `Microphone not found`
@@ -88,31 +122,24 @@ Use these product-facing messages instead of technical logs:
   - Body: `The recording stopped before analysis finished. Please try again.`
   - Action: `TRY AGAIN`
 
-### Implementation Notes
-
-- Add view methods for onboarding and error states instead of pushing raw strings from services directly into UI.
-- Keep service errors technical internally, but map them to user-friendly messages in the presenter.
-- Store onboarding completion in `PlayerPrefs`.
-- Add a reset/debug option later if needed, but do not expose it as a main user flow.
-
 ### Acceptance Criteria
 
 - First launch shows onboarding before practice starts.
 - Returning users can go directly to the category screen.
-- User sees a friendly state if no microphone exists.
-- User sees a friendly state if the model is missing.
+- The user sees a friendly state if no microphone exists.
+- The user sees a friendly state if the model is missing.
 - `START SPEAKING` is not available while the speech model is still preparing.
 - Empty or silent recordings return to a retryable state.
 - Existing category, lesson, settings, and result UI still work.
 
 ### Suggested Files
 
-- `Assets/_FluentEcho/Runtime/Views/FluentEchoView.cs`
-- `Assets/_FluentEcho/Runtime/Presentation/FluentEchoPresenter.cs`
-- `Assets/_FluentEcho/Runtime/Bootstrap/FluentEchoBootstrap.cs`
-- `Assets/_FluentEcho/Runtime/Services/WhisperSpeechRecognitionService.cs`
-- `Assets/_FluentEcho/Editor/FluentEchoPrototypeBuilder.cs`
-- `Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Views/FluentEchoView.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Presentation/FluentEchoPresenter.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Bootstrap/FluentEchoBootstrap.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Services/WhisperSpeechRecognitionService.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Editor/FluentEchoPrototypeBuilder.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`
 
 ## Sprint 2 - Honest Local Pronunciation Estimate
 
@@ -134,9 +161,9 @@ Rename user-facing labels:
 
 - `Pronunciation Score` -> `Pronunciation Estimate`
 - `Score` -> `Practice Score`
-- `Precision` -> `Recognition precision`
+- `Precision` -> `Recognition Precision`
 - `Tempo` -> `Rhythm`
-- `Word detail` -> `Word focus`
+- `Word detail` -> `Word Focus`
 - `Confidence` should be shown as a band: `High`, `Medium`, or `Low`
 
 ### Scoring Breakdown
@@ -247,18 +274,75 @@ When no speech is detected:
 
 ### Suggested Files
 
-- `Assets/_FluentEcho/Runtime/Services/WhisperSettingsSO.cs`
-- `Assets/_FluentEcho/Runtime/Presentation/FluentEchoPresenter.cs`
-- `Assets/_FluentEcho/Runtime/Domain/SpeechAnswerMatcher.cs`
-- `Assets/_FluentEcho/Runtime/Views/FluentEchoView.cs`
-- `Assets/_FluentEcho/Tests/Editor`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Services/WhisperSettingsSO.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Presentation/FluentEchoPresenter.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Domain/SpeechAnswerMatcher.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Views/FluentEchoView.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Tests/Editor`
 
-## Sprint 3 - Portfolio Case Study Polish
+## Sprint 3 - Lesson Catalog, Progress, and Navigation
+
+### Objective
+
+Expand the content so the app feels like a real learning product instead of a single demo lesson.
+
+### Scope
+
+- Build a category-first starting flow.
+- Keep three practice paths:
+  - Words
+  - Short Sentences
+  - Challenge Sentences
+- Populate each category with 8-10 exercises.
+- Keep the `Next` / `Prev` navigation smooth and predictable.
+- Persist the selected category, lesson index, and best result per exercise.
+- Make lesson switching fast and deterministic.
+
+### Content Targets
+
+- Words:
+  - short, concrete nouns and common vocabulary;
+  - focused on clarity and pronunciation confidence.
+
+- Short Sentences:
+  - 4-6 word prompts;
+  - controlled rhythm;
+  - a good fit for early scoring feedback.
+
+- Challenge Sentences:
+  - longer, more natural phrases;
+  - rhythm and continuity become more important;
+  - useful for a stronger portfolio demo.
+
+### Acceptance Criteria
+
+- The start screen shows three distinct practice categories.
+- Each category contains multiple unique lessons.
+- `Next` and `Prev` switch lessons without slow rebuilds.
+- Progress survives restarts.
+- Lesson content no longer collapses into one repeated placeholder experience.
+
+### Suggested Files
+
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Data`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Presentation/FluentEchoPresenter.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Runtime/Services/LessonProgressRepository.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Editor/FluentEchoPrototypeBuilder.cs`
+- `Fluent-Echo/Assets/_FluentEcho/Demo/Data`
+
+### Verify After Sprint
+
+- Confirm the category screen shows three paths.
+- Confirm each path has its own lesson list.
+- Confirm progress is stored and restored correctly.
+- Confirm lesson switching does not block the mic or scoring flow.
+
+## Sprint 4 - Portfolio Case Study Polish
 
 ### Objective
 
 Prepare the project to be shown confidently in a portfolio.
-This sprint is not about adding large systems; it is about presentation, clarity, and proof of engineering decisions.
+This sprint is about presentation, clarity, and proof of engineering decisions.
 
 ### Scope
 
@@ -288,19 +372,18 @@ This sprint is not about adding large systems; it is about presentation, clarity
 
 ### Suggested Files
 
-- `Assets/_FluentEcho/Docs/MB_ARCHITECTURE.md`
-- `Assets/_FluentEcho/Docs/MB_NEXT_STEPS.md`
-- `Assets/_FluentEcho/Docs/PROTOTYPE_OVERVIEW.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/MB_ARCHITECTURE.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/MB_NEXT_STEPS.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/PROTOTYPE_OVERVIEW.md`
 - Portfolio README or external case study later.
 
 ## Recommended Implementation Order
 
-1. Sprint 1: onboarding and friendly error states.
-2. Sprint 2: honest local pronunciation estimate.
-3. Sprint 3: portfolio case-study polish.
-
-Do not start with paid APIs, custom ML training, or complex 3D systems.
-The strongest next move is a reliable, honest, repeatable learning loop.
+1. Sprint 0: scene-owned UI and layout lock-down.
+2. Sprint 1: onboarding and friendly error states.
+3. Sprint 2: honest local pronunciation estimate.
+4. Sprint 3: lesson catalog, progress, and navigation.
+5. Sprint 4: portfolio case-study polish.
 
 ## Definition of Done for the Whole Roadmap
 
