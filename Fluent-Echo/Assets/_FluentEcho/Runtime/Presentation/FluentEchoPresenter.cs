@@ -506,11 +506,11 @@ namespace FluentEcho.Presentation
             view.SetListening(false);
             view.SetSuccess(false);
             if (useMock)
-                view.SetStatus("Demo mode is ready. Press Start Speaking to preview a correct answer.");
+                view.SetStatus(FluentEchoCopy.DemoModeReadyStatus);
             else if (activeService != null && activeService.IsReady)
-                view.SetStatus("Ready to practice.");
+                view.SetStatus(FluentEchoCopy.ReadyToPracticeStatus);
             else
-                view.SetStatus("Preparing speech model...");
+                view.SetStatus(FluentEchoCopy.PreparingSpeechModelStatus);
         }
 
         private void HandleNoticeConfirmed()
@@ -524,8 +524,8 @@ namespace FluentEcho.Presentation
                     view.HideNotice();
                     view.SetCategoryScreenVisible(true);
                     view.SetStatus(useMock
-                        ? "Demo mode is ready. Press Start Speaking to preview a correct answer."
-                        : "Ready to practice.");
+                        ? FluentEchoCopy.DemoModeReadyStatus
+                        : FluentEchoCopy.ReadyToPracticeStatus);
                     break;
                 case NoticeAction.OpenSettings:
                     view.HideNotice();
@@ -744,7 +744,7 @@ namespace FluentEcho.Presentation
                 if (lines.Count > 0)
                     lines.Add(string.Empty);
 
-                lines.Add("Choose Next Mission to continue, or Try Again to improve this score.");
+                lines.Add(FluentEchoCopy.NextMissionPrompt);
                 return string.Join("\n", lines);
             }
 

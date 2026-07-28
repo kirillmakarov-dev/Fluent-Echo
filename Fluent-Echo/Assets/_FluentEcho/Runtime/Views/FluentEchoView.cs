@@ -408,10 +408,10 @@ namespace FluentEcho.Views
             }
 
             if (status.StartsWith("Whisper ready", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Ready to practice.";
+                statusLabel.text = FluentEchoCopy.ReadyToPracticeStatus;
             else if (status.StartsWith("Loading", StringComparison.OrdinalIgnoreCase)
                      || status.StartsWith("Warming", StringComparison.OrdinalIgnoreCase))
-                statusLabel.text = "Preparing speech model...";
+                statusLabel.text = FluentEchoCopy.PreparingSpeechModelStatus;
             else if (status.StartsWith("Analyzing", StringComparison.OrdinalIgnoreCase))
                 statusLabel.text = "Checking your pronunciation...";
             else if (status.StartsWith("Excellent", StringComparison.OrdinalIgnoreCase))

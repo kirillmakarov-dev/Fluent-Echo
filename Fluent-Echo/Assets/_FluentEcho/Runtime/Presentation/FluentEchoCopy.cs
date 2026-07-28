@@ -8,6 +8,10 @@ namespace FluentEcho.Presentation
         public const string FirstPronunciationSummary = "PRACTICE SCORE | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstEstimatePrompt = "Speak once to generate the first local estimate.";
         public const string PhonemeRoadmapText = "Phoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.";
+        public const string ReadyToPracticeStatus = "Ready to practice.";
+        public const string DemoModeReadyStatus = "Demo mode is ready. Press Start Speaking to preview a correct answer.";
+        public const string PreparingSpeechModelStatus = "Preparing speech model...";
+        public const string NextMissionPrompt = "Choose Next Mission to continue, or Try Again to improve this score.";
 
         public static string BuildProgressSummary(int totalWords)
         {

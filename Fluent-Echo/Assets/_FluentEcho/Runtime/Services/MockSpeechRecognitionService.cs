@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using FluentEcho.Data;
+using FluentEcho.Presentation;
 using UnityEngine;
 
 namespace FluentEcho.Services
@@ -33,7 +34,7 @@ namespace FluentEcho.Services
 
         public void Prepare()
         {
-            StatusChanged?.Invoke("Demo mode is ready. Press Start Speaking to preview a correct answer.");
+            StatusChanged?.Invoke(FluentEchoCopy.DemoModeReadyStatus);
         }
 
         public void StartListening()
