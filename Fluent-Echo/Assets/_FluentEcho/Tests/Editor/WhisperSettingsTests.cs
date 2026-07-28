@@ -149,6 +149,8 @@ namespace FluentEcho.Tests
                 Assert.That(score.BandLabel, Is.EqualTo("strong"));
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION"));
                 Assert.That(score.FeedbackText, Does.Contain("Strong delivery"));
+                Assert.That(score.WordScores, Has.Length.EqualTo(4));
+                Assert.That(score.WordScores[0].Score, Is.GreaterThanOrEqualTo(90));
             }
             finally
             {
@@ -174,6 +176,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.MissingWordCount, Is.EqualTo(1));
                 Assert.That(score.FeedbackText, Does.Contain("Missing 1 word"));
                 Assert.That(score.FeedbackText, Does.Contain("Focus on big"));
+                Assert.That(score.WordScores[3].Score, Is.LessThan(score.WordScores[0].Score));
             }
             finally
             {
@@ -181,17 +184,41 @@ namespace FluentEcho.Tests
             }
         }
 
-        private static SpeechExerciseSO CreateExercise()
+        [Test]
+        public void AcceptedAlternative_ProducesHighPerWordScore()
+        {
+            SpeechExerciseSO exercise = CreateExercise("dog|hound");
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "The hound is big.",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    3f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.WordScores[1].Word, Is.EqualTo("dog"));
+                Assert.That(score.WordScores[1].Score, Is.GreaterThanOrEqualTo(95));
+                Assert.That(score.WordScores[1].Matched, Is.True);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        private static SpeechExerciseSO CreateExercise(string secondWord = "dog")
         {
             SpeechExerciseSO exercise = ScriptableObject.CreateInstance<SpeechExerciseSO>();
             SerializedObject serialized = new(exercise);
             serialized.FindProperty("prompt").stringValue = "Say the sentence in English.";
             serialized.FindProperty("targetWords").arraySize = 4;
             serialized.FindProperty("targetWords").GetArrayElementAtIndex(0).stringValue = "the";
-            serialized.FindProperty("targetWords").GetArrayElementAtIndex(1).stringValue = "dog";
+            serialized.FindProperty("targetWords").GetArrayElementAtIndex(1).stringValue = secondWord;
             serialized.FindProperty("targetWords").GetArrayElementAtIndex(2).stringValue = "is";
             serialized.FindProperty("targetWords").GetArrayElementAtIndex(3).stringValue = "big";
-            serialized.FindProperty("acceptedPhrases").stringValue = "the dog is big";
+            serialized.FindProperty("acceptedPhrases").stringValue = "the dog is big|the hound is big";
             serialized.FindProperty("progressKey").stringValue = "lesson_01_describe_the_dog";
             serialized.FindProperty("requireWordOrder").boolValue = true;
             serialized.FindProperty("allowFuzzyMatch").boolValue = true;

@@ -439,10 +439,17 @@ namespace FluentEcho.Presentation
 
             if (lastPronunciationScore.IsAvailable)
             {
+                lines.Add("RESULT BOARD");
                 lines.Add(
-                    $"RESULT | {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel.ToUpperInvariant()}");
+                    $"SCORE | {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel.ToUpperInvariant()}");
                 lines.Add(
                     $"Coverage {lastPronunciationScore.CoverageScore}% | Precision {lastPronunciationScore.PrecisionScore}% | Tempo {lastPronunciationScore.TempoScore}%");
+                lines.Add(
+                    $"Matched {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount} | Missing {lastPronunciationScore.MissingWordCount} | Extra {lastPronunciationScore.ExtraWordCount}");
+
+                string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
+                if (!string.IsNullOrWhiteSpace(wordBreakdown))
+                    lines.Add(wordBreakdown);
 
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
                     lines.Add(lastPronunciationScore.FeedbackText);
@@ -471,11 +478,36 @@ namespace FluentEcho.Presentation
                 ? $"Focus next: {score.MissingWordCount} missing word{(score.MissingWordCount == 1 ? string.Empty : "s")}."
                 : "Focus next: keep the rhythm steady.";
 
+            string wordBreakdown = BuildWordBreakdown(score.WordScores);
+
             return string.Join(
                 "\n",
                 $"Coverage {score.CoverageScore}% | Precision {score.PrecisionScore}% | Tempo {score.TempoScore}%",
+                $"Matched {score.MatchedWordCount}/{score.ExpectedWordCount} | Missing {score.MissingWordCount} | Extra {score.ExtraWordCount}",
+                string.IsNullOrWhiteSpace(wordBreakdown) ? string.Empty : wordBreakdown,
                 focus,
                 string.IsNullOrWhiteSpace(score.FeedbackText) ? string.Empty : score.FeedbackText);
+        }
+
+        private static string BuildWordBreakdown(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
+        {
+            if (wordScores == null || wordScores.Count == 0)
+                return string.Empty;
+
+            int limit = Mathf.Min(5, wordScores.Count);
+            var parts = new System.Collections.Generic.List<string>(limit);
+            for (int i = 0; i < limit; i++)
+            {
+                PronunciationWordScore wordScore = wordScores[i];
+                string marker = wordScore.Score >= 90
+                    ? "ok"
+                    : wordScore.Score >= 70
+                        ? "near"
+                        : "work";
+                parts.Add($"{wordScore.Word} {wordScore.Score}% {marker}");
+            }
+
+            return $"Words | {string.Join(" | ", parts)}";
         }
 
         private int ResolveExerciseIndex(SpeechExerciseSO selectedExercise)

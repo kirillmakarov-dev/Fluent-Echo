@@ -129,6 +129,7 @@ namespace FluentEcho.Services
                 return PronunciationScoreResult.Unavailable;
 
             bool[] matchedWordFlags = matchResult.MatchedWords ?? Array.Empty<bool>();
+            string[][] acceptedWordGroups = exercise.GetAcceptedWordGroups();
             List<string> spokenWords = Tokenize(transcript);
             int matchedWords = CountMatchedWords(matchedWordFlags);
             int expectedCount = expectedWords.Length;
@@ -154,7 +155,13 @@ namespace FluentEcho.Services
                     0,
                     0,
                     recordingSeconds,
-                    BuildWordScores(expectedWords, matchedWordFlags));
+                    BuildWordScores(
+                        expectedWords,
+                        acceptedWordGroups,
+                        spokenWords,
+                        matchedWordFlags,
+                        exercise.RequireWordOrder,
+                        exercise.AllowFuzzyMatch));
             }
 
             float coverage = Mathf.Clamp01((float) matchedWords / expectedCount);
@@ -195,7 +202,13 @@ namespace FluentEcho.Services
                 precisionScore,
                 tempoScore,
                 recordingSeconds,
-                BuildWordScores(expectedWords, matchedWordFlags));
+                BuildWordScores(
+                    expectedWords,
+                    acceptedWordGroups,
+                    spokenWords,
+                    matchedWordFlags,
+                    exercise.RequireWordOrder,
+                    exercise.AllowFuzzyMatch));
         }
 
         private static string BuildSummary(int score, string band)
@@ -264,7 +277,13 @@ namespace FluentEcho.Services
             return focus.Count == 0 ? string.Empty : string.Join(", ", focus);
         }
 
-        private static PronunciationWordScore[] BuildWordScores(string[] expectedWords, bool[] matches)
+        private static PronunciationWordScore[] BuildWordScores(
+            string[] expectedWords,
+            string[][] acceptedWordGroups,
+            List<string> spokenWords,
+            bool[] matches,
+            bool requireWordOrder,
+            bool allowFuzzyMatch)
         {
             if (expectedWords == null || expectedWords.Length == 0)
                 return Array.Empty<PronunciationWordScore>();
@@ -272,12 +291,130 @@ namespace FluentEcho.Services
             var scores = new PronunciationWordScore[expectedWords.Length];
             for (int i = 0; i < expectedWords.Length; i++)
             {
-                bool matched = matches != null && i < matches.Length && matches[i];
-                int score = matched ? 90 : 35;
-                scores[i] = new PronunciationWordScore(expectedWords[i], score, matched);
+                string expectedWord = expectedWords[i];
+                string[] acceptedWords = acceptedWordGroups != null && i < acceptedWordGroups.Length
+                    ? acceptedWordGroups[i]
+                    : Array.Empty<string>();
+                int score = ScoreWord(
+                    expectedWord,
+                    acceptedWords,
+                    spokenWords,
+                    i,
+                    requireWordOrder,
+                    allowFuzzyMatch);
+
+                if (matches != null && i < matches.Length && matches[i])
+                    score = Mathf.Max(score, 90);
+
+                bool matched = score >= 80;
+                scores[i] = new PronunciationWordScore(expectedWord, score, matched);
             }
 
             return scores;
+        }
+
+        private static int ScoreWord(
+            string expectedWord,
+            string[] acceptedWords,
+            List<string> spokenWords,
+            int expectedIndex,
+            bool requireWordOrder,
+            bool allowFuzzyMatch)
+        {
+            if (spokenWords == null || spokenWords.Count == 0)
+                return 0;
+
+            int bestScore = 0;
+            for (int tokenIndex = 0; tokenIndex < spokenWords.Count; tokenIndex++)
+            {
+                string token = spokenWords[tokenIndex];
+                int score = ScoreTokenAgainstCandidates(token, expectedWord, acceptedWords, allowFuzzyMatch);
+                if (score <= 0)
+                    continue;
+
+                if (requireWordOrder)
+                {
+                    int distancePenalty = Mathf.Min(24, Mathf.Abs(tokenIndex - expectedIndex) * 6);
+                    score = Mathf.Max(0, score - distancePenalty);
+                }
+
+                if (score > bestScore)
+                    bestScore = score;
+            }
+
+            return bestScore;
+        }
+
+        private static int ScoreTokenAgainstCandidates(
+            string token,
+            string expectedWord,
+            string[] acceptedWords,
+            bool allowFuzzyMatch)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return 0;
+
+            int bestScore = ScoreCandidate(token, expectedWord, allowFuzzyMatch);
+            if (acceptedWords == null)
+                return bestScore;
+
+            for (int i = 0; i < acceptedWords.Length; i++)
+                bestScore = Mathf.Max(bestScore, ScoreCandidate(token, acceptedWords[i], allowFuzzyMatch));
+
+            return bestScore;
+        }
+
+        private static int ScoreCandidate(string token, string candidate, bool allowFuzzyMatch)
+        {
+            string normalizedCandidate = NormalizeToken(candidate);
+            if (string.IsNullOrEmpty(normalizedCandidate))
+                return 0;
+
+            if (token == normalizedCandidate)
+                return 100;
+
+            if (!allowFuzzyMatch)
+                return 0;
+
+            int distance = ComputeLevenshteinDistance(token, normalizedCandidate);
+            int longest = Mathf.Max(token.Length, normalizedCandidate.Length);
+            if (longest <= 0)
+                return 0;
+
+            float similarity = 1f - ((float) distance / longest);
+            if (similarity <= 0f)
+                return 0;
+
+            return Mathf.RoundToInt(Mathf.Lerp(48f, 92f, similarity));
+        }
+
+        private static int ComputeLevenshteinDistance(string left, string right)
+        {
+            if (string.IsNullOrEmpty(left))
+                return string.IsNullOrEmpty(right) ? 0 : right.Length;
+
+            if (string.IsNullOrEmpty(right))
+                return left.Length;
+
+            int[,] matrix = new int[left.Length + 1, right.Length + 1];
+            for (int i = 0; i <= left.Length; i++)
+                matrix[i, 0] = i;
+
+            for (int j = 0; j <= right.Length; j++)
+                matrix[0, j] = j;
+
+            for (int i = 1; i <= left.Length; i++)
+            {
+                for (int j = 1; j <= right.Length; j++)
+                {
+                    int cost = left[i - 1] == right[j - 1] ? 0 : 1;
+                    matrix[i, j] = Mathf.Min(
+                        Mathf.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
+                        matrix[i - 1, j - 1] + cost);
+                }
+            }
+
+            return matrix[left.Length, right.Length];
         }
 
         private static string GetBandLabel(int score)
