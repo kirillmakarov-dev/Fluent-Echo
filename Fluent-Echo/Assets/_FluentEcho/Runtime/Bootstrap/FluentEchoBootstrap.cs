@@ -73,6 +73,7 @@ namespace FluentEcho.Bootstrap
             EnsureMicrophoneDropdown();
             EnsureQualityDropdown();
             EnsureProgressLabel();
+            EnsurePronunciationLabels();
             presenter = new FluentEchoPresenter(
                 exercise,
                 exerciseCatalog,
@@ -122,8 +123,8 @@ namespace FluentEcho.Bootstrap
             }
 
             RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.06f, 0.08f);
-            rect.anchorMax = new Vector2(0.42f, 0.15f);
+            rect.anchorMin = new Vector2(0.06f, 0.03f);
+            rect.anchorMax = new Vector2(0.42f, 0.09f);
 
             PopulateDropdown(microphone, dropdown);
         }
@@ -185,8 +186,8 @@ namespace FluentEcho.Bootstrap
 
             WhisperQualityProfile currentProfile = whisperService.CurrentQualityProfile;
             RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.46f, 0.08f);
-            rect.anchorMax = new Vector2(0.82f, 0.15f);
+            rect.anchorMin = new Vector2(0.46f, 0.03f);
+            rect.anchorMax = new Vector2(0.82f, 0.09f);
 
             var options = new List<Dropdown.OptionData>();
             foreach (string name in Enum.GetNames(typeof(WhisperQualityProfile)))
@@ -232,6 +233,50 @@ namespace FluentEcho.Bootstrap
             }
 
             view.ConfigureProgressLabel(label);
+        }
+
+        private void EnsurePronunciationLabels()
+        {
+            if (view == null)
+                return;
+
+            Transform summaryExisting = view.transform.Find("Pronunciation Summary");
+            TextMeshProUGUI summaryLabel = summaryExisting != null
+                ? summaryExisting.GetComponent<TextMeshProUGUI>()
+                : null;
+            if (summaryLabel == null)
+            {
+                summaryLabel = CreateText(
+                    view.transform,
+                    "Pronunciation Summary",
+                    string.Empty,
+                    14,
+                    FontStyles.Bold,
+                    new Color(0.89f, 0.37f, 0.3f, 1f),
+                    new Vector2(0.62f, 0.32f),
+                    new Vector2(0.94f, 0.37f),
+                    TextAlignmentOptions.Right);
+            }
+
+            Transform feedbackExisting = view.transform.Find("Pronunciation Feedback");
+            TextMeshProUGUI feedbackLabel = feedbackExisting != null
+                ? feedbackExisting.GetComponent<TextMeshProUGUI>()
+                : null;
+            if (feedbackLabel == null)
+            {
+                feedbackLabel = CreateText(
+                    view.transform,
+                    "Pronunciation Feedback",
+                    "Score feedback will appear here.",
+                    12,
+                    FontStyles.Italic,
+                    new Color(0.21f, 0.21f, 0.21f, 1f),
+                    new Vector2(0.62f, 0.27f),
+                    new Vector2(0.94f, 0.32f),
+                    TextAlignmentOptions.Right);
+            }
+
+            view.ConfigurePronunciationLabels(summaryLabel, feedbackLabel);
         }
 
         private SpeechExerciseSO ResolveSelectedExercise()

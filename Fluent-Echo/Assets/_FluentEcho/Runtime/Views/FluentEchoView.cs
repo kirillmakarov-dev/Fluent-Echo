@@ -4,13 +4,14 @@ using FluentEcho.Presentation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
 namespace FluentEcho.Views
 {
     public sealed class FluentEchoView : MonoBehaviour, IFluentEchoView
     {
         [SerializeField] private TextMeshProUGUI promptLabel;
         [SerializeField] private TextMeshProUGUI progressLabel;
+        [SerializeField] private TextMeshProUGUI pronunciationSummaryLabel;
+        [SerializeField] private TextMeshProUGUI pronunciationFeedbackLabel;
         [SerializeField] private TextMeshProUGUI statusLabel;
         [SerializeField] private TextMeshProUGUI transcriptLabel;
         [SerializeField] private TextMeshProUGUI micButtonLabel;
@@ -41,10 +42,17 @@ namespace FluentEcho.Views
         {
             wordChipPrefab = prefab;
         }
-
         public void ConfigureProgressLabel(TextMeshProUGUI label)
         {
             progressLabel = label;
+        }
+
+        public void ConfigurePronunciationLabels(
+            TextMeshProUGUI summaryLabel,
+            TextMeshProUGUI feedbackLabel)
+        {
+            pronunciationSummaryLabel = summaryLabel;
+            pronunciationFeedbackLabel = feedbackLabel;
         }
 
         private void Awake()
@@ -86,6 +94,15 @@ namespace FluentEcho.Views
         {
             if (progressLabel != null)
                 progressLabel.text = progress;
+        }
+
+        public void SetPronunciation(string summary, string feedback)
+        {
+            if (pronunciationSummaryLabel != null)
+                pronunciationSummaryLabel.text = summary ?? string.Empty;
+
+            if (pronunciationFeedbackLabel != null)
+                pronunciationFeedbackLabel.text = feedback ?? string.Empty;
         }
 
         public void SetStatus(string status) => statusLabel.text = status;

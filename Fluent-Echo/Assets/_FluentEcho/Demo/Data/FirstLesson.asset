@@ -19,6 +19,7 @@ MonoBehaviour:
   - is
   - big|large
   acceptedPhrases: the dog is big|the dog is large
+  progressKey: lesson_01_describe_the_dog
   requireWordOrder: 1
   allowFuzzyMatch: 1
   silenceTimeoutSeconds: 2.5

@@ -12,6 +12,7 @@ namespace FluentEcho.Presentation
         private readonly IFluentEchoView view;
         private readonly ISpeechRecognitionService realService;
         private readonly ISpeechRecognitionService mockService;
+        private readonly IPronunciationScoringService scoringService = new HeuristicPronunciationScoringService();
         private readonly SpeechAnswerMatcher matcher = new();
         private readonly SpeechSession session = new();
         private readonly Action<AudioClip> playReference;
@@ -22,6 +23,7 @@ namespace FluentEcho.Presentation
         private int currentExerciseIndex;
         private bool useMock;
         private bool success;
+        private float attemptStartedAt = -1f;
 
         public FluentEchoPresenter(
             SpeechExerciseSO exercise,
@@ -77,7 +79,7 @@ namespace FluentEcho.Presentation
 
         private void HandleMicPressed()
         {
-            if (success)
+            if (success || session.Phase == SpeechSessionPhase.Cancelling)
                 return;
 
             if (activeService.IsListening)
@@ -101,7 +103,8 @@ namespace FluentEcho.Presentation
                 ? "Running deterministic demo..."
                 : "Listening... Transcription appears in short local-processing chunks.");
             view.SetListening(true);
-            session.SetPhase(SpeechSessionPhase.Listening);
+            session.BeginListening();
+            attemptStartedAt = Time.realtimeSinceStartup;
             activeService.StartListening();
         }
 
@@ -123,12 +126,10 @@ namespace FluentEcho.Presentation
 
         private void HandleRetry()
         {
-            if (IsInteractionLocked())
-                return;
-
-            activeService?.Cancel();
+            CancelCurrentService("Stopping current attempt...");
             success = false;
             session.Reset();
+            ClearAttemptState();
             ResetView();
         }
 
@@ -160,11 +161,17 @@ namespace FluentEcho.Presentation
 
         private void HandlePreviousExercise()
         {
+            if (IsInteractionLocked())
+                return;
+
             SwitchExercise(currentExerciseIndex - 1);
         }
 
         private void HandleNextExercise()
         {
+            if (IsInteractionLocked())
+                return;
+
             SwitchExercise(currentExerciseIndex + 1);
         }
 
@@ -177,10 +184,8 @@ namespace FluentEcho.Presentation
             if (clampedIndex == currentExerciseIndex)
                 return;
 
-            if (activeService != null)
-                activeService.Cancel();
-
-            UnbindService();
+            CancelCurrentService("Switching lesson...");
+            ClearAttemptState();
             currentExerciseIndex = clampedIndex;
             currentExercise = exerciseCatalog.GetExercise(currentExerciseIndex);
             EnsureExercise();
@@ -193,7 +198,6 @@ namespace FluentEcho.Presentation
 
         private void SelectService(bool mock)
         {
-            activeService?.Cancel();
             UnbindService();
             activeService = mock ? mockService : realService;
             if (activeService == null)
@@ -266,7 +270,7 @@ namespace FluentEcho.Presentation
                 return;
 
             success = true;
-            session.SetPhase(SpeechSessionPhase.Success);
+            session.BeginSuccess();
             view.SetSuccess(true);
             view.SetStatus("Excellent. Every target word was recognized.");
             view.SetListening(false);
@@ -280,25 +284,29 @@ namespace FluentEcho.Presentation
             if (success)
                 return;
 
-            session.SetPhase(SpeechSessionPhase.Analyzing);
+            session.BeginAnalyzing();
             view.SetStatus("Analyzing speech locally...");
             view.SetListening(false);
         }
 
         private void HandleListeningStopped()
         {
+            if (session.Phase == SpeechSessionPhase.Cancelling)
+                return;
+
             view.SetListening(false);
             if (session.Phase == SpeechSessionPhase.Success
                 || session.Phase == SpeechSessionPhase.Retry
                 || session.Phase == SpeechSessionPhase.Analyzing)
             {
                 SaveProgress();
+                UpdatePronunciationScore();
             }
 
             if (success || session.Phase == SpeechSessionPhase.Error)
                 return;
 
-            session.SetPhase(SpeechSessionPhase.Retry);
+            session.BeginRetry();
             view.SetStatus(string.IsNullOrWhiteSpace(session.Transcript)
                 ? "No speech was recognized. Check the microphone and try again."
                 : "Some words are missing. Review the highlights and retry.");
@@ -306,7 +314,11 @@ namespace FluentEcho.Presentation
 
         private void HandleFailure(string message)
         {
-            session.SetPhase(SpeechSessionPhase.Error);
+            if (session.Phase == SpeechSessionPhase.Cancelling)
+                return;
+
+            UpdatePronunciationScore();
+            session.BeginError();
             view.SetListening(false);
             view.SetStatus(message);
         }
@@ -319,12 +331,12 @@ namespace FluentEcho.Presentation
             if (message.StartsWith("Loading", StringComparison.OrdinalIgnoreCase)
                 || message.StartsWith("Warming", StringComparison.OrdinalIgnoreCase))
             {
-                session.SetPhase(SpeechSessionPhase.Preparing);
+                session.BeginPreparing();
             }
             else if (message.StartsWith("Whisper ready", StringComparison.OrdinalIgnoreCase))
             {
                 if (session.Phase == SpeechSessionPhase.Preparing)
-                    session.SetPhase(SpeechSessionPhase.Idle);
+                    session.BeginIdle();
             }
 
             view.SetStatus(message);
@@ -334,9 +346,11 @@ namespace FluentEcho.Presentation
         {
             session.Reset();
             success = false;
+            ClearAttemptState();
             view.SetTranscript(string.Empty);
             view.SetWordMatches(new bool[currentExercise.GetDisplayWords().Length]);
             view.SetProgress(progress?.GetSummaryText() ?? string.Empty);
+            view.SetPronunciation(string.Empty, string.Empty);
             view.SetListening(false);
             view.SetSuccess(false);
             view.SetStatus(useMock
@@ -358,9 +372,52 @@ namespace FluentEcho.Presentation
         {
             return activeService == null
                 ? false
-                : session.Phase == SpeechSessionPhase.Preparing
-                  || session.Phase == SpeechSessionPhase.Analyzing
+                : session.IsBusy
                   || activeService.IsListening;
+        }
+
+        private void CancelCurrentService(string statusMessage)
+        {
+            if (activeService == null)
+                return;
+
+            session.BeginCancelling();
+            view.SetStatus(statusMessage);
+            view.SetListening(false);
+            ClearAttemptState();
+
+            UnbindService();
+            activeService.Cancel();
+        }
+
+        private void UpdatePronunciationScore()
+        {
+            PronunciationScoreResult score = scoringService.Score(
+                currentExercise,
+                session.Transcript,
+                session.MatchResult,
+                GetAttemptDurationSeconds());
+
+            if (!score.IsAvailable)
+            {
+                view.SetPronunciation(string.Empty, string.Empty);
+                return;
+            }
+
+            view.SetPronunciation(score.SummaryText, score.FeedbackText);
+        }
+
+        private float GetAttemptDurationSeconds()
+        {
+            if (attemptStartedAt < 0f)
+                return 0f;
+
+            return Mathf.Max(0f, Time.realtimeSinceStartup - attemptStartedAt);
+        }
+
+        private void ClearAttemptState()
+        {
+            attemptStartedAt = -1f;
         }
 
         private int ResolveExerciseIndex(SpeechExerciseSO selectedExercise)

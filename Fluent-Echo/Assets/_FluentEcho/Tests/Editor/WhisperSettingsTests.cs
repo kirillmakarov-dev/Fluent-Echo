@@ -1,4 +1,5 @@
 using System;
+using FluentEcho.Data;
 using FluentEcho.Domain;
 using FluentEcho.Services;
 using NUnit.Framework;
@@ -110,6 +111,79 @@ namespace FluentEcho.Tests
             serialized.FindProperty("qualityProfilePrefsKey").stringValue = prefsKey;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return settings;
+        }
+    }
+
+    public sealed class PronunciationScoringServiceTests
+    {
+        private readonly HeuristicPronunciationScoringService scorer = new();
+
+        [Test]
+        public void ExactSentence_ProducesStrongScore()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "The dog is big.",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    3f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.OverallScore, Is.GreaterThanOrEqualTo(90));
+                Assert.That(score.BandLabel, Is.EqualTo("strong"));
+                Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION"));
+                Assert.That(score.FeedbackText, Does.Contain("Strong delivery"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        [Test]
+        public void MissingWord_ProducesFocusedFeedback()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "The dog is",
+                    new SpeechMatchResult(false, new[] { true, true, true, false }),
+                    2.5f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.OverallScore, Is.LessThan(90));
+                Assert.That(score.MissingWordCount, Is.EqualTo(1));
+                Assert.That(score.FeedbackText, Does.Contain("Missing 1 word"));
+                Assert.That(score.FeedbackText, Does.Contain("Focus on big"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        private static SpeechExerciseSO CreateExercise()
+        {
+            SpeechExerciseSO exercise = ScriptableObject.CreateInstance<SpeechExerciseSO>();
+            SerializedObject serialized = new(exercise);
+            serialized.FindProperty("prompt").stringValue = "Say the sentence in English.";
+            serialized.FindProperty("targetWords").arraySize = 4;
+            serialized.FindProperty("targetWords").GetArrayElementAtIndex(0).stringValue = "the";
+            serialized.FindProperty("targetWords").GetArrayElementAtIndex(1).stringValue = "dog";
+            serialized.FindProperty("targetWords").GetArrayElementAtIndex(2).stringValue = "is";
+            serialized.FindProperty("targetWords").GetArrayElementAtIndex(3).stringValue = "big";
+            serialized.FindProperty("acceptedPhrases").stringValue = "the dog is big";
+            serialized.FindProperty("progressKey").stringValue = "lesson_01_describe_the_dog";
+            serialized.FindProperty("requireWordOrder").boolValue = true;
+            serialized.FindProperty("allowFuzzyMatch").boolValue = true;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return exercise;
         }
     }
 }

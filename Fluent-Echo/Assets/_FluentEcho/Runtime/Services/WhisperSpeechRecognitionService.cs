@@ -87,39 +87,74 @@ namespace FluentEcho.Services
 
         public async void StartListening()
         {
-            if (IsListening)
-                return;
-
-            if (Microphone.devices.Length == 0)
+            try
             {
-                RaiseError("No microphone device was detected.");
-                StatusChanged?.Invoke("No microphone device was detected.");
-                ListeningStopped?.Invoke();
-                return;
+                if (IsListening)
+                    return;
+
+                if (Microphone.devices.Length == 0)
+                {
+                    RaiseError("No microphone device was detected.");
+                    StatusChanged?.Invoke("No microphone device was detected.");
+                    ListeningStopped?.Invoke();
+                    return;
+                }
+
+                if (!await EnsurePreparedAsync())
+                {
+                    ListeningStopped?.Invoke();
+                    return;
+                }
+
+                if (stream == null)
+                {
+                    RaiseError("Whisper stream was not ready.");
+                    StatusChanged?.Invoke("Whisper stream was not ready.");
+                    ListeningStopped?.Invoke();
+                    return;
+                }
+
+                suppressStopEvent = false;
+                stream.OnResultUpdated -= HandleTranscript;
+                stream.OnResultUpdated += HandleTranscript;
+                stream.OnStreamFinished -= HandleStreamFinished;
+                stream.OnStreamFinished += HandleStreamFinished;
+
+                IsListening = true;
+                stream.StartStream();
+                microphone.OnRecordStop -= HandleRecordStop;
+                microphone.OnRecordStop += HandleRecordStop;
+                if (!microphone.StartRecord())
+                {
+                    RaiseError("The microphone could not start. Check operating-system permission.");
+                    StatusChanged?.Invoke("The microphone could not start. Check operating-system permission.");
+                    stream.StopStream();
+                    CompleteStop();
+                    return;
+                }
+
+                if (!microphone.IsRecording)
+                {
+                    RaiseError("The microphone could not start. Check operating-system permission.");
+                    StatusChanged?.Invoke("The microphone could not start. Check operating-system permission.");
+                    stream.StopStream();
+                    CompleteStop();
+                }
             }
-
-            if (!await EnsurePreparedAsync())
+            catch (Exception exception)
             {
-                ListeningStopped?.Invoke();
-                return;
-            }
+                RaiseError($"Listening failed: {exception.Message}");
+                StatusChanged?.Invoke("Listening failed.");
+                try
+                {
+                    if (stream != null)
+                        stream.StopStream();
+                }
+                catch
+                {
+                    // Best effort cleanup only.
+                }
 
-            suppressStopEvent = false;
-            stream.OnResultUpdated -= HandleTranscript;
-            stream.OnResultUpdated += HandleTranscript;
-            stream.OnStreamFinished -= HandleStreamFinished;
-            stream.OnStreamFinished += HandleStreamFinished;
-
-            IsListening = true;
-            stream.StartStream();
-            microphone.OnRecordStop -= HandleRecordStop;
-            microphone.OnRecordStop += HandleRecordStop;
-            microphone.StartRecord();
-
-            if (!microphone.IsRecording)
-            {
-                RaiseError("The microphone could not start. Check operating-system permission.");
-                stream.StopStream();
                 CompleteStop();
             }
         }
@@ -290,8 +325,14 @@ namespace FluentEcho.Services
                 whisperManager.updatePrompt = settings.UpdatePrompt;
                 whisperManager.dropOldBuffer = settings.DropOldBuffer;
                 whisperManager.useVad = settings.UseVad;
-                SetWhisperManagerField(whisperManager, "useGpu", settings.UseGpu);
-                SetWhisperManagerField(whisperManager, "flashAttention", settings.FlashAttention);
+
+                // The Vulkan GPU path in the Whisper package has been crashing the
+                // Unity Editor on this prototype machine. Keep the editor on the CPU
+                // backend for stability until we explicitly validate a safe GPU path.
+                bool useGpu = settings.UseGpu && !Application.isEditor;
+                bool flashAttention = settings.FlashAttention && useGpu;
+                SetWhisperManagerField(whisperManager, "useGpu", useGpu);
+                SetWhisperManagerField(whisperManager, "flashAttention", flashAttention);
             }
 
             if (microphone != null)

@@ -9,13 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4281b6398ed362f438e706340d1e917c, type: 3}
+  m_Script: {fileID: 0}
   m_Name: ExerciseCatalog
-  m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Data.SpeechExerciseCatalogSO
+  m_EditorClassIdentifier: FluentEcho.Runtime:FluentEcho.Data:SpeechExerciseCatalogSO
   exercises:
   - {fileID: 11400000, guid: 7c19b505db71e514b8a842485f9f7b9c, type: 2}
   - {fileID: 11400000, guid: cd5eaed755fa427e90677ec06778e63f, type: 2}
   - {fileID: 11400000, guid: 7ac4b095ad8440d8967524499e28d8ac, type: 2}
   - {fileID: 11400000, guid: 2a1fdf7c54014f5f83018a52ab75bb3f, type: 2}
   - {fileID: 11400000, guid: 4d6be2e59e8a42e49bceacd37f7e3c22, type: 2}
-

@@ -21,5 +21,6 @@ namespace FluentEcho.Presentation
         void SetSuccess(bool success);
         void SetMode(bool mockMode);
         void SetNavigation(bool canGoPrevious, bool canGoNext);
+        void SetPronunciation(string summary, string feedback);
     }
 }

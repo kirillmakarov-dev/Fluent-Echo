@@ -17,8 +17,8 @@ MonoBehaviour:
   balancedModelPath: Whisper/ggml-base.en.bin
   accurateModelPath: Whisper/ggml-small.en.bin
   language: en
-  useGpu: 1
-  flashAttention: 1
+  useGpu: 0
+  flashAttention: 0
   streamingStepSeconds: 1.25
   keepSeconds: 0.2
   streamLengthSeconds: 10

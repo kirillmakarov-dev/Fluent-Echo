@@ -25,4 +25,3 @@ MonoBehaviour:
   allowFuzzyMatch: 1
   silenceTimeoutSeconds: 2.5
   referenceAudio: {fileID: 0}
-

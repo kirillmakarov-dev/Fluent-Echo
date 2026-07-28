@@ -1,96 +1,97 @@
 # Fluent Echo Architecture Brief
 
-This brief describes how the current Fluent Echo prototype is structured in the active Unity checkout.
+This brief summarizes how the current Fluent Echo prototype is organized in the active Unity checkout.
 
-## Purpose
+## Current shape
 
-Fluent Echo is an offline English-speaking practice prototype built around three concerns:
+Fluent Echo is a local speech-practice slice built around three concerns:
 
-1. capture microphone input locally in Unity;
-2. transcribe it with Whisper;
-3. compare the transcript against lesson-specific speech exercises.
+1. Capture microphone audio and run local Whisper transcription.
+2. Compare the transcript against lesson rules and save progress.
+3. Present the result in a compact Unity UI that can later be expanded into a portfolio scene.
 
-The current prototype is still a vertical slice, but the code already separates UI, presentation, domain logic, and speech services.
+The current implementation keeps those concerns separated so the project can grow without turning into one large controller.
 
-## Runtime Layers
+## Main layers
 
 ### `Runtime/Data`
 
-ScriptableObject-based lesson and settings data.
+ScriptableObject lesson content:
 
-- `SpeechExerciseSO` stores the prompt, accepted phrases, target words, and progress key.
-- `SpeechExerciseCatalogSO` stores the lesson sequence used by the prototype.
-- `WhisperSettingsSO` stores the active Whisper profile and model/configuration settings.
+- `SpeechExerciseSO` stores the prompt, target words, accepted phrases, progress key, and reference audio.
+- `SpeechExerciseCatalogSO` groups multiple lessons for lesson navigation.
 
 ### `Runtime/Domain`
 
-Pure logic with no direct Unity UI dependency.
+Pure logic and state:
 
-- `SpeechAnswerMatcher` compares recognized text with lesson targets.
-- `SpeechSession` tracks the current recording state.
-- `SpeechMatchResult` stores the outcome of a transcript match.
+- `SpeechAnswerMatcher` handles transcript-to-lesson matching.
+- `SpeechSession` tracks the current attempt state.
+- `SpeechMatchResult` carries match flags and completion state.
 
 ### `Runtime/Services`
 
-Speech infrastructure and persistence.
+Infrastructure and scoring:
 
-- `ISpeechRecognitionService` defines the speech input contract.
-- `WhisperSpeechRecognitionService` wraps local Whisper transcription.
-- `MockSpeechRecognitionService` provides the deterministic demo path.
-- `LessonProgressRepository` stores per-lesson progress in `PlayerPrefs`.
+- `ISpeechRecognitionService` defines the speech pipeline contract.
+- `WhisperSpeechRecognitionService` runs the local Whisper flow.
+- `MockSpeechRecognitionService` provides deterministic demo behavior.
+- `WhisperSettingsSO` stores model/profile configuration.
+- `LessonProgressRepository` persists lesson progress in `PlayerPrefs`.
+- `HeuristicPronunciationScoringService` provides the current MVP pronunciation score.
 
 ### `Runtime/Presentation`
 
-Presenter-facing orchestration.
+The presenter wires everything together:
 
-- `FluentEchoPresenter` binds a lesson, the active service, and the view.
-- `IFluentEchoView` keeps the presenter decoupled from the concrete Unity view.
+- It selects the active lesson.
+- It binds the active speech service.
+- It forwards transcript updates to the view.
+- It controls success, retry, cancellation, and lesson switching.
 
 ### `Runtime/Views`
 
-Unity UI implementation.
+Unity UI components:
 
-- `FluentEchoView` owns the interactive buttons, labels, chips, and status display.
-- `WordChipView` renders word-level highlight chips.
+- `FluentEchoView` exposes buttons, labels, chips, and toggles.
+- `WordChipView` shows per-word highlights.
 
 ### `Runtime/Bootstrap`
 
-Scene wiring and startup logic.
+Scene composition:
 
-- `FluentEchoBootstrap` selects the active lesson, wires services, and attaches runtime dropdowns.
+- `FluentEchoBootstrap` creates or wires runtime UI controls.
+- It also sets up lesson selection, microphone selection, Whisper quality selection, and the visible status labels.
 
 ### `Editor`
 
-Prototype-scene generation and rebuild tooling.
+Prototype generation:
 
-- `FluentEchoPrototypeBuilder` reconstructs the demo scene, data assets, runtime objects, and UI.
+- `FluentEchoPrototypeBuilder` rebuilds the demo scene and demo assets.
+- It also keeps the editor-safe Whisper settings in a CPU-only configuration.
 
-## Current Flow
+### `Tests/Editor`
 
-1. The prototype scene is built or opened.
-2. Bootstrap resolves the selected lesson and the active Whisper profile.
-3. Presenter loads the lesson, progress state, and UI bindings.
-4. The active speech service prepares the model.
-5. The user records a phrase.
-6. Whisper produces a transcript.
-7. `SpeechAnswerMatcher` checks the transcript against the lesson target.
-8. Progress is saved when the attempt resolves.
+Current edit-mode coverage:
 
-## Key Implementation Notes
+- `SpeechAnswerMatcherTests`
+- `SpeechSessionTests`
+- `WhisperSettingsTests`
+- `PronunciationScoringServiceTests`
 
-- Lesson switching is catalog-driven, not scene-driven.
-- Whisper profile switching is persisted and the scene is reloaded to apply the selected model.
-- Mic selection is persisted through the microphone component and exposed in UI.
-- The prototype currently uses transcript matching, not phoneme-level pronunciation scoring.
-- Cancellation is treated as an important UX path, especially during lesson switching and retry flows.
+## Runtime flow
 
-## Important Files
+1. Bootstrap selects the lesson and wires UI controls.
+2. Presenter binds the chosen speech service.
+3. Service prepares Whisper or demo mode.
+4. User starts recording.
+5. Transcript updates stream into the presenter.
+6. Presenter evaluates the answer, saves progress, and now also calculates heuristic pronunciation feedback.
+7. View shows transcript, word highlights, progress, and the current pronunciation score.
 
-- `Assets/_FluentEcho/Runtime/Bootstrap/FluentEchoBootstrap.cs`
-- `Assets/_FluentEcho/Runtime/Presentation/FluentEchoPresenter.cs`
-- `Assets/_FluentEcho/Runtime/Views/FluentEchoView.cs`
-- `Assets/_FluentEcho/Runtime/Services/WhisperSpeechRecognitionService.cs`
-- `Assets/_FluentEcho/Runtime/Services/WhisperSettingsSO.cs`
-- `Assets/_FluentEcho/Runtime/Data/SpeechExerciseSO.cs`
-- `Assets/_FluentEcho/Editor/FluentEchoPrototypeBuilder.cs`
+## Important notes
 
+- The app uses local Whisper, not a cloud speech API.
+- Editor mode is forced onto the CPU path for Whisper to avoid the Vulkan crash path.
+- The pronunciation score is still heuristic. It is useful for MVP feedback, but it is not true phonetic assessment yet.
+- New systems should keep following the existing separation between data, domain, services, presentation, and view.

@@ -466,8 +466,8 @@ namespace FluentEcho.Editor
             serialized.FindProperty("balancedModelPath").stringValue = "Whisper/ggml-base.en.bin";
             serialized.FindProperty("accurateModelPath").stringValue = "Whisper/ggml-small.en.bin";
             serialized.FindProperty("language").stringValue = "en";
-            serialized.FindProperty("useGpu").boolValue = true;
-            serialized.FindProperty("flashAttention").boolValue = true;
+            serialized.FindProperty("useGpu").boolValue = false;
+            serialized.FindProperty("flashAttention").boolValue = false;
             serialized.FindProperty("streamingStepSeconds").floatValue = 1.25f;
             serialized.FindProperty("keepSeconds").floatValue = 0.2f;
             serialized.FindProperty("streamLengthSeconds").floatValue = 10f;

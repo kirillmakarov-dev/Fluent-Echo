@@ -1,55 +1,66 @@
-# Fluent Echo Next Steps
+# Fluent Echo Next Steps Brief
 
-This brief captures the practical path from the current prototype to a portfolio-ready app.
+This brief captures the practical path from the current prototype to a fuller portfolio-grade application.
 
-## 1. Finish the lesson loop
+## What is already in place
 
-- Polish lesson navigation and make the current lesson state obvious in the UI.
-- Keep `Previous` / `Next` behavior consistent when recording, preparing, retrying, or switching modes.
-- Add a clear end-of-lesson state and a clean way to replay or continue.
+- Local microphone capture with device selection.
+- Whisper transcription with quality profiles.
+- Lesson navigation across multiple exercises.
+- Progress persistence.
+- A heuristic pronunciation score MVP.
+- Editor-safe CPU fallback for Whisper.
 
-## 2. Expand the exercise catalog
+## Recommended next steps
 
-- Add more lesson types beyond the current sentence-repetition prompts.
-- Keep 2-3 short exercises per content group so the catalog feels like a real learning flow.
-- Add richer lesson metadata if the scene needs categories, difficulty, or teaching goals.
+### 1. Harden the transcription pipeline
 
-## 3. Replace transcript matching with scoring
+- Add visible input-level feedback so the user knows the microphone is active.
+- Keep refining cancellation and restart behavior.
+- Validate that switching lessons, mic devices, and Whisper profiles remains stable across repeated attempts.
 
-- Introduce a dedicated pronunciation scoring layer.
-- Keep transcript recognition and pronunciation scoring separate.
-- Expose a score summary, per-word feedback, and targeted guidance in the UI.
+### 2. Expand the exercise catalog
 
-## 4. Harden cancellation and state transitions
+- Add more lesson types beyond the sentence-repetition flow.
+- Mix simple phrase prompts with response prompts and description prompts.
+- Keep content in ScriptableObjects so the catalog remains data-driven.
 
-- Make prepare, listen, analyze, and retry flows explicitly cancelable.
-- Prevent stale async work from writing status back into the UI after the user has already moved on.
-- Add tests for rapid mode switching, lesson switching, and interrupted recordings.
+### 3. Improve progress tracking
 
-## 5. Improve feedback and learning value
+- Store best score, best transcript, and per-lesson attempt history.
+- Show a clearer results summary when a lesson is cleared.
+- Add lightweight progression rules for unlocking or sequencing lessons.
 
-- Show a better breakdown of what the system heard and what the learner should fix.
-- Add a result history or progress screen per lesson.
-- Store more than the best transcript if the app needs session review.
+### 4. Replace heuristic scoring with true pronunciation assessment
 
-## 6. Build the portfolio layer
+- Keep the current heuristic scorer as a fallback or debug aid.
+- Replace it with a phoneme-aware or alignment-based scoring path.
+- Return separate feedback for timing, missing sounds, and difficult words.
 
-- Replace temporary visuals with a stronger character and a more intentional scene.
-- Add lip sync or light facial animation once the core flow is stable.
-- Prepare a short demo capture that explains the product in under one minute.
+### 5. Add tests around the architecture
 
-## 7. Finalize release quality
+- Cover presenter flows for success, retry, cancellation, and lesson switching.
+- Cover scoring edge cases, especially empty input and partial matches.
+- Cover persistence behavior so progress state does not regress.
 
-- Add playmode and editor coverage for the core flow.
-- Verify microphone permissions and model loading on the target machine.
-- Document the final build process, model assets, and update path.
+### 6. Polish the portfolio presentation
 
-## Recommended Order
+- Replace placeholders with a real 3D character or a more polished presentation layer.
+- Add lip sync and facial reaction states.
+- Turn one lesson into a demo-quality showcase scene with strong visual hierarchy.
 
-1. Finish the lesson loop.
-2. Harden cancellation and state transitions.
-3. Expand the exercise catalog.
-4. Add pronunciation scoring.
-5. Polish visuals and presentation.
-6. Wrap with tests and release documentation.
+## Implementation order
 
+1. Stabilize the current interaction loop.
+2. Expand the catalog.
+3. Improve progress.
+4. Swap in real pronunciation scoring.
+5. Finish portfolio polish and visual presentation.
+
+## Working principle
+
+Do not start with a custom speech model or complex 3D systems. Keep the loop simple first:
+
+`record -> transcript -> score -> feedback -> next attempt`
+
+That gives the project a reliable foundation before higher-fidelity features are added.
