@@ -15,7 +15,9 @@ namespace FluentEcho.Presentation
 
             var lines = new List<string>
             {
-                "Alignment preview:",
+                alignment.IsPreview
+                    ? "Alignment preview (demo only):"
+                    : "Alignment preview:",
                 $"Preview score: {alignment.AlignmentScore}/100 | {Capitalize(alignment.ConfidenceBand)}"
             };
 

@@ -125,7 +125,7 @@ namespace FluentEcho.Tests
 
             string text = PhonemeAlignmentTextFormatter.BuildPreviewText(alignment);
 
-            Assert.That(text, Does.Contain("Alignment preview:"));
+            Assert.That(text, Does.Contain("Alignment preview (demo only):"));
             Assert.That(text, Does.Contain("Preview score: 82/100 | High"));
             Assert.That(text, Does.Contain("Preview mode: 4/5 target words matched from the transcript."));
             Assert.That(text, Does.Contain("Preview only: keep going."));
