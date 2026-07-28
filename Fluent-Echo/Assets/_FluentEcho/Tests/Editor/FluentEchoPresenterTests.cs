@@ -566,6 +566,7 @@ namespace FluentEcho.Tests
                 Assert.That(view.LastCategoryName, Is.EqualTo("Words"));
                 Assert.That(view.LastCategoryDescription, Is.EqualTo("Practice one word at a time."));
                 Assert.That(view.LastCategoryProgress, Does.Contain("Progress: 1/2 lessons cleared"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("2/2 attempted"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("best score 92/100"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("confidence high"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("avg best score 66/100"));
