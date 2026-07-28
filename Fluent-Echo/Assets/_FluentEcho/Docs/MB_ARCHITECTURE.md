@@ -89,12 +89,14 @@ Infrastructure and scoring:
 - `WhisperSettingsSO` stores model/profile configuration and progress-friendly lesson history data;
 - `LessonProgressRepository` persists progress in `PlayerPrefs`;
 - `IPronunciationScoringService` and `HeuristicPronunciationScoringService` compute the current local pronunciation estimate.
+- `IPhonemeAlignmentService` and `PhonemeAlignmentResult` define the future phoneme-aware scoring boundary without changing the current heuristic path.
 
 Important note:
 
 - the scoring service is heuristic;
 - it combines transcript match, rhythm, word quality, and confidence into a transparent practice score;
 - it does not claim to measure phonemes directly.
+- the future phoneme-aware path is now modeled as a separate additive contract instead of a rewrite of Whisper.
 
 ### `Runtime/Presentation`
 
