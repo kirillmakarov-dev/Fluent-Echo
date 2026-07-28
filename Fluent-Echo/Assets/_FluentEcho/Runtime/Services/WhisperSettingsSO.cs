@@ -102,6 +102,9 @@ namespace FluentEcho.Domain
         [SerializeField] private string pronunciationConfidenceBand = string.Empty;
         [SerializeField] private int pronunciationConfidenceScore;
         [SerializeField] private string pronunciationConfidenceReason = string.Empty;
+        [SerializeField] private int exactMatchedWords;
+        [SerializeField] private int approximateMatchedWords;
+        [SerializeField] private int missedWords;
 
         public string TimestampUtc => timestampUtc;
         public string Transcript => transcript;
@@ -114,6 +117,10 @@ namespace FluentEcho.Domain
         public string PronunciationConfidenceBand => pronunciationConfidenceBand;
         public int PronunciationConfidenceScore => pronunciationConfidenceScore;
         public string PronunciationConfidenceReason => pronunciationConfidenceReason;
+        public int ExactMatchedWords => exactMatchedWords;
+        public int ApproximateMatchedWords => approximateMatchedWords;
+        public int MissedWords => missedWords;
+        public string MatchQualitySummary => $"Match quality: {exactMatchedWords} exact | {approximateMatchedWords} approximate | {missedWords} missed";
 
         public void Configure(
             string utcTimestamp,
@@ -126,7 +133,10 @@ namespace FluentEcho.Domain
             string summary,
             string confidenceBand = "",
             int confidenceScore = 0,
-            string confidenceReason = "")
+            string confidenceReason = "",
+            int exactMatchedWordCount = 0,
+            int approximateMatchedWordCount = 0,
+            int missedWordCount = 0)
         {
             timestampUtc = utcTimestamp ?? string.Empty;
             transcript = transcriptValue ?? string.Empty;
@@ -139,6 +149,9 @@ namespace FluentEcho.Domain
             pronunciationConfidenceBand = confidenceBand ?? string.Empty;
             pronunciationConfidenceScore = Mathf.Clamp(confidenceScore, 0, 100);
             pronunciationConfidenceReason = confidenceReason ?? string.Empty;
+            exactMatchedWords = Math.Max(0, exactMatchedWordCount);
+            approximateMatchedWords = Math.Max(0, approximateMatchedWordCount);
+            missedWords = Math.Max(0, missedWordCount);
         }
     }
 
@@ -207,7 +220,10 @@ namespace FluentEcho.Domain
             string pronunciationSummary = "",
             string confidenceBand = "",
             int confidenceScore = 0,
-            string confidenceReason = "")
+            string confidenceReason = "",
+            int exactMatchedWordCount = 0,
+            int approximateMatchedWordCount = 0,
+            int missedWordCount = 0)
         {
             Configure(lessonKey, expectedTotalWords);
 
@@ -320,7 +336,10 @@ namespace FluentEcho.Domain
             string pronunciationSummary,
             string confidenceBand = "",
             int confidenceScore = 0,
-            string confidenceReason = "")
+            string confidenceReason = "",
+            int exactMatchedWordCount = 0,
+            int approximateMatchedWordCount = 0,
+            int missedWordCount = 0)
         {
             if (attemptHistory == null)
                 attemptHistory = new List<LessonAttemptRecord>();
@@ -337,7 +356,10 @@ namespace FluentEcho.Domain
                 pronunciationSummary,
                 confidenceBand,
                 confidenceScore,
-                confidenceReason);
+                confidenceReason,
+                exactMatchedWordCount,
+                approximateMatchedWordCount,
+                missedWordCount);
             attemptHistory.Insert(0, record);
 
             while (attemptHistory.Count > HistoryLimit)
@@ -370,7 +392,10 @@ namespace FluentEcho.Domain
                 : string.Empty;
             string statusText = record.IsComplete ? "cleared" : "needs retry";
             string transcriptPreview = Truncate(record.Transcript, 34);
-            return $"{entryNumber}. {scoreText}{confidenceText}{reasonText} | {statusText} | {transcriptPreview}";
+            string qualityText = record.ExactMatchedWords > 0 || record.ApproximateMatchedWords > 0 || record.MissedWords > 0
+                ? $" | {record.MatchQualitySummary}"
+                : string.Empty;
+            return $"{entryNumber}. {scoreText}{confidenceText}{reasonText}{qualityText} | {statusText} | {transcriptPreview}";
         }
 
         private string BuildHistorySummaryLine(int visibleEntries)

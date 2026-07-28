@@ -664,7 +664,10 @@ namespace FluentEcho.Presentation
                 lastPronunciationScore.SummaryText,
                 lastPronunciationScore.ConfidenceBand,
                 lastPronunciationScore.ConfidenceScore,
-                lastPronunciationScore.ConfidenceReason);
+                lastPronunciationScore.ConfidenceReason,
+                CountExactWordScores(lastPronunciationScore.WordScores),
+                CountApproximateWordScores(lastPronunciationScore.WordScores),
+                CountMissedWordScores(lastPronunciationScore.WordScores));
             LessonProgressRepository.Save(progress);
             view.SetProgress(progress.GetSummaryText());
             view.SetProgressDetails(BuildProgressDetailsText());
@@ -1080,6 +1083,51 @@ namespace FluentEcho.Presentation
             }
 
             return $"Word focus: {string.Join(" | ", parts)}";
+        }
+
+        private static int CountExactWordScores(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
+        {
+            if (wordScores == null || wordScores.Count == 0)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < wordScores.Count; i++)
+            {
+                if (wordScores[i].Kind == PronunciationMatchKind.Exact)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static int CountApproximateWordScores(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
+        {
+            if (wordScores == null || wordScores.Count == 0)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < wordScores.Count; i++)
+            {
+                if (wordScores[i].Kind is PronunciationMatchKind.Alternative or PronunciationMatchKind.Fuzzy)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static int CountMissedWordScores(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
+        {
+            if (wordScores == null || wordScores.Count == 0)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < wordScores.Count; i++)
+            {
+                if (wordScores[i].Kind == PronunciationMatchKind.Missing)
+                    count++;
+            }
+
+            return count;
         }
 
         private static string BuildApproximateMatchText(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)

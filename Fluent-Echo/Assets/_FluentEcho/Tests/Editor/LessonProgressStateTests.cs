@@ -61,5 +61,45 @@ namespace FluentEcho.Tests
                 LessonProgressRepository.Clear("lesson_test_history_limit");
             }
         }
+
+        [Test]
+        public void HistoryEntry_RoundTripsMatchQualityBreakdown()
+        {
+            string key = "lesson_test_match_quality_roundtrip";
+            LessonProgressRepository.Clear(key);
+
+            LessonProgressState state = LessonProgressRepository.Load(key, 4);
+
+            try
+            {
+                state.RecordAttempt(
+                    "the dug is big",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    4,
+                    88,
+                    "strong",
+                    "PRONUNCIATION ESTIMATE | 88/100 | HIGH",
+                    "high",
+                    90,
+                    "2 words matched approximately, but the sentence still stayed strong.",
+                    2,
+                    2,
+                    0);
+
+                LessonProgressRepository.Save(state);
+                LessonProgressState reloaded = LessonProgressRepository.Load(key, 4);
+
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Match quality: 2 exact | 2 approximate | 0 missed"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Approximate matches"));
+                Assert.That(reloaded.AttemptHistory, Has.Count.EqualTo(1));
+                Assert.That(reloaded.AttemptHistory[0].ExactMatchedWords, Is.EqualTo(2));
+                Assert.That(reloaded.AttemptHistory[0].ApproximateMatchedWords, Is.EqualTo(2));
+                Assert.That(reloaded.AttemptHistory[0].MissedWords, Is.EqualTo(0));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(key);
+            }
+        }
     }
 }
