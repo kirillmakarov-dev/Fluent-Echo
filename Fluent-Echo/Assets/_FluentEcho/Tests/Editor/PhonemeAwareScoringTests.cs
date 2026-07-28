@@ -114,6 +114,64 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void PreviewService_ReturnsUnavailableWhenRequestIsNull()
+        {
+            var service = new InspectorPhonemeAlignmentService();
+            PhonemeAlignmentResult result = service.Align(null);
+
+            Assert.That(result.IsAvailable, Is.False);
+            Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
+            Assert.That(result.DisplayTitle, Is.EqualTo("Alignment unavailable:"));
+            Assert.That(result.HasRenderablePreview, Is.False);
+            Assert.That(result.AlignmentScore, Is.EqualTo(0));
+            Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
+        }
+
+        [Test]
+        public void PreviewService_ReturnsUnavailableWhenTranscriptIsMissing()
+        {
+            var service = new InspectorPhonemeAlignmentService();
+            PhonemeAlignmentRequest request = new(
+                (SpeechExerciseSO) null,
+                string.Empty,
+                new SpeechMatchResult(true, new[] { true }),
+                2f,
+                new[] { "apple" },
+                new[] { "apple" });
+
+            PhonemeAlignmentResult result = service.Align(request);
+
+            Assert.That(result.IsAvailable, Is.False);
+            Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
+            Assert.That(result.DisplayTitle, Is.EqualTo("Alignment unavailable:"));
+            Assert.That(result.HasRenderablePreview, Is.False);
+            Assert.That(result.AlignmentScore, Is.EqualTo(0));
+            Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
+        }
+
+        [Test]
+        public void PreviewService_ReturnsUnavailableWhenTargetWordsAreMissing()
+        {
+            var service = new InspectorPhonemeAlignmentService();
+            PhonemeAlignmentRequest request = new(
+                (SpeechExerciseSO) null,
+                "apple",
+                new SpeechMatchResult(true, new[] { true }),
+                2f,
+                System.Array.Empty<string>(),
+                new[] { "apple" });
+
+            PhonemeAlignmentResult result = service.Align(request);
+
+            Assert.That(result.IsAvailable, Is.False);
+            Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
+            Assert.That(result.DisplayTitle, Is.EqualTo("Alignment unavailable:"));
+            Assert.That(result.HasRenderablePreview, Is.False);
+            Assert.That(result.AlignmentScore, Is.EqualTo(0));
+            Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
+        }
+
+        [Test]
         public void PreviewFormatter_ReturnsCompactInspectableBlock()
         {
             PhonemeAlignmentResult alignment = new(
