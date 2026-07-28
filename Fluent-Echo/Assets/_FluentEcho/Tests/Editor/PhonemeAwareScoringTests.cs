@@ -50,6 +50,22 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void Request_WithNullMatchedWords_NormalizesToPresentEmptyResult()
+        {
+            SpeechMatchResult matchResult = new(false, null);
+            PhonemeAlignmentRequest request = new(
+                (SpeechExerciseSO) null,
+                "apple",
+                matchResult,
+                1.5f,
+                new[] { "apple" },
+                new[] { "apple" });
+
+            Assert.That(request.HasMatchResult, Is.True);
+            Assert.That(request.MatchResult.MatchedWords, Is.Empty);
+        }
+
+        [Test]
         public void NoOpService_ReturnsUnavailableRoadmapResult()
         {
             var service = NoOpPhonemeAlignmentService.Instance;
