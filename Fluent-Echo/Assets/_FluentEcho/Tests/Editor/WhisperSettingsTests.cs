@@ -318,6 +318,18 @@ namespace FluentEcho.Tests
             Assert.That(PronunciationScoreResult.Unavailable.FeedbackText, Does.Contain(FluentEchoCopy.FirstEstimatePrompt));
         }
 
+        [Test]
+        public void SharedCopy_HelperBuildsExpectedFirstStateText()
+        {
+            Assert.That(FluentEchoCopy.BuildProgressSummary(0), Is.EqualTo(FluentEchoCopy.FirstProgressSummary));
+            Assert.That(FluentEchoCopy.BuildProgressSummary(4), Is.EqualTo("Progress: ready for first recording | 0/4 matched"));
+
+            string unavailableDetails = FluentEchoCopy.BuildUnavailablePronunciationDetails();
+            Assert.That(unavailableDetails, Does.Contain(FluentEchoCopy.FirstEstimatePrompt));
+            Assert.That(unavailableDetails, Does.Contain(FluentEchoCopy.FirstCoachingTipText));
+            Assert.That(unavailableDetails, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
+        }
+
         private static SpeechExerciseSO CreateExercise(string secondWord = "dog")
         {
             SpeechExerciseSO exercise = ScriptableObject.CreateInstance<SpeechExerciseSO>();
