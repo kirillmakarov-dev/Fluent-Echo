@@ -106,6 +106,9 @@ namespace FluentEcho.Views
         private void Awake()
         {
             EnsureCategoriesButton();
+            ConfigureResultButton(resultCloseButton, "CLOSE", 12);
+            ConfigureResultButton(resultNextButton, "NEXT MISSION", 12);
+            ConfigureResultButton(resultTryAgainButton, "TRY AGAIN", 12);
             micButton.onClick.AddListener(() => MicPressed?.Invoke());
             demoButton.onClick.AddListener(() => DemoPressed?.Invoke());
             retryButton.onClick.AddListener(() => RetryPressed?.Invoke());
@@ -169,6 +172,20 @@ namespace FluentEcho.Views
             {
                 label.text = "CATEGORIES";
                 label.fontSize = 14;
+                label.alignment = TextAlignmentOptions.Center;
+            }
+        }
+
+        private static void ConfigureResultButton(Button button, string labelText, int fontSize)
+        {
+            if (button == null)
+                return;
+
+            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.text = labelText;
+                label.fontSize = fontSize;
                 label.alignment = TextAlignmentOptions.Center;
             }
         }
@@ -444,6 +461,15 @@ namespace FluentEcho.Views
         {
             SetResultPanelVisible(success);
             retryButton.gameObject.SetActive(success);
+
+            if (resultCloseButton != null)
+                resultCloseButton.gameObject.SetActive(success);
+
+            if (resultNextButton != null)
+                resultNextButton.gameObject.SetActive(success);
+
+            if (resultTryAgainButton != null)
+                resultTryAgainButton.gameObject.SetActive(success);
         }
 
         public void SetMode(bool mockMode)
