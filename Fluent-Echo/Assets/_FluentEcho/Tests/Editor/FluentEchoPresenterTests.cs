@@ -567,6 +567,89 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void SavedSelection_RestoresCategoryProgressAndExerciseOnInitialize()
+        {
+            SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_saved_selection_progress_01");
+            SpeechExerciseSO wordsTwo = CreateExercise("word_02", "Say the second word.", "lesson_test_saved_selection_progress_02");
+            SpeechExerciseSO sentencesOne = CreateExercise("sentence_01", "Say the sentence.", "lesson_test_saved_selection_progress_03");
+            SpeechExerciseSO sentencesTwo = CreateExercise("sentence_02", "Say the next sentence.", "lesson_test_saved_selection_progress_04");
+            SpeechExerciseCatalogSO catalog = CreateCategorizedCatalog(
+                new[]
+                {
+                    ("Words", "Practice one word at a time.", new[] { wordsOne, wordsTwo }),
+                    ("Sentences", "Practice short sentence lines.", new[] { sentencesOne, sentencesTwo })
+                });
+
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = new FluentEchoPresenter(
+                null,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                1,
+                1,
+                null);
+
+            try
+            {
+                LessonProgressRepository.Clear(wordsOne.ProgressKey);
+                LessonProgressRepository.Clear(wordsTwo.ProgressKey);
+                LessonProgressRepository.Clear(sentencesOne.ProgressKey);
+                LessonProgressRepository.Clear(sentencesTwo.ProgressKey);
+
+                LessonProgressState firstSentence = LessonProgressRepository.Load(sentencesOne.ProgressKey, 1);
+                firstSentence.RecordAttempt(
+                    "sentence_01",
+                    new SpeechMatchResult(true, new[] { true }),
+                    1,
+                    89,
+                    "steady",
+                    "PRACTICE SCORE | 89/100 | HIGH",
+                    "high",
+                    88);
+                LessonProgressRepository.Save(firstSentence);
+
+                LessonProgressState secondSentence = LessonProgressRepository.Load(sentencesTwo.ProgressKey, 1);
+                secondSentence.RecordAttempt(
+                    "sentence",
+                    new SpeechMatchResult(false, new[] { false }),
+                    1,
+                    57,
+                    "developing",
+                    "PRACTICE SCORE | 57/100 | MEDIUM",
+                    "medium",
+                    61);
+                LessonProgressRepository.Save(secondSentence);
+
+                presenter.Initialize();
+
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the next sentence."));
+                Assert.That(view.LastTargetWords, Is.EqualTo(new[] { "sentence_02" }));
+                Assert.That(view.LastCategoryName, Is.EqualTo("Sentences"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("Progress: 1/2 lessons cleared"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("2/2 attempted"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("next lesson Say the next sentence."));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(wordsOne.ProgressKey);
+                LessonProgressRepository.Clear(wordsTwo.ProgressKey);
+                LessonProgressRepository.Clear(sentencesOne.ProgressKey);
+                LessonProgressRepository.Clear(sentencesTwo.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(wordsOne);
+                UnityEngine.Object.DestroyImmediate(wordsTwo);
+                UnityEngine.Object.DestroyImmediate(sentencesOne);
+                UnityEngine.Object.DestroyImmediate(sentencesTwo);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void CategoryScreen_ShowsProgressSummaryForSavedLessons()
         {
             SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_category_progress_01");
