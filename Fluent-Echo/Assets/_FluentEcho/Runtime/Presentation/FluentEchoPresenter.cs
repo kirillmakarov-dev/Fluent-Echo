@@ -517,6 +517,7 @@ namespace FluentEcho.Presentation
             view.SetPronunciation(
                 FluentEchoCopy.FirstPronunciationSummary,
                 FluentEchoCopy.BuildUnavailablePronunciationDetails());
+            view.SetPronunciationConfidence(FluentEchoCopy.FirstConfidenceSummary);
             view.SetListening(false);
             view.SetSuccess(false);
             UpdateMicControlState();
@@ -710,12 +711,14 @@ namespace FluentEcho.Presentation
                 view.SetPronunciation(
                     FluentEchoCopy.FirstPronunciationSummary,
                     FluentEchoCopy.BuildUnavailablePronunciationDetails());
+                view.SetPronunciationConfidence(FluentEchoCopy.FirstConfidenceSummary);
                 return;
             }
 
             view.SetPronunciation(
                 lastPronunciationScore.SummaryText,
                 BuildPronunciationDetails(lastPronunciationScore));
+            view.SetPronunciationConfidence($"CONFIDENCE | {Capitalize(lastPronunciationScore.ConfidenceBand)}");
         }
 
         private float GetAttemptDurationSeconds()

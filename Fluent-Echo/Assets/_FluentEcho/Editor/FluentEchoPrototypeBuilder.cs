@@ -362,8 +362,18 @@ namespace FluentEcho.Editor
                 FontStyles.Bold,
                 CoralInk,
                 new Vector2(0.06f, 0.34f),
-                new Vector2(0.94f, 0.49f),
+                new Vector2(0.66f, 0.49f),
                 TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationConfidence = EnsureText(
+                resultPanel,
+                "Pronunciation Confidence",
+                FluentEchoCopy.FirstConfidenceSummary,
+                12,
+                FontStyles.Bold,
+                MintInk,
+                new Vector2(0.68f, 0.34f),
+                new Vector2(0.94f, 0.49f),
+                TextAlignmentOptions.Right);
             TextMeshProUGUI pronunciationFeedback = EnsureText(
                 resultPanel,
                 "Pronunciation Feedback",
@@ -404,6 +414,7 @@ namespace FluentEcho.Editor
                 SerializedObject viewObject = new(view);
                 Set(viewObject, "progressDetailsLabel", progressDetails);
                 Set(viewObject, "pronunciationSummaryLabel", pronunciationSummary);
+                Set(viewObject, "pronunciationConfidenceLabel", pronunciationConfidence);
                 Set(viewObject, "pronunciationFeedbackLabel", pronunciationFeedback);
                 if (resultImage != null)
                     Set(viewObject, "successPanel", resultImage);
@@ -728,7 +739,10 @@ namespace FluentEcho.Editor
                 new Vector2(0.06f, 0.50f), new Vector2(0.94f, 0.69f), TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationSummary = CreateText(
                 success.rectTransform, "Pronunciation Summary", string.Empty, 30, FontStyles.Bold, CoralInk,
-                new Vector2(0.06f, 0.34f), new Vector2(0.94f, 0.49f), TextAlignmentOptions.Left);
+                new Vector2(0.06f, 0.34f), new Vector2(0.66f, 0.49f), TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationConfidence = CreateText(
+                success.rectTransform, "Pronunciation Confidence", FluentEchoCopy.FirstConfidenceSummary, 12, FontStyles.Bold, MintInk,
+                new Vector2(0.68f, 0.34f), new Vector2(0.94f, 0.49f), TextAlignmentOptions.Right);
             TextMeshProUGUI pronunciationFeedback = CreateText(
                 success.rectTransform, "Pronunciation Feedback", "Your coach tip will appear here.", 18, FontStyles.Italic, Ink,
                 new Vector2(0.06f, 0.19f), new Vector2(0.94f, 0.33f), TextAlignmentOptions.Left);

@@ -113,6 +113,7 @@ namespace FluentEcho.Tests
                 Assert.That(view.LastStatus, Does.Contain("Ready").Or.Contain("Preparing"));
                 Assert.That(view.LastProgress, Does.Contain(FluentEchoCopy.FirstProgressSummary));
                 Assert.That(view.LastPronunciationSummary, Does.Contain(FluentEchoCopy.FirstPronunciationSummary));
+                Assert.That(view.LastPronunciationConfidence, Does.Contain(FluentEchoCopy.FirstConfidenceSummary));
                 Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
             }
             finally
@@ -563,6 +564,7 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.NextMissionPrompt));
                     Assert.That(view.LastProgressDetails, Does.Contain("Coach tip:"));
                     Assert.That(view.LastPronunciationSummary, Does.Contain("Pronunciation estimate"));
+                    Assert.That(view.LastPronunciationConfidence, Does.Contain("High").Or.Contain("Medium").Or.Contain("Low"));
                     Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(saved.Attempts, Is.EqualTo(1));
                     Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
@@ -964,6 +966,7 @@ namespace FluentEcho.Tests
             public string[] LessonOptions { get; private set; } = Array.Empty<string>();
             public string LastProgressDetails { get; private set; } = string.Empty;
             public string LastPronunciationSummary { get; private set; } = string.Empty;
+            public string LastPronunciationConfidence { get; private set; } = string.Empty;
             public string LastPronunciationFeedback { get; private set; } = string.Empty;
             public bool CategoryScreenVisible { get; private set; }
             public bool SettingsPanelVisible { get; private set; }
@@ -1083,6 +1086,11 @@ namespace FluentEcho.Tests
             {
                 LastPronunciationSummary = summary ?? string.Empty;
                 LastPronunciationFeedback = feedback ?? string.Empty;
+            }
+
+            public void SetPronunciationConfidence(string confidence)
+            {
+                LastPronunciationConfidence = confidence ?? string.Empty;
             }
         }
     }

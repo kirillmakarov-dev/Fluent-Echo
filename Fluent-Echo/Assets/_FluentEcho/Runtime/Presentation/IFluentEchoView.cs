@@ -36,5 +36,6 @@ namespace FluentEcho.Presentation
         void HideNotice();
         void SetProgressDetails(string details);
         void SetPronunciation(string summary, string feedback);
+        void SetPronunciationConfidence(string confidence);
     }
 }
