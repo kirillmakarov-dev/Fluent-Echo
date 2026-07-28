@@ -166,6 +166,64 @@ namespace FluentEcho.Tests
             }
         }
 
+        [Test]
+        public void CategorySelection_SwitchesCategoryAndResetsExerciseIndex()
+        {
+            SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_word_06");
+            SpeechExerciseSO wordsTwo = CreateExercise("word_02", "Say the second word.", "lesson_test_word_07");
+            SpeechExerciseSO sentencesOne = CreateExercise("sentence_01", "Say the sentence.", "lesson_test_sentence_01");
+            SpeechExerciseSO sentencesTwo = CreateExercise("sentence_02", "Say the next sentence.", "lesson_test_sentence_02");
+            SpeechExerciseCatalogSO catalog = CreateCategorizedCatalog(
+                new[]
+                {
+                    ("Words", "Practice one word at a time.", new[] { wordsOne, wordsTwo }),
+                    ("Sentences", "Practice short sentence lines.", new[] { sentencesOne, sentencesTwo })
+                });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            int persistedCategory = -1;
+            int persistedExercise = -1;
+            var presenter = new FluentEchoPresenter(
+                wordsTwo,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                0,
+                1,
+                (categoryIndex, exerciseIndex) =>
+                {
+                    persistedCategory = categoryIndex;
+                    persistedExercise = exerciseIndex;
+                });
+
+            try
+            {
+                presenter.Initialize();
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the second word."));
+
+                view.RaiseCategorySelected(1);
+
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the sentence."));
+                Assert.That(view.LastTargetWords, Is.EqualTo(new[] { "sentence_01" }));
+                Assert.That(view.CategoryScreenVisible, Is.False);
+                Assert.That(persistedCategory, Is.EqualTo(1));
+                Assert.That(persistedExercise, Is.EqualTo(0));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(2));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(wordsOne);
+                UnityEngine.Object.DestroyImmediate(wordsTwo);
+                UnityEngine.Object.DestroyImmediate(sentencesOne);
+                UnityEngine.Object.DestroyImmediate(sentencesTwo);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
         private static FluentEchoPresenter CreatePresenter(
             SpeechExerciseSO exercise,
             SpeechExerciseCatalogSO catalog,
@@ -224,6 +282,32 @@ namespace FluentEcho.Tests
             for (int i = 0; i < exercises.Length; i++)
                 categoryExercises.GetArrayElementAtIndex(i).objectReferenceValue = exercises[i];
 
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return catalog;
+        }
+
+        private static SpeechExerciseCatalogSO CreateCategorizedCatalog(
+            (string displayName, string description, SpeechExerciseSO[] exercises)[] categories)
+        {
+            SpeechExerciseCatalogSO catalog = ScriptableObject.CreateInstance<SpeechExerciseCatalogSO>();
+            SerializedObject serialized = new(catalog);
+
+            SerializedProperty categoriesProperty = serialized.FindProperty("categories");
+            categoriesProperty.arraySize = categories.Length;
+
+            for (int i = 0; i < categories.Length; i++)
+            {
+                SerializedProperty category = categoriesProperty.GetArrayElementAtIndex(i);
+                category.FindPropertyRelative("displayName").stringValue = categories[i].displayName;
+                category.FindPropertyRelative("description").stringValue = categories[i].description;
+
+                SerializedProperty categoryExercises = category.FindPropertyRelative("exercises");
+                categoryExercises.arraySize = categories[i].exercises.Length;
+                for (int j = 0; j < categories[i].exercises.Length; j++)
+                    categoryExercises.GetArrayElementAtIndex(j).objectReferenceValue = categories[i].exercises[j];
+            }
+
+            serialized.FindProperty("exercises").arraySize = 0;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return catalog;
         }
