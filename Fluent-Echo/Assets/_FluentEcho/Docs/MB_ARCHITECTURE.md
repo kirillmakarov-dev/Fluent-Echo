@@ -25,7 +25,7 @@ The key promise is privacy:
 - progress persistence per lesson;
 - onboarding and user-friendly failure states;
 - a heuristic pronunciation estimate that is explicitly presented as an estimate, not true phoneme scoring;
-- an explicit phoneme roadmap line in the score flow so the limitation is visible in the UI;
+- an explicit phoneme roadmap line in the estimate flow so the limitation is visible in the UI;
 - a result flow that supports retry, close, and next mission actions;
 - inspector-friendly scene-owned UI wiring.
 

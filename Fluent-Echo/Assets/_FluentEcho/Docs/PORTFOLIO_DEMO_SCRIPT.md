@@ -52,7 +52,7 @@ Use Demo Mode or start a real attempt.
 
 Say:
 
-> Here the app gets a transcript locally, then turns it into a transparent practice score and a short coaching tip.
+> Here the app gets a transcript locally, then turns it into a transparent pronunciation estimate and a short coaching tip.
 
 Let the result panel appear.
 
@@ -60,7 +60,7 @@ Let the result panel appear.
 
 Highlight:
 
-- practice score;
+- pronunciation estimate;
 - confidence;
 - matched words;
 - coach tip;

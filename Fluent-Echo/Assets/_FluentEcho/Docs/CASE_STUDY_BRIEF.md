@@ -89,4 +89,4 @@ The next natural step is a stronger scoring pipeline:
 
 For the current portfolio phase, the important win is a stable local loop:
 
-`record -> transcript -> score -> feedback`
+`record -> transcript -> pronunciation estimate -> feedback`

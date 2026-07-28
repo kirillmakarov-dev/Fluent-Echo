@@ -83,6 +83,6 @@ The plan intentionally avoids paid APIs and keeps the scoring pipeline local and
 
 Do not start with a custom speech model or complex 3D systems. Keep the loop simple first:
 
-`record -> transcript -> score -> feedback -> next attempt`
+`record -> transcript -> pronunciation estimate -> feedback -> next attempt`
 
 That gives the project a reliable foundation before higher-fidelity features are added.
