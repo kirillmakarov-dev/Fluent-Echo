@@ -636,6 +636,27 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void GuidedCatalog_HasUniqueLessonNamesPerCategory()
+        {
+            SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>("Assets/_FluentEcho/Demo/Data/ExerciseCatalog.asset");
+
+            Assert.That(catalog, Is.Not.Null);
+
+            for (int categoryIndex = 0; categoryIndex < catalog.CategoryCount; categoryIndex++)
+            {
+                string[] lessonNames = catalog.GetCategoryExerciseDisplayNames(categoryIndex);
+                Assert.That(lessonNames, Is.Not.Null);
+                Assert.That(lessonNames.Length, Is.GreaterThan(0));
+                Assert.That(lessonNames, Has.All.Not.Null.And.Not.Empty);
+                var uniqueNames = new System.Collections.Generic.HashSet<string>(lessonNames, StringComparer.Ordinal);
+                Assert.That(
+                    uniqueNames.Count,
+                    Is.EqualTo(lessonNames.Length),
+                    $"Category {categoryIndex} should not contain duplicate lesson names.");
+            }
+        }
+
+        [Test]
         public void CompleteTranscript_SavesProgressAndShowsSuccess()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_complete");
