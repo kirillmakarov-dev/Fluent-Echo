@@ -54,6 +54,40 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void FirstLaunch_ShowsOnboardingBeforePractice()
+        {
+            PlayerPrefs.DeleteKey(OnboardingPrefsKey);
+            PlayerPrefs.Save();
+
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_00");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+
+                Assert.That(view.CategoryScreenVisible, Is.False);
+                Assert.That(view.NoticeVisible, Is.True);
+                Assert.That(view.NoticeTitle, Is.EqualTo("Practice English privately"));
+
+                view.RaiseNoticeConfirmed();
+
+                Assert.That(view.NoticeVisible, Is.False);
+                Assert.That(view.CategoryScreenVisible, Is.True);
+                Assert.That(PlayerPrefs.HasKey(OnboardingPrefsKey), Is.True);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void MissingMicrophoneFailure_OpensSettingsNotice()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_02");
