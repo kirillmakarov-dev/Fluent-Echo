@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Assets\_FluentEcho\Runtime\Domain\SpeechMatchResult.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\FluentEchoPresenter.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\FluentEchoCopy.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Views\FluentEchoView.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\WhisperSettingsSO.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\IFluentEchoView.cs" />
