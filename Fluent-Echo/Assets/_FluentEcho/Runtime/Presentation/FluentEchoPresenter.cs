@@ -374,6 +374,9 @@ namespace FluentEcho.Presentation
                 : null;
             string categoryName = category != null ? category.DisplayName : "Practice Menu";
             string categoryDescription = category != null ? category.Description : "Pick a lesson set and practice at your own pace.";
+            string categoryProgress = BuildCategoryProgressSummary(currentCategoryIndex);
+            if (!string.IsNullOrWhiteSpace(categoryProgress))
+                categoryDescription = $"{categoryDescription}\n{categoryProgress}";
             int exerciseCount = GetCurrentExerciseCount();
 
             view.SetCategory(categoryName, categoryDescription);
@@ -779,6 +782,42 @@ namespace FluentEcho.Presentation
             return lines.Count == 0
                 ? FluentEchoCopy.FirstLocalEstimateText
                 : string.Join("\n", lines);
+        }
+
+        private string BuildCategoryProgressSummary(int categoryIndex)
+        {
+            if (exerciseCatalog == null || exerciseCatalog.CategoryCount == 0)
+                return string.Empty;
+
+            int exerciseCount = exerciseCatalog.GetCategoryExerciseCount(categoryIndex);
+            if (exerciseCount <= 0)
+                return string.Empty;
+
+            int clearedLessons = 0;
+            int bestScore = 0;
+
+            for (int i = 0; i < exerciseCount; i++)
+            {
+                SpeechExerciseSO exercise = exerciseCatalog.GetCategoryExercise(categoryIndex, i);
+                if (exercise == null)
+                    continue;
+
+                LessonProgressState lessonProgress = LessonProgressRepository.Load(
+                    exercise.ProgressKey,
+                    exercise.GetDisplayWords().Length);
+
+                if (lessonProgress.SuccessfulAttempts > 0)
+                    clearedLessons++;
+
+                if (lessonProgress.BestPronunciationScore > bestScore)
+                    bestScore = lessonProgress.BestPronunciationScore;
+            }
+
+            string summary = $"Progress: {clearedLessons}/{exerciseCount} lessons cleared";
+            if (bestScore > 0)
+                summary += $" | best score {bestScore}/100";
+
+            return summary;
         }
 
         private static string BuildPronunciationDetails(PronunciationScoreResult score)

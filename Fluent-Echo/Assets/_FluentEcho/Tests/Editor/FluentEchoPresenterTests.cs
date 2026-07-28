@@ -427,6 +427,55 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void CategoryScreen_ShowsProgressSummaryForSavedLessons()
+        {
+            SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_category_progress_01");
+            SpeechExerciseSO wordsTwo = CreateExercise("word_02", "Say the second word.", "lesson_test_category_progress_02");
+            SpeechExerciseCatalogSO catalog = CreateCategorizedCatalog(
+                new[]
+                {
+                    ("Words", "Practice one word at a time.", new[] { wordsOne, wordsTwo })
+                });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(wordsOne, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(wordsOne.ProgressKey);
+                LessonProgressRepository.Clear(wordsTwo.ProgressKey);
+
+                LessonProgressState savedProgress = LessonProgressRepository.Load(wordsOne.ProgressKey, 1);
+                savedProgress.RecordAttempt(
+                    "word_01",
+                    new SpeechMatchResult(true, new[] { true }),
+                    1,
+                    92,
+                    "strong",
+                    "PRACTICE SCORE | 92/100 | HIGH",
+                    "high",
+                    90);
+                LessonProgressRepository.Save(savedProgress);
+
+                presenter.Initialize();
+
+                Assert.That(view.LastCategoryName, Is.EqualTo("Words"));
+                Assert.That(view.LastCategoryDescription, Does.Contain("Practice one word at a time."));
+                Assert.That(view.LastCategoryDescription, Does.Contain("Progress: 1/2 lessons cleared"));
+                Assert.That(view.LastCategoryDescription, Does.Contain("best score 92/100"));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(wordsOne.ProgressKey);
+                LessonProgressRepository.Clear(wordsTwo.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(wordsOne);
+                UnityEngine.Object.DestroyImmediate(wordsTwo);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void GuidedCatalog_ContainsThreeCategoriesWithExpectedLessonCounts()
         {
             SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>("Assets/_FluentEcho/Demo/Data/ExerciseCatalog.asset");
@@ -872,6 +921,8 @@ namespace FluentEcho.Tests
             public string LastStatus { get; private set; } = string.Empty;
             public string LastTranscript { get; private set; } = string.Empty;
             public string LastProgress { get; private set; } = string.Empty;
+            public string LastCategoryName { get; private set; } = string.Empty;
+            public string LastCategoryDescription { get; private set; } = string.Empty;
             public string[] LessonOptions { get; private set; } = Array.Empty<string>();
             public string LastProgressDetails { get; private set; } = string.Empty;
             public string LastPronunciationSummary { get; private set; } = string.Empty;
@@ -945,7 +996,11 @@ namespace FluentEcho.Tests
                 LessonOptions = lessonNames ?? Array.Empty<string>();
             }
 
-            public void SetCategory(string categoryName, string categoryDescription) { }
+            public void SetCategory(string categoryName, string categoryDescription)
+            {
+                LastCategoryName = categoryName ?? string.Empty;
+                LastCategoryDescription = categoryDescription ?? string.Empty;
+            }
 
             public void SetCategoryScreenVisible(bool visible)
             {

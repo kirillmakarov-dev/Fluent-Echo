@@ -27,8 +27,8 @@ The app should stay honest about what local Whisper can do. It can produce trans
 - Notice overlay is now scene-owned instead of being created from code.
 - Settings panel and notice UI are now assigned through the scene instead of being reconstructed at runtime.
 - Progress, Whisper profile, and pronunciation labels are now also bound directly from scene-owned references.
-- Sprint 4 portfolio docs polish is now the active focus: case-study, demo script, and overview text should match the current practice-score flow.
-- Next pass should keep the docs aligned with the current build, then return to the lesson catalog and progression sprint if any content gaps remain.
+- Sprint 3 lesson catalog and progress UX is now the active focus: category screens should surface how much has already been cleared.
+- Next pass should keep polishing category/progress visibility, then move back to the broader portfolio polish sprint if no content gaps remain.
 
 ## Sprint 0 - Scene-Owned UI and Layout Lock-Down
 
