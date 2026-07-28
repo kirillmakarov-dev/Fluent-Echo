@@ -339,6 +339,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.WordScores[1].Score, Is.GreaterThanOrEqualTo(95));
                 Assert.That(score.WordScores[1].Matched, Is.True);
                 Assert.That(score.WordScores[1].Kind, Is.EqualTo(PronunciationMatchKind.Alternative));
+                Assert.That(score.ConfidenceReason, Does.Contain("approximately"));
             }
             finally
             {
@@ -364,6 +365,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.WordScores[1].Score, Is.LessThan(100));
                 Assert.That(score.WordQualityScore, Is.LessThan(100));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
+                Assert.That(score.ConfidenceReason, Does.Contain("approximately"));
             }
             finally
             {

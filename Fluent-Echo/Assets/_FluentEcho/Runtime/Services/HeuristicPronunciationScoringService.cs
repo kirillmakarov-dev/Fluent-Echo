@@ -56,6 +56,7 @@ namespace FluentEcho.Services
                         missingCount,
                         extraCount,
                         recordingSeconds,
+                        CountApproximateWordScores(wordScores),
                         emptyConfidence,
                         true,
                         transcriptWasEmpty),
@@ -99,6 +100,7 @@ namespace FluentEcho.Services
                 missingCount,
                 extraCount,
                 recordingSeconds,
+                CountApproximateWordScores(wordScores),
                 confidenceBand,
                 matchResult.IsComplete,
                 transcriptWasEmpty);
@@ -204,6 +206,7 @@ namespace FluentEcho.Services
             int missingCount,
             int extraCount,
             float recordingSeconds,
+            int approximateWordCount,
             string confidenceBand,
             bool isComplete,
             bool transcriptWasEmpty)
@@ -224,6 +227,13 @@ namespace FluentEcho.Services
                 return AppendPacingReason(
                     "Extra words were heard, so confidence stays a little cautious.",
                     recordingSeconds,
+                    expectedCount,
+                    approximateWordCount);
+
+            if (approximateWordCount > 0)
+                return AppendApproximationReason(
+                    BuildApproximationReason(approximateWordCount, confidenceBand),
+                    recordingSeconds,
                     expectedCount);
 
             if (isComplete && confidenceBand == "high")
@@ -232,16 +242,23 @@ namespace FluentEcho.Services
             return AppendPacingReason(
                 "The match is useful, but confidence still stays cautious.",
                 recordingSeconds,
-                expectedCount);
+                expectedCount,
+                approximateWordCount);
         }
 
-        private static string AppendPacingReason(string reason, float recordingSeconds, int expectedCount)
+        private static string AppendPacingReason(string reason, float recordingSeconds, int expectedCount, int approximateWordCount)
         {
             string pacingReason = BuildPacingReason(recordingSeconds, expectedCount);
+            string approximationReason = BuildApproximationReason(approximateWordCount, string.Empty);
             if (string.IsNullOrWhiteSpace(pacingReason))
-                return reason;
+                return string.IsNullOrWhiteSpace(approximationReason)
+                    ? reason
+                    : $"{reason} {approximationReason}";
 
-            return $"{reason} {pacingReason}";
+            if (string.IsNullOrWhiteSpace(approximationReason))
+                return $"{reason} {pacingReason}";
+
+            return $"{reason} {pacingReason} {approximationReason}";
         }
 
         private static string BuildPacingReason(float recordingSeconds, int expectedCount)
@@ -265,6 +282,30 @@ namespace FluentEcho.Services
                 return "The pacing sounded a little slow, so confidence stays cautious.";
 
             return string.Empty;
+        }
+
+        private static string AppendApproximationReason(string reason, float recordingSeconds, int expectedCount)
+        {
+            string pacingReason = BuildPacingReason(recordingSeconds, expectedCount);
+            if (string.IsNullOrWhiteSpace(pacingReason))
+                return reason;
+
+            return $"{reason} {pacingReason}";
+        }
+
+        private static string BuildApproximationReason(int approximateWordCount, string confidenceBand)
+        {
+            if (approximateWordCount <= 0)
+                return string.Empty;
+
+            string wordText = approximateWordCount == 1 ? "word matched approximately" : "words matched approximately";
+            if (string.Equals(confidenceBand, "high", StringComparison.OrdinalIgnoreCase))
+                return $"{approximateWordCount} {wordText}, but the sentence still stayed strong.";
+
+            if (string.Equals(confidenceBand, "medium", StringComparison.OrdinalIgnoreCase))
+                return $"{approximateWordCount} {wordText}, so confidence stays careful.";
+
+            return $"{approximateWordCount} {wordText}.";
         }
 
         private static string BuildEstimateBasisText(bool isComplete)
@@ -526,6 +567,21 @@ namespace FluentEcho.Services
                 total += wordScores[i].Score;
 
             return Mathf.RoundToInt((float) total / wordScores.Length);
+        }
+
+        private static int CountApproximateWordScores(PronunciationWordScore[] wordScores)
+        {
+            if (wordScores == null || wordScores.Length == 0)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < wordScores.Length; i++)
+            {
+                if (wordScores[i].Kind is PronunciationMatchKind.Alternative or PronunciationMatchKind.Fuzzy)
+                    count++;
+            }
+
+            return count;
         }
 
         private static int ComputeLevenshteinDistance(string left, string right)
