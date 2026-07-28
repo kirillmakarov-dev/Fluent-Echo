@@ -113,6 +113,26 @@ namespace FluentEcho.Tests
             LessonProgressRepository.Clear(key);
         }
 
+        [Test]
+        public void EmptyProgressState_ShowsReadyCopy()
+        {
+            string key = $"lesson_test_{Guid.NewGuid():N}";
+            LessonProgressRepository.Clear(key);
+
+            LessonProgressState state = LessonProgressRepository.Load(key, 4);
+
+            try
+            {
+                Assert.That(state.GetSummaryText(), Does.Contain("ready for first recording"));
+                Assert.That(state.GetSummaryText(), Does.Contain("0/4 matched"));
+                Assert.That(state.GetHistoryText(), Does.Contain("Your first recording will appear here."));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(key);
+            }
+        }
+
         private static WhisperSettingsSO CreateSettings(string prefsKey)
         {
             WhisperSettingsSO settings = ScriptableObject.CreateInstance<WhisperSettingsSO>();
@@ -287,6 +307,14 @@ namespace FluentEcho.Tests
             {
                 UnityEngine.Object.DestroyImmediate(exercise);
             }
+        }
+
+        [Test]
+        public void UnavailableScore_UsesFriendlyCopy()
+        {
+            Assert.That(PronunciationScoreResult.Unavailable.IsAvailable, Is.False);
+            Assert.That(PronunciationScoreResult.Unavailable.SummaryText, Does.Contain("READY FOR YOUR FIRST ATTEMPT"));
+            Assert.That(PronunciationScoreResult.Unavailable.FeedbackText, Does.Contain("Speak once"));
         }
 
         private static SpeechExerciseSO CreateExercise(string secondWord = "dog")

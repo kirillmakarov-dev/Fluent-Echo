@@ -217,11 +217,19 @@ namespace FluentEcho.Domain
         public string GetSummaryText()
         {
             if (totalWords <= 0)
+            {
+                if (attempts <= 0)
+                    return "Progress: ready for first recording";
+
                 return $"Progress: {attempts} attempts";
+            }
+
+            if (attempts <= 0 && bestPronunciationScore <= 0)
+                return $"Progress: ready for first recording | 0/{totalWords} matched";
 
             string completion = $"{Math.Min(bestMatchedWords, totalWords)}/{totalWords}";
             string score = bestPronunciationScore > 0 ? $" | estimate {bestPronunciationScore}/100" : string.Empty;
-            string attemptsText = attempts == 0 ? "no attempts recorded yet" : $"{attempts} attempts";
+            string attemptsText = $"{attempts} attempts";
             string successText = successfulAttempts > 0 ? $" | cleared {successfulAttempts}" : string.Empty;
             return $"Progress: best {completion}{score} | {attemptsText}{successText}";
         }
