@@ -232,7 +232,9 @@ namespace FluentEcho.Views
         public void SetProgress(string progress)
         {
             if (progressLabel != null && progressLabel != lessonPositionLabel)
-                progressLabel.text = progress;
+                progressLabel.text = string.IsNullOrWhiteSpace(progress)
+                    ? FluentEchoCopy.FirstProgressSummary
+                    : progress;
         }
 
         public void SetLessonPosition(int currentLesson, int totalLessons)

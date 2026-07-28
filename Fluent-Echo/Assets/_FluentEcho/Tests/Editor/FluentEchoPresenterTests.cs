@@ -104,6 +104,7 @@ namespace FluentEcho.Tests
                 Assert.That(view.NoticeVisible, Is.False);
                 Assert.That(view.CategoryScreenVisible, Is.True);
                 Assert.That(view.LastStatus, Does.Contain("Ready").Or.Contain("Preparing"));
+                Assert.That(view.LastProgress, Does.Contain(FluentEchoCopy.FirstProgressSummary));
                 Assert.That(view.LastPronunciationSummary, Does.Contain(FluentEchoCopy.FirstPronunciationSummary));
                 Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
             }
@@ -862,6 +863,7 @@ namespace FluentEcho.Tests
             public string[] LastTargetWords { get; private set; } = Array.Empty<string>();
             public string LastStatus { get; private set; } = string.Empty;
             public string LastTranscript { get; private set; } = string.Empty;
+            public string LastProgress { get; private set; } = string.Empty;
             public string[] LessonOptions { get; private set; } = Array.Empty<string>();
             public string LastProgressDetails { get; private set; } = string.Empty;
             public string LastPronunciationSummary { get; private set; } = string.Empty;
@@ -895,7 +897,10 @@ namespace FluentEcho.Tests
                 LastTargetWords = targetWords ?? Array.Empty<string>();
             }
 
-            public void SetProgress(string progress) { }
+            public void SetProgress(string progress)
+            {
+                LastProgress = progress ?? string.Empty;
+            }
 
             public void SetStatus(string status)
             {
