@@ -45,6 +45,7 @@ For the current sprint, keep the focus on the roadmap story:
 - keep `PORTFOLIO_DEMO_SCRIPT.md` ready for a clean live walkthrough;
 - make sure the docs explain the local-only scoring story without overclaiming phoneme assessment.
 - make the phoneme-aware scoring path explicit as the next additive service boundary.
+- use `PHONEME_AWARE_SCORING_ROADMAP.md` as the concrete sprint 5 handoff for the next scoring layer.
 
 The plan intentionally avoids paid APIs and keeps the scoring pipeline local and transparent.
 

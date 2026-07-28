@@ -419,6 +419,7 @@ Define the next scoring stage clearly enough that the project can move from heur
 - `Fluent-Echo/Assets/_FluentEcho/Docs/MB_NEXT_STEPS.md`
 - `Fluent-Echo/Assets/_FluentEcho/Docs/CASE_STUDY_BRIEF.md`
 - `Fluent-Echo/Assets/_FluentEcho/Docs/PORTFOLIO_DEMO_SCRIPT.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/PHONEME_AWARE_SCORING_ROADMAP.md`
 
 ### Verify After Sprint
 
