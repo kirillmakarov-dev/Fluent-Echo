@@ -29,6 +29,7 @@ namespace FluentEcho.Bootstrap
         [SerializeField] private Dropdown exerciseDropdown;
         [SerializeField] private Dropdown whisperProfileDropdown;
         [SerializeField] private string selectedExercisePrefsKey = "FluentEcho.SelectedExerciseIndex";
+        [SerializeField] private bool repairSceneUiOnStart;
         [SerializeField] private bool useMockByDefault;
         [SerializeField] private AudioSource audioSource;
 
@@ -77,11 +78,19 @@ namespace FluentEcho.Bootstrap
             }
 
             EnsureExerciseDropdown();
-            EnsureMicrophoneDropdown();
-            EnsureQualityDropdown();
-            EnsureProgressLabel();
-            EnsureProgressDetailsLabel();
-            EnsurePronunciationLabels();
+            if (repairSceneUiOnStart)
+            {
+                EnsureMicrophoneDropdown();
+                EnsureQualityDropdown();
+                EnsureProgressLabel();
+                EnsureProgressDetailsLabel();
+                EnsurePronunciationLabels();
+            }
+            else
+            {
+                WireSceneOwnedUi();
+            }
+
             presenter = new FluentEchoPresenter(
                 exercise,
                 exerciseCatalog,
@@ -107,6 +116,144 @@ namespace FluentEcho.Bootstrap
         {
             presenter?.Dispose();
             presenter = null;
+        }
+
+        private void WireSceneOwnedUi()
+        {
+            BindSceneMicrophoneDropdown();
+            BindSceneWhisperProfileDropdown();
+            WireExistingSettingsPanel();
+            WireExistingResultPanel();
+        }
+
+        private void BindSceneMicrophoneDropdown()
+        {
+            if (whisperService == null || view == null)
+                return;
+
+            MicrophoneRecord microphone = whisperService.GetComponent<MicrophoneRecord>();
+            if (microphone == null)
+                return;
+
+            Dropdown dropdown = microphone.microphoneDropdown;
+            if (dropdown == null)
+                dropdown = FindDeepTransform(view.transform.root, "Microphone Dropdown")?.GetComponent<Dropdown>();
+
+            if (dropdown == null)
+            {
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Scene-owned Microphone Dropdown is not assigned.",
+                    this);
+                return;
+            }
+
+            microphone.microphoneDropdown = dropdown;
+            TextMeshProUGUI valueLabel = FindDeepTransform(view.transform.root, "Microphone Value")
+                ?.GetComponent<TextMeshProUGUI>();
+            PopulateDropdown(microphone, dropdown, valueLabel);
+            UpdateMicrophoneValueLabel(microphone, valueLabel);
+        }
+
+        private void BindSceneWhisperProfileDropdown()
+        {
+            if (whisperService == null || view == null)
+                return;
+
+            Dropdown dropdown = whisperProfileDropdown;
+            if (dropdown == null)
+                dropdown = FindDeepTransform(view.transform.root, "Whisper Profile Dropdown")?.GetComponent<Dropdown>();
+
+            if (dropdown == null)
+            {
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Scene-owned Whisper Profile Dropdown is not assigned.",
+                    this);
+                return;
+            }
+
+            whisperProfileDropdown = dropdown;
+            WhisperQualityProfile currentProfile = whisperService.CurrentQualityProfile;
+            TextMeshProUGUI valueLabel = FindDeepTransform(view.transform.root, "Whisper Profile Value")
+                ?.GetComponent<TextMeshProUGUI>();
+
+            var options = new List<Dropdown.OptionData>();
+            foreach (string name in Enum.GetNames(typeof(WhisperQualityProfile)))
+                options.Add(new Dropdown.OptionData(name.ToUpperInvariant()));
+
+            dropdown.options = options;
+            dropdown.onValueChanged.RemoveAllListeners();
+            dropdown.onValueChanged.AddListener(index =>
+            {
+                WhisperQualityProfile profile = index switch
+                {
+                    1 => WhisperQualityProfile.Balanced,
+                    2 => WhisperQualityProfile.Accurate,
+                    _ => WhisperQualityProfile.Fast
+                };
+
+                whisperService.SetQualityProfile(profile);
+                if (valueLabel != null)
+                    valueLabel.text = profile.ToString().ToUpperInvariant();
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            });
+
+            dropdown.SetValueWithoutNotify((int) currentProfile);
+            if (dropdown.captionText != null)
+                dropdown.captionText.text = currentProfile.ToString().ToUpperInvariant();
+
+            if (valueLabel != null)
+                valueLabel.text = currentProfile.ToString().ToUpperInvariant();
+        }
+
+        private void WireExistingSettingsPanel()
+        {
+            if (view == null)
+                return;
+
+            Transform teacherCard = view.transform.parent != null
+                ? view.transform.parent.Find("Teacher Card")
+                : null;
+            Transform settingsPanel = teacherCard != null ? teacherCard.Find("Settings Panel") : null;
+            Button toggleButton = teacherCard != null
+                ? teacherCard.Find("Settings Toggle Button")?.GetComponent<Button>()
+                : null;
+            Button closeButton = settingsPanel != null
+                ? settingsPanel.Find("Settings Close Button")?.GetComponent<Button>()
+                : null;
+
+            if (toggleButton != null && settingsPanel != null)
+            {
+                toggleButton.onClick.RemoveAllListeners();
+                toggleButton.onClick.AddListener(() =>
+                {
+                    bool shouldOpen = !settingsPanel.gameObject.activeSelf;
+                    settingsPanel.gameObject.SetActive(shouldOpen);
+                    if (shouldOpen)
+                        settingsPanel.SetAsLastSibling();
+                });
+            }
+
+            if (closeButton != null && settingsPanel != null)
+            {
+                closeButton.onClick.RemoveAllListeners();
+                closeButton.onClick.AddListener(() => settingsPanel.gameObject.SetActive(false));
+            }
+        }
+
+        private void WireExistingResultPanel()
+        {
+            if (view == null)
+                return;
+
+            Transform resultPanel = view.transform.Find("Result Panel");
+            Button closeButton = resultPanel != null
+                ? resultPanel.Find("Result Close Button")?.GetComponent<Button>()
+                : null;
+            if (closeButton == null || resultPanel == null)
+                return;
+
+            closeButton.onClick.RemoveAllListeners();
+            closeButton.onClick.AddListener(() => resultPanel.gameObject.SetActive(false));
         }
 
         private void EnsureMicrophoneDropdown()
@@ -201,6 +348,7 @@ namespace FluentEcho.Bootstrap
                 return;
 
             Dropdown dropdown = exerciseDropdown;
+            bool createdDropdown = false;
             if (dropdown == null)
             {
                 dropdown = CreateDropdown(
@@ -210,11 +358,15 @@ namespace FluentEcho.Bootstrap
                     new Vector2(0.17f, 0.86f),
                     new Vector2(0.78f, 0.93f));
                 exerciseDropdown = dropdown;
+                createdDropdown = true;
             }
 
-            RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.17f, 0.86f);
-            rect.anchorMax = new Vector2(0.78f, 0.93f);
+            if (createdDropdown)
+            {
+                RectTransform rect = dropdown.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.17f, 0.86f);
+                rect.anchorMax = new Vector2(0.78f, 0.93f);
+            }
 
             string[] names = exerciseCatalog.GetDisplayNames();
             var options = new List<Dropdown.OptionData>();

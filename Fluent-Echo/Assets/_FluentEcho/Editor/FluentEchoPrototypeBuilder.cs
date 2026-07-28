@@ -30,7 +30,7 @@ namespace FluentEcho.Editor
         private const string EighthExercisePath = Root + "/Demo/Data/EighthLesson.asset";
         private const string WhisperSettingsPath = Root + "/Demo/Data/WhisperSettings.asset";
         private const string ChipPrefabPath = Root + "/Demo/Prefabs/WordChip.prefab";
-        private const string SyncSessionKey = "FluentEcho.SyncPrototypeSceneUiOnce";
+        private const string SyncSessionKey = "FluentEcho.SyncPrototypeSceneUiOnce.v2";
 
         private static readonly Color Background = Hex("08171D");
         private static readonly Color Surface = Hex("10272E");
@@ -192,6 +192,67 @@ namespace FluentEcho.Editor
             Transform micLabel = lessonCard.Find("Mic Label");
             if (micLabel != null)
                 micLabel.gameObject.SetActive(false);
+
+            RectTransform resultPanel = FindSceneRect(scene, "Result Panel");
+            if (resultPanel == null)
+                resultPanel = CreatePanel(lessonCard, "Result Panel", new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f), ResultFill);
+
+            resultPanel.SetParent(lessonCard, false);
+            SetAnchors(resultPanel, new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f));
+            Image resultImage = resultPanel.GetComponent<Image>();
+            if (resultImage != null)
+                resultImage.color = ResultFill;
+
+            ApplyPanelFrame(resultPanel, ResultBorder);
+            EnsureChildPanel(resultPanel, "Result Accent", new Vector2(0f, 0.92f), Vector2.one, ResultAccent);
+            EnsureChildPanel(resultPanel, "Result Divider", new Vector2(0.04f, 0.74f), new Vector2(0.96f, 0.75f), new Color(0.89f, 0.37f, 0.30f, 0.16f));
+            EnsureText(resultPanel, "Result Header", "FINAL FEEDBACK", 10, FontStyles.Bold, Mint, new Vector2(0.04f, 0.79f), new Vector2(0.34f, 0.92f), TextAlignmentOptions.Left);
+            EnsureText(resultPanel, "Result Badge", "CLEARED", 10, FontStyles.Bold, Coral, new Vector2(0.78f, 0.79f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Right);
+            EnsureButton(resultPanel, "Result Close Button", "CLOSE", new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink);
+            TextMeshProUGUI progressDetails = EnsureText(
+                resultPanel,
+                "Progress Details",
+                "Recent attempts will appear here.",
+                11,
+                FontStyles.Normal,
+                Ink,
+                new Vector2(0.04f, 0.50f),
+                new Vector2(0.96f, 0.72f),
+                TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationSummary = EnsureText(
+                resultPanel,
+                "Pronunciation Summary",
+                string.Empty,
+                14,
+                FontStyles.Bold,
+                Coral,
+                new Vector2(0.04f, 0.34f),
+                new Vector2(0.96f, 0.48f),
+                TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationFeedback = EnsureText(
+                resultPanel,
+                "Pronunciation Feedback",
+                "Score feedback will appear here.",
+                12,
+                FontStyles.Italic,
+                Ink,
+                new Vector2(0.04f, 0.10f),
+                new Vector2(0.96f, 0.30f),
+                TextAlignmentOptions.Left);
+            resultPanel.gameObject.SetActive(false);
+
+            FluentEchoView view = Object.FindFirstObjectByType<FluentEchoView>(FindObjectsInactive.Include);
+            if (view != null)
+            {
+                SerializedObject viewObject = new(view);
+                Set(viewObject, "progressDetailsLabel", progressDetails);
+                Set(viewObject, "pronunciationSummaryLabel", pronunciationSummary);
+                Set(viewObject, "pronunciationFeedbackLabel", pronunciationFeedback);
+                if (resultImage != null)
+                    Set(viewObject, "successPanel", resultImage);
+                viewObject.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(view);
+            }
 
             MicrophoneRecord microphone = Object.FindFirstObjectByType<MicrophoneRecord>(FindObjectsInactive.Include);
             if (microphone != null)
