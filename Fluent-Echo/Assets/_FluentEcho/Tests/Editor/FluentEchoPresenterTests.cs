@@ -160,6 +160,35 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void Scoring_WithoutPhonemeService_KeepsRoadmapTextOutOfResultDetails()
+        {
+            SpeechExerciseSO exercise = CreateExercise("apple", "Say the word.", "lesson_test_phoneme_noop");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                service.RaiseTranscript("apple");
+                service.RaiseListeningStopped();
+
+                Assert.That(view.LastPronunciationFeedback, Does.Not.Contain(FluentEchoCopy.PhonemeRoadmapText));
+                Assert.That(view.LastProgressDetails, Does.Not.Contain(FluentEchoCopy.PhonemeRoadmapText));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void LoadingStatus_DisablesMicUntilSpeechModelIsReady()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_loading_status");

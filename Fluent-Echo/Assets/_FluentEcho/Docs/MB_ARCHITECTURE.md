@@ -99,6 +99,7 @@ Important note:
 - it does not claim to measure phonemes directly.
 - the future phoneme-aware path is now modeled as a separate additive contract instead of a rewrite of Whisper.
 - the current build still uses a no-op alignment default until a real phoneme-aware scorer is introduced.
+- the phoneme roadmap note stays in the initial empty-state copy, while post-attempt result details only show actual alignment evidence.
 
 ### `Runtime/Presentation`
 

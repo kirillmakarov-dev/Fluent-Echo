@@ -1122,7 +1122,7 @@ namespace FluentEcho.Presentation
                 return string.Empty;
 
             if (!alignment.IsAvailable)
-                return FluentEchoCopy.PhonemeRoadmapText;
+                return string.Empty;
 
             var lines = new System.Collections.Generic.List<string>
             {

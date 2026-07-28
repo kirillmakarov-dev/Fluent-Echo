@@ -29,6 +29,7 @@ The next step is to add a separate scoring layer, not to rewrite Whisper.
 - Add future phoneme-aware logic as an optional service boundary.
 - Use a `NoOpPhonemeAlignmentService` as the explicit default until a real scorer is wired.
 - Keep the UI honest about what is estimated and what is actually measured.
+- Keep roadmap text out of post-attempt result details unless a real alignment signal exists.
 
 ## Proposed Service Boundary
 
@@ -117,6 +118,7 @@ When a future phoneme-aware scorer is introduced:
 
 - Wire the future scorer behind a feature flag or profile choice.
 - Keep the current result panel layout stable.
+- Keep the result panel clean by only showing alignment evidence when it is real, not as a permanent placeholder.
 - Compare heuristic and phoneme-aware feedback on the same lesson flow.
 
 ### Stage 4 - UI Honest Mode
