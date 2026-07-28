@@ -245,8 +245,12 @@ namespace FluentEcho.Domain
             lastPronunciationConfidenceScore = Mathf.Clamp(confidenceScore, 0, 100);
             lastPronunciationConfidenceReason = confidenceReason ?? string.Empty;
 
-            if (matchedWords > bestMatchedWords
-                || (matchedWords == bestMatchedWords && lastPronunciationScore >= bestPronunciationScore))
+            if (IsBetterBestAttempt(
+                    matchedWords,
+                    lastPronunciationScore,
+                    exactMatchedWordCount,
+                    approximateMatchedWordCount,
+                    missedWordCount))
             {
                 bestMatchedWords = matchedWords;
                 bestTranscript = lastTranscript;
@@ -282,6 +286,51 @@ namespace FluentEcho.Domain
             lastApproximateMatchedWords = approximateMatchedWordCount;
             lastMissedWords = missedWordCount;
             lastUpdatedUtc = DateTime.UtcNow.ToString("O");
+        }
+
+        private bool IsBetterBestAttempt(
+            int matchedWords,
+            int pronunciationScore,
+            int exactMatchedWordCount,
+            int approximateMatchedWordCount,
+            int missedWordCount)
+        {
+            if (matchedWords > bestMatchedWords)
+                return true;
+
+            if (matchedWords < bestMatchedWords)
+                return false;
+
+            if (pronunciationScore > bestPronunciationScore)
+                return true;
+
+            if (pronunciationScore < bestPronunciationScore)
+                return false;
+
+            return IsBetterMatchQuality(
+                exactMatchedWordCount,
+                approximateMatchedWordCount,
+                missedWordCount,
+                bestExactMatchedWords,
+                bestApproximateMatchedWords,
+                bestMissedWords);
+        }
+
+        private static bool IsBetterMatchQuality(
+            int exactMatchedWordCount,
+            int approximateMatchedWordCount,
+            int missedWordCount,
+            int bestExactMatchedWordCount,
+            int bestApproximateMatchedWordCount,
+            int bestMissedWordCount)
+        {
+            if (exactMatchedWordCount != bestExactMatchedWordCount)
+                return exactMatchedWordCount > bestExactMatchedWordCount;
+
+            if (approximateMatchedWordCount != bestApproximateMatchedWordCount)
+                return approximateMatchedWordCount < bestApproximateMatchedWordCount;
+
+            return missedWordCount < bestMissedWordCount;
         }
 
         public string GetSummaryText()

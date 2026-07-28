@@ -104,5 +104,59 @@ namespace FluentEcho.Tests
                 LessonProgressRepository.Clear(key);
             }
         }
+
+        [Test]
+        public void BestAttempt_PrefersExactMatchesWhenScoreTies()
+        {
+            string key = "lesson_test_best_match_quality_tie";
+            LessonProgressRepository.Clear(key);
+
+            LessonProgressState state = LessonProgressRepository.Load(key, 4);
+
+            try
+            {
+                state.RecordAttempt(
+                    "the dug is big",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    4,
+                    88,
+                    "strong",
+                    "PRONUNCIATION ESTIMATE | 88/100 | HIGH",
+                    "high",
+                    90,
+                    "4 words matched approximately, but the sentence still stayed strong.",
+                    0,
+                    4,
+                    0);
+
+                state.RecordAttempt(
+                    "the dog is big",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    4,
+                    88,
+                    "strong",
+                    "PRONUNCIATION ESTIMATE | 88/100 | HIGH",
+                    "high",
+                    90,
+                    "4 words matched cleanly, with no extra words.",
+                    4,
+                    0,
+                    0);
+
+                LessonProgressRepository.Save(state);
+                LessonProgressState reloaded = LessonProgressRepository.Load(key, 4);
+
+                Assert.That(reloaded.BestTranscript, Is.EqualTo("the dog is big"));
+                Assert.That(reloaded.BestMatchQualitySummary, Is.EqualTo("Match quality: 4 exact | 0 approximate | 0 missed"));
+                Assert.That(reloaded.GetSummaryText(), Does.Contain("Match quality: 4 exact | 0 approximate | 0 missed"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Match quality: 4 exact | 0 approximate | 0 missed"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Best Match quality: 4 exact | 0 approximate | 0 missed"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Last Match quality: 4 exact | 0 approximate | 0 missed"));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(key);
+            }
+        }
     }
 }
