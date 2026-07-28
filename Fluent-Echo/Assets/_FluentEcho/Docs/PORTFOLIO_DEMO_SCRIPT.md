@@ -64,6 +64,7 @@ Highlight:
 - confidence;
 - matched words;
 - coach tip;
+- the phoneme-roadmap note;
 - `TRY AGAIN`, `NEXT MISSION`, and `CLOSE`.
 
 Say:
@@ -82,7 +83,7 @@ Say:
 
 Say:
 
-> The current scorer is a heuristic estimate based on transcript quality, rhythm, and word focus. The roadmap leaves room for more advanced pronunciation scoring later, but the current app is honest about what it does today.
+> The current scorer is a heuristic estimate based on transcript quality, rhythm, and word focus. The UI also says that true phoneme scoring is still a roadmap item, so the app stays honest about what it does today.
 
 ## Shot List
 

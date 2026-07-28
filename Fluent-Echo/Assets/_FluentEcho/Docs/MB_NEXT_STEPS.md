@@ -10,6 +10,7 @@ This brief captures the practical path from the current prototype to a fuller po
 - A multi-category lesson catalog.
 - Progress persistence.
 - A heuristic pronunciation estimate MVP.
+- A visible phoneme-roadmap note in the scoring flow.
 - Editor-safe CPU fallback for Whisper.
 - Separate scene-owned panels for settings and result feedback.
 
@@ -64,6 +65,7 @@ The plan intentionally avoids paid APIs and keeps the scoring pipeline local and
 ### 6. Keep the portfolio story readable
 
 - Keep `MB_ARCHITECTURE.md` aligned with the current onboarding, honest scoring, and panel layout.
+- Keep the score UI honest by naming the current heuristic estimate and the future phoneme roadmap separately.
 - Keep `CASE_STUDY_BRIEF.md` as the short portfolio-facing summary.
 - Keep `PORTFOLIO_DEMO_SCRIPT.md` as the live presentation walkthrough.
 - Make sure the case-study story fits a one-minute explanation: privacy, local Whisper, transparent estimate, coach-style feedback.
