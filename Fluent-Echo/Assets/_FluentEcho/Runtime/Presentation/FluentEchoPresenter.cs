@@ -704,7 +704,7 @@ namespace FluentEcho.Presentation
             if (lastPronunciationScore.IsAvailable)
             {
                 lines.Add(
-                    $"Pronunciation estimate: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
+                    $"Practice score: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
                 lines.Add(
                     $"Recognition confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
                 lines.Add(
@@ -712,7 +712,7 @@ namespace FluentEcho.Presentation
                 lines.Add(
                     $"Transcript match: coverage {lastPronunciationScore.CoverageScore}% | precision {lastPronunciationScore.PrecisionScore}%");
                 lines.Add(
-                    $"Rhythm: {lastPronunciationScore.TempoScore}% | clarity estimate {lastPronunciationScore.WordQualityScore}%");
+                    $"Rhythm: {lastPronunciationScore.TempoScore}% | word focus {lastPronunciationScore.WordQualityScore}%");
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -761,11 +761,11 @@ namespace FluentEcho.Presentation
 
             var lines = new System.Collections.Generic.List<string>
             {
-                $"Pronunciation estimate: {score.OverallScore}/100 | {score.BandLabel}",
+                $"Practice score: {score.OverallScore}/100 | {score.BandLabel}",
                 $"Recognition confidence: {Capitalize(score.ConfidenceBand)}",
                 $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
                 $"Transcript match: coverage {score.CoverageScore}% | precision {score.PrecisionScore}%",
-                $"Rhythm: {score.TempoScore}% | clarity estimate: {score.WordQualityScore}%"
+                $"Rhythm: {score.TempoScore}% | word focus: {score.WordQualityScore}%"
             };
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))

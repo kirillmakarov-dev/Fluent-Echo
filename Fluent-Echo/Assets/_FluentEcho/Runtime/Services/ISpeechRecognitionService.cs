@@ -64,7 +64,7 @@ namespace FluentEcho.Services
             0,
             "UNAVAILABLE",
             "UNAVAILABLE",
-            "Pronunciation score is not available yet.",
+            "Practice score is not available yet.",
             string.Empty,
             0,
             0,
@@ -252,9 +252,9 @@ namespace FluentEcho.Services
         private static string BuildSummary(int score, string band, string confidenceBand)
         {
             if (score <= 0)
-                return $"PRONUNCIATION ESTIMATE | 0/100 | {confidenceBand.ToUpperInvariant()}";
+                return $"PRACTICE SCORE | 0/100 | {confidenceBand.ToUpperInvariant()}";
 
-            return $"PRONUNCIATION ESTIMATE | {score:0}/100 | {confidenceBand.ToUpperInvariant()}";
+            return $"PRACTICE SCORE | {score:0}/100 | {confidenceBand.ToUpperInvariant()}";
         }
 
         private static string BuildFeedback(
@@ -268,7 +268,7 @@ namespace FluentEcho.Services
             string band)
         {
             if (string.IsNullOrWhiteSpace(transcript))
-                return "Try saying the sentence once, then let the model finish the turn.";
+                return "Try saying the sentence once, then let the estimate finish the turn.";
 
             string focus = BuildFocusText(expectedWords, matchResult.MatchedWords);
             if (missingCount > 0)
@@ -288,9 +288,9 @@ namespace FluentEcho.Services
                 return "Good word match. Slow down a little so each word lands cleanly.";
 
             if (score >= 85)
-                return $"Strong delivery. {band.ToUpperInvariant()} pronunciation estimate.";
+                return $"Strong transcript match. {band.ToUpperInvariant()} practice score.";
 
-            return $"Good transcript match. Keep the rhythm steady and natural for the next estimate.";
+            return $"Good transcript match. Keep the rhythm steady and natural for the next attempt.";
         }
 
         private static int ComputeConfidenceScore(

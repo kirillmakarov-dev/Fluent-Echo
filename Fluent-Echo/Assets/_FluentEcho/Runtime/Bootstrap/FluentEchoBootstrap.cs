@@ -538,7 +538,7 @@ namespace FluentEcho.Bootstrap
 
             TextMeshProUGUI summaryLabel = MoveOrCreateText(
                 resultPanel,
-                "Pronunciation Summary",
+                "Practice Score",
                 string.Empty,
                 14,
                 FontStyles.Bold,
@@ -546,12 +546,12 @@ namespace FluentEcho.Bootstrap
                 new Vector2(0.04f, 0.34f),
                 new Vector2(0.96f, 0.48f),
                 TextAlignmentOptions.Left,
-                new[] { "Pronunciation Summary" });
+                new[] { "Pronunciation Summary", "Practice Score" });
 
             summaryLabel.color = new Color(0.89f, 0.37f, 0.30f, 1f);
             TextMeshProUGUI feedbackLabel = MoveOrCreateText(
                 resultPanel,
-                "Pronunciation Feedback",
+                "Coach Tip",
                 "Your coach tip will appear here.",
                 12,
                 FontStyles.Italic,
@@ -559,7 +559,7 @@ namespace FluentEcho.Bootstrap
                 new Vector2(0.04f, 0.10f),
                 new Vector2(0.96f, 0.30f),
                 TextAlignmentOptions.Left,
-                new[] { "Pronunciation Feedback" });
+                new[] { "Pronunciation Feedback", "Coach Tip" });
 
             feedbackLabel.color = new Color(0.21f, 0.21f, 0.21f, 1f);
             EnsureResultHeader(resultPanel);
