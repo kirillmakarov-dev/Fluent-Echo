@@ -945,6 +945,8 @@ namespace FluentEcho.Presentation
             }
 
             string summary = $"Progress: {clearedLessons}/{exerciseCount} lessons cleared";
+            if (clearedLessons == exerciseCount && exerciseCount > 0)
+                summary += " | all lessons cleared";
             if (attemptedLessons > 0)
                 summary += $" | {attemptedLessons}/{exerciseCount} attempted";
             if (bestScore > 0)
