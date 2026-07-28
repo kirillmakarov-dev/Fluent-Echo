@@ -379,6 +379,36 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void MockModeToggle_WhileListening_RevertsToggleWithoutSwitchingServices()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_mock_mode_locked");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var realService = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, realService, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                realService.IsListening = true;
+
+                view.RaiseMockModeChanged(true);
+
+                Assert.That(view.LastMockMode, Is.False);
+                Assert.That(realService.ConfigureCalls, Is.EqualTo(1));
+                Assert.That(mockService.ConfigureCalls, Is.EqualTo(0));
+                Assert.That(mockService.PrepareCalls, Is.EqualTo(0));
+                Assert.That(view.LastStatus, Does.Contain("Ready to practice").Or.Contain("Preparing"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void PartialTranscript_SavesRetryProgressWithoutSuccess()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_retry");
