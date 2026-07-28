@@ -751,7 +751,7 @@ namespace FluentEcho.Presentation
 
                 if (progress != null)
                 {
-                    lines.Add("Progress summary:");
+                    lines.Add("Lesson progress:");
                     lines.Add(progress.GetSummaryText());
                 }
 
