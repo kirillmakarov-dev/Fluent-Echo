@@ -291,6 +291,7 @@ namespace FluentEcho.Domain
             if (!string.IsNullOrWhiteSpace(header))
                 lines.Add(header);
 
+            lines.Add(BuildHistorySummaryLine(count));
             lines.Add("Recent attempts:");
             for (int i = 0; i < count; i++)
             {
@@ -370,6 +371,27 @@ namespace FluentEcho.Domain
             string statusText = record.IsComplete ? "cleared" : "needs retry";
             string transcriptPreview = Truncate(record.Transcript, 34);
             return $"{entryNumber}. {scoreText}{confidenceText}{reasonText} | {statusText} | {transcriptPreview}";
+        }
+
+        private string BuildHistorySummaryLine(int visibleEntries)
+        {
+            int totalEntries = attemptHistory?.Count ?? 0;
+            if (totalEntries <= 0)
+                return string.Empty;
+
+            string attemptsText = totalEntries == 1
+                ? "1 attempt"
+                : $"{totalEntries} attempts";
+
+            string visibleText = visibleEntries >= totalEntries
+                ? string.Empty
+                : $" | showing last {visibleEntries}";
+
+            string successText = successfulAttempts > 0
+                ? $" | cleared {successfulAttempts}"
+                : string.Empty;
+
+            return $"History: {attemptsText}{visibleText}{successText}";
         }
 
         private string BuildHistoryHeader()

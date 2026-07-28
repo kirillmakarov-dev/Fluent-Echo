@@ -96,6 +96,7 @@ namespace FluentEcho.Tests
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Best reason: All target words matched cleanly"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Last reason: All target words matched cleanly"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("All target words matched cleanly"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("History: 1 attempt"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Recent attempts:"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("1."));
             }
@@ -131,6 +132,7 @@ namespace FluentEcho.Tests
                 Assert.That(state.GetHistoryText(), Does.Contain("Best reason: All target words matched cleanly"));
                 Assert.That(state.GetHistoryText(), Does.Contain("Last reason: All target words matched cleanly"));
                 Assert.That(state.GetHistoryText(), Does.Contain("All target words matched cleanly"));
+                Assert.That(state.GetHistoryText(), Does.Contain("History: 1 attempt"));
                 Assert.That(state.GetHistoryText(), Does.Contain("Recent attempts:"));
                 Assert.That(state.LastPronunciationSummary, Does.Contain("94/100"));
 
