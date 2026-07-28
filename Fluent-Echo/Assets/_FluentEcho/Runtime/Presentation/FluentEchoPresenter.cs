@@ -908,6 +908,7 @@ namespace FluentEcho.Presentation
             string bestConfidenceBand = string.Empty;
             string bestLessonLabel = string.Empty;
             string startLessonLabel = string.Empty;
+            string nextLessonLabel = string.Empty;
 
             for (int i = 0; i < exerciseCount; i++)
             {
@@ -927,6 +928,9 @@ namespace FluentEcho.Presentation
                 {
                     attemptedLessons++;
                     totalBestScore += lessonProgress.BestPronunciationScore;
+
+                    if (lessonProgress.SuccessfulAttempts <= 0 && string.IsNullOrWhiteSpace(nextLessonLabel))
+                        nextLessonLabel = BuildCategoryLessonLabel(exercise);
                 }
 
                 if (lessonProgress.SuccessfulAttempts > 0)
@@ -949,6 +953,10 @@ namespace FluentEcho.Presentation
                 summary += $" | top lesson {bestLessonLabel}";
             else if (attemptedLessons == 0 && !string.IsNullOrWhiteSpace(startLessonLabel))
                 summary += $" | start with {startLessonLabel}";
+            if (attemptedLessons > 0
+                && !string.IsNullOrWhiteSpace(nextLessonLabel)
+                && !string.Equals(nextLessonLabel, bestLessonLabel, StringComparison.Ordinal))
+                summary += $" | next lesson {nextLessonLabel}";
             if (!string.IsNullOrWhiteSpace(bestConfidenceBand))
                 summary += $" | confidence {bestConfidenceBand}";
             if (attemptedLessons > 0)

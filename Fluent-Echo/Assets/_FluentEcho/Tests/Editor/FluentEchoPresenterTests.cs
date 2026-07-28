@@ -569,6 +569,7 @@ namespace FluentEcho.Tests
                 Assert.That(view.LastCategoryProgress, Does.Contain("2/2 attempted"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("best score 92/100"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("top lesson Say the first word."));
+                Assert.That(view.LastCategoryProgress, Does.Contain("next lesson Say the second word."));
                 Assert.That(view.LastCategoryProgress, Does.Contain("confidence high"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("avg best score 66/100"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("2 attempts"));
@@ -607,6 +608,7 @@ namespace FluentEcho.Tests
 
                 Assert.That(view.LastCategoryProgress, Does.Contain("Progress: 0/2 lessons cleared"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("start with Say the first word."));
+                Assert.That(view.LastCategoryProgress, Does.Not.Contain("next lesson"));
                 Assert.That(view.LastCategoryProgress, Does.Not.Contain("attempted"));
                 Assert.That(view.LastCategoryProgress, Does.Not.Contain("avg best score"));
             }
