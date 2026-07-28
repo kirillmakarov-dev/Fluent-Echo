@@ -539,7 +539,7 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI summaryLabel = MoveOrCreateText(
                 resultPanel,
                 "Practice Score",
-                string.Empty,
+                FluentEchoCopy.FirstPronunciationSummary,
                 14,
                 FontStyles.Bold,
                 new Color(0.89f, 0.37f, 0.3f, 1f),
