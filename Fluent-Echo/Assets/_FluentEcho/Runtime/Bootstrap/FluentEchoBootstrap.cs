@@ -100,7 +100,7 @@ namespace FluentEcho.Bootstrap
                 mockService,
                 useMockByDefault,
                 PlayReference,
-                null,
+                NoOpPhonemeAlignmentService.Instance,
                 ResolveSelectedCategoryIndex(),
                 ResolveSelectedExerciseIndex(),
                 PersistPracticeSelection);

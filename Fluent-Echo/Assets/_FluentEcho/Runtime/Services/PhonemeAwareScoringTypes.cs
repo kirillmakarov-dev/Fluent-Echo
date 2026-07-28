@@ -12,6 +12,17 @@ namespace FluentEcho.Services
         PhonemeAlignmentResult Align(PhonemeAlignmentRequest request);
     }
 
+    public sealed class NoOpPhonemeAlignmentService : IPhonemeAlignmentService
+    {
+        public static readonly NoOpPhonemeAlignmentService Instance = new();
+
+        private NoOpPhonemeAlignmentService()
+        {
+        }
+
+        public PhonemeAlignmentResult Align(PhonemeAlignmentRequest request) => PhonemeAlignmentResult.Unavailable;
+    }
+
     public sealed class PhonemeAlignmentRequest
     {
         public PhonemeAlignmentRequest(
@@ -38,7 +49,6 @@ namespace FluentEcho.Services
         public IReadOnlyList<string> AcceptedPhrases { get; }
 
         public bool HasTranscript => !string.IsNullOrWhiteSpace(Transcript);
-        public bool HasMatchResult => MatchResult.MatchedWords != null;
     }
 
     public sealed class PhonemeAlignmentResult

@@ -42,7 +42,27 @@ namespace FluentEcho.Tests
             Assert.That(request.TargetWords, Is.Empty);
             Assert.That(request.AcceptedPhrases, Is.Empty);
             Assert.That(request.HasTranscript, Is.False);
-            Assert.That(request.HasMatchResult, Is.True);
+        }
+
+        [Test]
+        public void NoOpService_ReturnsUnavailableRoadmapResult()
+        {
+            var service = NoOpPhonemeAlignmentService.Instance;
+            PhonemeAlignmentRequest request = new(
+                (SpeechExerciseSO) null,
+                "apple",
+                new SpeechMatchResult(true, new[] { true }),
+                1.5f,
+                new[] { "apple" },
+                new[] { "apple" });
+
+            PhonemeAlignmentResult result = service.Align(request);
+
+            Assert.That(result.IsAvailable, Is.False);
+            Assert.That(result.AlignmentScore, Is.EqualTo(0));
+            Assert.That(result.SummaryText, Does.Contain("not active yet"));
+            Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
+            Assert.That(result.HasEvidence, Is.False);
         }
     }
 }

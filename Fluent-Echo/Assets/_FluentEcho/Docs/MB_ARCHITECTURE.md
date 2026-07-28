@@ -90,6 +90,7 @@ Infrastructure and scoring:
 - `LessonProgressRepository` persists progress in `PlayerPrefs`;
 - `IPronunciationScoringService` and `HeuristicPronunciationScoringService` compute the current local pronunciation estimate.
 - `IPhonemeAlignmentService` and `PhonemeAlignmentResult` define the future phoneme-aware scoring boundary without changing the current heuristic path.
+- `NoOpPhonemeAlignmentService` is the explicit default so the app keeps a stable fallback path even when phoneme-aware scoring is not wired.
 
 Important note:
 
@@ -97,6 +98,7 @@ Important note:
 - it combines transcript match, rhythm, word quality, and confidence into a transparent practice score;
 - it does not claim to measure phonemes directly.
 - the future phoneme-aware path is now modeled as a separate additive contract instead of a rewrite of Whisper.
+- the current build still uses a no-op alignment default until a real phoneme-aware scorer is introduced.
 
 ### `Runtime/Presentation`
 

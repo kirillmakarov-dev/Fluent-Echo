@@ -61,7 +61,7 @@ namespace FluentEcho.Presentation
             this.mockService = mockService;
             useMock = useMockByDefault;
             this.playReference = playReference;
-            this.phonemeAlignmentService = phonemeAlignmentService;
+            this.phonemeAlignmentService = phonemeAlignmentService ?? NoOpPhonemeAlignmentService.Instance;
             this.persistSelection = persistSelection;
             currentCategoryIndex = ResolveCategoryIndex(selectedCategoryIndex);
             currentExerciseIndex = Mathf.Max(0, selectedExerciseIndex);

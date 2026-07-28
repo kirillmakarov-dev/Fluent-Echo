@@ -27,6 +27,7 @@ The next step is to add a separate scoring layer, not to rewrite Whisper.
 - Keep `ISpeechRecognitionService` responsible for transcript generation only.
 - Keep `IPronunciationScoringService` responsible for heuristic estimate logic until a better scorer exists.
 - Add future phoneme-aware logic as an optional service boundary.
+- Use a `NoOpPhonemeAlignmentService` as the explicit default until a real scorer is wired.
 - Keep the UI honest about what is estimated and what is actually measured.
 
 ## Proposed Service Boundary
@@ -110,6 +111,7 @@ When a future phoneme-aware scorer is introduced:
 - Add the future service interface.
 - Add a result model that can carry phoneme or segment-level details.
 - Keep the existing heuristic scorer untouched as the default.
+- Keep the explicit no-op fallback available so the build stays predictable before the future scorer ships.
 
 ### Stage 3 - Incremental Integration
 
