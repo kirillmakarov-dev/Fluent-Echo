@@ -511,7 +511,7 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI label = MoveOrCreateText(
                 resultPanel,
                 "Progress Details",
-                "Your attempt history will appear after your first recording.",
+                "Your first recording will appear here.",
                 11,
                 FontStyles.Normal,
                 new Color(0.20f, 0.20f, 0.20f, 1f),

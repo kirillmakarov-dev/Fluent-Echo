@@ -744,7 +744,7 @@ namespace FluentEcho.Presentation
             }
 
             return lines.Count == 0
-                ? "Your attempt history will appear after your first recording."
+                ? "Your first recording will appear here."
                 : string.Join("\n", lines);
         }
 

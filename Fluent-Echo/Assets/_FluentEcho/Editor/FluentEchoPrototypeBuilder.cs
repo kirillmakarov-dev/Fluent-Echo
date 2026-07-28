@@ -346,7 +346,7 @@ namespace FluentEcho.Editor
             TextMeshProUGUI progressDetails = EnsureText(
                 resultPanel,
                 "Progress Details",
-                "Your attempt history will appear after your first recording.",
+                "Your first recording will appear here.",
                 17,
                 FontStyles.Normal,
                 Ink,
@@ -722,7 +722,7 @@ namespace FluentEcho.Editor
                 new Vector2(0.14f, 0.36f), new Vector2(0.26f, 0.64f), Cream);
             SetButtonLabelInsets(resultCloseButton, 0.30f, 0.96f);
             TextMeshProUGUI progressDetails = CreateText(
-                success.rectTransform, "Progress Details", "Your attempt history will appear after your first recording.", 17, FontStyles.Normal, Ink,
+                success.rectTransform, "Progress Details", "Your first recording will appear here.", 17, FontStyles.Normal, Ink,
                 new Vector2(0.06f, 0.50f), new Vector2(0.94f, 0.69f), TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationSummary = CreateText(
                 success.rectTransform, "Pronunciation Summary", string.Empty, 30, FontStyles.Bold, CoralInk,

@@ -14,7 +14,7 @@ namespace FluentEcho.Tests
             try
             {
                 Assert.That(state.GetSummaryText(), Does.Contain("no attempts yet"));
-                Assert.That(state.GetHistoryText(), Does.Contain("No attempts yet."));
+                Assert.That(state.GetHistoryText(), Does.Contain("Your first recording will appear here."));
             }
             finally
             {

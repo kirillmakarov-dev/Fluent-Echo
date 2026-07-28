@@ -221,7 +221,7 @@ namespace FluentEcho.Domain
 
             string completion = $"{Math.Min(bestMatchedWords, totalWords)}/{totalWords}";
             string score = bestPronunciationScore > 0 ? $" | estimate {bestPronunciationScore}/100" : string.Empty;
-            string attemptsText = attempts == 0 ? "no attempts yet" : $"{attempts} attempts";
+            string attemptsText = attempts == 0 ? "no attempts recorded yet" : $"{attempts} attempts";
             string successText = successfulAttempts > 0 ? $" | cleared {successfulAttempts}" : string.Empty;
             return $"Progress: best {completion}{score} | {attemptsText}{successText}";
         }
@@ -232,8 +232,8 @@ namespace FluentEcho.Domain
             {
                 string emptyHeader = BuildHistoryHeader();
                 return string.IsNullOrWhiteSpace(emptyHeader)
-                    ? "No attempts yet."
-                    : $"{emptyHeader}\nNo attempts yet.";
+                    ? "Your first recording will appear here."
+                    : $"{emptyHeader}\nYour first recording will appear here.";
             }
 
             int limit = Math.Max(1, maxEntries);
