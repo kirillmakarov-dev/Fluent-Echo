@@ -350,10 +350,14 @@ namespace FluentEcho.Views
         public void SetPronunciation(string summary, string feedback)
         {
             if (pronunciationSummaryLabel != null)
-                pronunciationSummaryLabel.text = summary ?? string.Empty;
+                pronunciationSummaryLabel.text = string.IsNullOrWhiteSpace(summary)
+                    ? FluentEchoCopy.FirstPronunciationSummary
+                    : summary;
 
             if (pronunciationFeedbackLabel != null)
-                pronunciationFeedbackLabel.text = feedback ?? string.Empty;
+                pronunciationFeedbackLabel.text = string.IsNullOrWhiteSpace(feedback)
+                    ? FluentEchoCopy.BuildUnavailablePronunciationDetails()
+                    : feedback;
         }
 
         public void SetStatus(string status)
