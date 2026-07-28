@@ -755,6 +755,8 @@ namespace FluentEcho.Presentation
                 lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
                 lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
                 lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
+                if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
+                    lines.Add(lastPronunciationScore.EstimateBasisText);
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -900,6 +902,9 @@ namespace FluentEcho.Presentation
                 $"Rhythm: {score.TempoScore}%",
                 $"Word focus: {score.WordQualityScore}%"
             };
+
+            if (!string.IsNullOrWhiteSpace(score.EstimateBasisText))
+                lines.Add(score.EstimateBasisText);
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
                 lines.Add(wordBreakdown);

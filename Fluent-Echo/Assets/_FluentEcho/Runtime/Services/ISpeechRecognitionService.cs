@@ -68,6 +68,7 @@ namespace FluentEcho.Services
             FluentEchoCopy.FirstPronunciationSummary,
             FluentEchoCopy.FirstEstimatePrompt,
             string.Empty,
+            string.Empty,
             0,
             0,
             0,
@@ -88,6 +89,7 @@ namespace FluentEcho.Services
             string summaryText,
             string feedbackText,
             string confidenceReason,
+            string estimateBasisText,
             int matchedWordCount,
             int expectedWordCount,
             int missingWordCount,
@@ -107,6 +109,7 @@ namespace FluentEcho.Services
             SummaryText = summaryText ?? string.Empty;
             FeedbackText = feedbackText ?? string.Empty;
             ConfidenceReason = confidenceReason ?? string.Empty;
+            EstimateBasisText = estimateBasisText ?? string.Empty;
             MatchedWordCount = Mathf.Max(0, matchedWordCount);
             ExpectedWordCount = Mathf.Max(0, expectedWordCount);
             MissingWordCount = Mathf.Max(0, missingWordCount);
@@ -127,6 +130,7 @@ namespace FluentEcho.Services
         public string SummaryText { get; }
         public string FeedbackText { get; }
         public string ConfidenceReason { get; }
+        public string EstimateBasisText { get; }
         public int MatchedWordCount { get; }
         public int ExpectedWordCount { get; }
         public int MissingWordCount { get; }
@@ -189,6 +193,7 @@ namespace FluentEcho.Services
                         extraCount,
                         emptyConfidence,
                         true),
+                    BuildEstimateBasisText(true),
                     matchedWords,
                     expectedCount,
                     missingCount,
@@ -256,6 +261,7 @@ namespace FluentEcho.Services
                 summary,
                 feedback,
                 confidenceReason,
+                BuildEstimateBasisText(matchResult.IsComplete),
                 matchedWords,
                 expectedCount,
                 missingCount,
@@ -272,9 +278,9 @@ namespace FluentEcho.Services
         private static string BuildSummary(int score, string band, string confidenceBand)
         {
             if (score <= 0)
-                return $"PRACTICE SCORE | 0/100 | {confidenceBand.ToUpperInvariant()}";
+                return $"PRONUNCIATION ESTIMATE | 0/100 | {confidenceBand.ToUpperInvariant()}";
 
-            return $"PRACTICE SCORE | {score:0}/100 | {confidenceBand.ToUpperInvariant()}";
+            return $"PRONUNCIATION ESTIMATE | {score:0}/100 | {confidenceBand.ToUpperInvariant()}";
         }
 
         private static string BuildFeedback(
@@ -337,6 +343,13 @@ namespace FluentEcho.Services
                 return "All target words matched cleanly, with no extra words.";
 
             return "The match is useful, but confidence still stays cautious.";
+        }
+
+        private static string BuildEstimateBasisText(bool isComplete)
+        {
+            return isComplete
+                ? "Estimate basis: transcript coverage, word quality, and pacing. This is not phoneme-level scoring."
+                : "Estimate basis: transcript coverage, word quality, and pacing. Missing words keep the estimate conservative.";
         }
 
         private static int ComputeConfidenceScore(

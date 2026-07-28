@@ -193,6 +193,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
                 Assert.That(score.ConfidenceReason, Does.Contain("matched cleanly"));
+                Assert.That(score.EstimateBasisText, Does.Contain("not phoneme-level scoring"));
                 Assert.That(score.FeedbackText, Does.Contain("pronunciation estimate"));
                 Assert.That(score.WordScores, Has.Length.EqualTo(4));
                 Assert.That(score.WordScores[0].Score, Is.GreaterThanOrEqualTo(90));
@@ -303,6 +304,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.ConfidenceReason, Does.Contain("No target words matched"));
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.SummaryText, Does.Contain("LOW"));
+                Assert.That(score.EstimateBasisText, Does.Contain("Missing words keep the estimate conservative"));
                 Assert.That(score.FeedbackText, Does.Contain("pause"));
                 Assert.That(score.FeedbackText, Does.Contain("pronunciation estimate"));
             }
