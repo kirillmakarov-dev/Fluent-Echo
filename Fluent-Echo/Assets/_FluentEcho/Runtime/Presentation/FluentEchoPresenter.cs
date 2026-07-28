@@ -439,20 +439,22 @@ namespace FluentEcho.Presentation
 
             if (lastPronunciationScore.IsAvailable)
             {
-                lines.Add("RESULT BOARD");
                 lines.Add(
-                    $"SCORE | {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel.ToUpperInvariant()}");
+                    $"Score: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
                 lines.Add(
-                    $"Coverage {lastPronunciationScore.CoverageScore}% | Precision {lastPronunciationScore.PrecisionScore}% | Tempo {lastPronunciationScore.TempoScore}%");
+                    $"Words: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount} matched");
                 lines.Add(
-                    $"Matched {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount} | Missing {lastPronunciationScore.MissingWordCount} | Extra {lastPronunciationScore.ExtraWordCount}");
+                    $"Clarity: {lastPronunciationScore.WordQualityScore}% | Coverage: {lastPronunciationScore.CoverageScore}% | Tempo: {lastPronunciationScore.TempoScore}%");
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
                     lines.Add(wordBreakdown);
 
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
-                    lines.Add(lastPronunciationScore.FeedbackText);
+                {
+                    lines.Add(string.Empty);
+                    lines.Add($"Coach note: {lastPronunciationScore.FeedbackText}");
+                }
             }
 
             string history = progress?.GetHistoryText(2);
@@ -462,6 +464,15 @@ namespace FluentEcho.Presentation
                     lines.Add(string.Empty);
 
                 lines.Add(history);
+            }
+
+            if (lastPronunciationScore.IsAvailable)
+            {
+                if (lines.Count > 0)
+                    lines.Add(string.Empty);
+
+                lines.Add("Choose Next Mission to keep going, or Try Again to improve this score.");
+                return string.Join("\n", lines);
             }
 
             return lines.Count == 0
@@ -475,19 +486,26 @@ namespace FluentEcho.Presentation
                 return string.Empty;
 
             string focus = score.MissingWordCount > 0
-                ? $"Focus next: {score.MissingWordCount} missing word{(score.MissingWordCount == 1 ? string.Empty : "s")}."
-                : "Focus next: keep the rhythm steady.";
+                ? $"Next focus: repeat the missing word{(score.MissingWordCount == 1 ? string.Empty : "s")} slowly once, then say the full sentence."
+                : "Next focus: keep the same clear rhythm on the next mission.";
 
             string wordBreakdown = BuildWordBreakdown(score.WordScores);
 
-            return string.Join(
-                "\n",
+            var lines = new System.Collections.Generic.List<string>
+            {
+                $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
                 $"Coverage {score.CoverageScore}% | Precision {score.PrecisionScore}% | Tempo {score.TempoScore}%",
-                $"Word quality {score.WordQualityScore}%",
-                $"Matched {score.MatchedWordCount}/{score.ExpectedWordCount} | Missing {score.MissingWordCount} | Extra {score.ExtraWordCount}",
-                string.IsNullOrWhiteSpace(wordBreakdown) ? string.Empty : wordBreakdown,
-                focus,
-                string.IsNullOrWhiteSpace(score.FeedbackText) ? string.Empty : score.FeedbackText);
+                $"Word clarity: {score.WordQualityScore}%"
+            };
+
+            if (!string.IsNullOrWhiteSpace(wordBreakdown))
+                lines.Add(wordBreakdown);
+
+            lines.Add(focus);
+            if (!string.IsNullOrWhiteSpace(score.FeedbackText))
+                lines.Add(score.FeedbackText);
+
+            return string.Join("\n", lines);
         }
 
         private static string BuildWordBreakdown(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
@@ -507,10 +525,10 @@ namespace FluentEcho.Presentation
                         : wordScore.Kind == PronunciationMatchKind.Fuzzy
                             ? "fuzzy"
                             : "miss";
-                parts.Add($"{wordScore.Word} {wordScore.Score}% {marker}");
+                parts.Add($"{wordScore.Word}: {wordScore.Score}% {marker}");
             }
 
-            return $"Words | {string.Join(" | ", parts)}";
+            return $"Word detail: {string.Join(" | ", parts)}";
         }
 
         private int ResolveExerciseIndex(SpeechExerciseSO selectedExercise)

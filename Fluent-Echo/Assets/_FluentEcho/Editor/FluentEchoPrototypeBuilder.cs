@@ -30,8 +30,6 @@ namespace FluentEcho.Editor
         private const string EighthExercisePath = Root + "/Demo/Data/EighthLesson.asset";
         private const string WhisperSettingsPath = Root + "/Demo/Data/WhisperSettings.asset";
         private const string ChipPrefabPath = Root + "/Demo/Prefabs/WordChip.prefab";
-        private const string SyncSessionKey = "FluentEcho.SyncPrototypeSceneUiOnce.v2";
-
         private static readonly Color Background = Hex("08171D");
         private static readonly Color Surface = Hex("10272E");
         private static readonly Color SurfaceRaised = Hex("17353D");
@@ -55,40 +53,6 @@ namespace FluentEcho.Editor
                 if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null)
                     BuildPrototype();
             };
-        }
-
-        [InitializeOnLoadMethod]
-        private static void SyncOpenPrototypeSceneOnReload()
-        {
-            EditorApplication.playModeStateChanged -= HandlePlayModeStateChanged;
-            EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
-            EditorApplication.delayCall += () =>
-            {
-                if (EditorApplication.isPlayingOrWillChangePlaymode)
-                    return;
-
-                if (SessionState.GetBool(SyncSessionKey, false))
-                    return;
-
-                Scene scene = SceneManager.GetActiveScene();
-                if (scene.path != ScenePath)
-                    return;
-
-                SessionState.SetBool(SyncSessionKey, true);
-                SyncCurrentPrototypeSceneUi();
-            };
-        }
-
-        private static void HandlePlayModeStateChanged(PlayModeStateChange state)
-        {
-            if (state != PlayModeStateChange.EnteredEditMode)
-                return;
-
-            Scene scene = SceneManager.GetActiveScene();
-            if (scene.path != ScenePath)
-                return;
-
-            SyncCurrentPrototypeSceneUi();
         }
 
         [MenuItem("Tools/Fluent Echo/Rebuild Prototype")]
@@ -138,11 +102,17 @@ namespace FluentEcho.Editor
             }
 
             RectTransform settingsPanel = FindSceneRect(scene, "Settings Panel");
+            bool createdSettingsPanel = false;
             if (settingsPanel == null)
+            {
                 settingsPanel = CreatePanel(teacherCard, "Settings Panel", new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f), SettingsFill);
+                createdSettingsPanel = true;
+            }
 
-            settingsPanel.SetParent(teacherCard, false);
-            SetAnchors(settingsPanel, new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f));
+            if (settingsPanel.parent != teacherCard)
+                settingsPanel.SetParent(teacherCard, false);
+            if (createdSettingsPanel)
+                SetAnchors(settingsPanel, new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f));
             settingsPanel.GetComponent<Image>().color = SettingsFill;
             ApplyPanelFrame(settingsPanel, SettingsBorder);
             EnsureChildPanel(settingsPanel, "Settings Accent", new Vector2(0f, 0.92f), Vector2.one, SettingsAccent);
@@ -155,20 +125,32 @@ namespace FluentEcho.Editor
             EnsureButton(settingsPanel, "Settings Close Button", "CLOSE", new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink);
 
             Dropdown microphoneDropdown = FindSceneDropdown(scene, "Microphone Dropdown");
+            bool createdMicrophoneDropdown = false;
             if (microphoneDropdown == null)
+            {
                 microphoneDropdown = CreateDropdown(settingsPanel, "Microphone Dropdown", new Vector2(0.05f, 0.10f), new Vector2(0.46f, 0.42f), "Default microphone");
+                createdMicrophoneDropdown = true;
+            }
 
-            microphoneDropdown.transform.SetParent(settingsPanel, false);
-            SetAnchors(microphoneDropdown.GetComponent<RectTransform>(), new Vector2(0.05f, 0.10f), new Vector2(0.46f, 0.42f));
+            if (microphoneDropdown.transform.parent != settingsPanel)
+                microphoneDropdown.transform.SetParent(settingsPanel, false);
+            if (createdMicrophoneDropdown)
+                SetAnchors(microphoneDropdown.GetComponent<RectTransform>(), new Vector2(0.05f, 0.10f), new Vector2(0.46f, 0.42f));
             SetDropdownOptions(microphoneDropdown, "Default microphone");
             StyleDropdown(microphoneDropdown, SettingsFill);
 
             Dropdown whisperProfileDropdown = FindSceneDropdown(scene, "Whisper Profile Dropdown");
+            bool createdWhisperProfileDropdown = false;
             if (whisperProfileDropdown == null)
+            {
                 whisperProfileDropdown = CreateDropdown(settingsPanel, "Whisper Profile Dropdown", new Vector2(0.54f, 0.10f), new Vector2(0.95f, 0.42f), "FAST");
+                createdWhisperProfileDropdown = true;
+            }
 
-            whisperProfileDropdown.transform.SetParent(settingsPanel, false);
-            SetAnchors(whisperProfileDropdown.GetComponent<RectTransform>(), new Vector2(0.54f, 0.10f), new Vector2(0.95f, 0.42f));
+            if (whisperProfileDropdown.transform.parent != settingsPanel)
+                whisperProfileDropdown.transform.SetParent(settingsPanel, false);
+            if (createdWhisperProfileDropdown)
+                SetAnchors(whisperProfileDropdown.GetComponent<RectTransform>(), new Vector2(0.54f, 0.10f), new Vector2(0.95f, 0.42f));
             SetDropdownOptions(whisperProfileDropdown, "FAST", "BALANCED", "ACCURATE");
             StyleDropdown(whisperProfileDropdown, SettingsFill);
             settingsPanel.gameObject.SetActive(false);
@@ -176,11 +158,17 @@ namespace FluentEcho.Editor
             EnsureButton(teacherCard, "Settings Toggle Button", "SETTINGS", new Vector2(0.08f, 0.05f), new Vector2(0.92f, 0.11f), SettingsFill, Cream);
 
             Dropdown lessonDropdown = FindSceneDropdown(scene, "Lesson Dropdown");
+            bool createdLessonDropdown = false;
             if (lessonDropdown == null)
+            {
                 lessonDropdown = CreateDropdown(lessonCard, "Lesson Dropdown", new Vector2(0.17f, 0.86f), new Vector2(0.78f, 0.93f), "Describe the Dog");
+                createdLessonDropdown = true;
+            }
 
-            lessonDropdown.transform.SetParent(lessonCard, false);
-            SetAnchors(lessonDropdown.GetComponent<RectTransform>(), new Vector2(0.17f, 0.86f), new Vector2(0.78f, 0.93f));
+            if (lessonDropdown.transform.parent != lessonCard)
+                lessonDropdown.transform.SetParent(lessonCard, false);
+            if (createdLessonDropdown)
+                SetAnchors(lessonDropdown.GetComponent<RectTransform>(), new Vector2(0.17f, 0.86f), new Vector2(0.78f, 0.93f));
             SetDropdownOptions(lessonDropdown, catalog != null ? catalog.GetDisplayNames() : new[] { "Describe the Dog" });
             StyleDropdown(lessonDropdown, SurfaceRaised);
             lessonDropdown.gameObject.SetActive(true);
@@ -194,21 +182,30 @@ namespace FluentEcho.Editor
                 micLabel.gameObject.SetActive(false);
 
             RectTransform resultPanel = FindSceneRect(scene, "Result Panel");
+            bool createdResultPanel = false;
             if (resultPanel == null)
+            {
                 resultPanel = CreatePanel(lessonCard, "Result Panel", new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f), ResultFill);
+                createdResultPanel = true;
+            }
 
-            resultPanel.SetParent(lessonCard, false);
-            SetAnchors(resultPanel, new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f));
+            if (resultPanel.parent != lessonCard)
+                resultPanel.SetParent(lessonCard, false);
+            if (createdResultPanel)
+                SetAnchors(resultPanel, new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f));
             Image resultImage = resultPanel.GetComponent<Image>();
             if (resultImage != null)
                 resultImage.color = ResultFill;
+            CanvasGroup resultGroup = resultPanel.GetComponent<CanvasGroup>();
+            if (resultGroup == null)
+                resultGroup = resultPanel.gameObject.AddComponent<CanvasGroup>();
 
             ApplyPanelFrame(resultPanel, ResultBorder);
             EnsureChildPanel(resultPanel, "Result Accent", new Vector2(0f, 0.92f), Vector2.one, ResultAccent);
             EnsureChildPanel(resultPanel, "Result Divider", new Vector2(0.04f, 0.74f), new Vector2(0.96f, 0.75f), new Color(0.89f, 0.37f, 0.30f, 0.16f));
             EnsureText(resultPanel, "Result Header", "FINAL FEEDBACK", 10, FontStyles.Bold, Mint, new Vector2(0.04f, 0.79f), new Vector2(0.34f, 0.92f), TextAlignmentOptions.Left);
             EnsureText(resultPanel, "Result Badge", "CLEARED", 10, FontStyles.Bold, Coral, new Vector2(0.78f, 0.79f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Right);
-            EnsureButton(resultPanel, "Result Close Button", "CLOSE", new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink);
+            Button resultCloseButton = EnsureButton(resultPanel, "Result Close Button", "CLOSE", new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink);
             TextMeshProUGUI progressDetails = EnsureText(
                 resultPanel,
                 "Progress Details",
@@ -236,9 +233,25 @@ namespace FluentEcho.Editor
                 12,
                 FontStyles.Italic,
                 Ink,
-                new Vector2(0.04f, 0.10f),
-                new Vector2(0.96f, 0.30f),
+                new Vector2(0.04f, 0.18f),
+                new Vector2(0.96f, 0.32f),
                 TextAlignmentOptions.Left);
+            Button resultTryAgainButton = EnsureButton(
+                resultPanel,
+                "Result Try Again Button",
+                "TRY AGAIN",
+                new Vector2(0.04f, 0.04f),
+                new Vector2(0.31f, 0.15f),
+                SurfaceRaised,
+                Cream);
+            Button resultNextButton = EnsureButton(
+                resultPanel,
+                "Result Next Mission Button",
+                "NEXT MISSION",
+                new Vector2(0.33f, 0.04f),
+                new Vector2(0.66f, 0.15f),
+                Mint,
+                Ink);
             resultPanel.gameObject.SetActive(false);
 
             FluentEchoView view = Object.FindFirstObjectByType<FluentEchoView>(FindObjectsInactive.Include);
@@ -250,6 +263,11 @@ namespace FluentEcho.Editor
                 Set(viewObject, "pronunciationFeedbackLabel", pronunciationFeedback);
                 if (resultImage != null)
                     Set(viewObject, "successPanel", resultImage);
+                Set(viewObject, "successPanelGroup", resultGroup);
+                Set(viewObject, "successPanelRect", resultPanel);
+                Set(viewObject, "resultCloseButton", resultCloseButton);
+                Set(viewObject, "resultTryAgainButton", resultTryAgainButton);
+                Set(viewObject, "resultNextButton", resultNextButton);
                 viewObject.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(view);
             }
@@ -463,6 +481,7 @@ namespace FluentEcho.Editor
             Image success = CreatePanel(
                 lessonCard, "Result Panel", new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f), ResultFill)
                 .GetComponent<Image>();
+            CanvasGroup successGroup = success.gameObject.AddComponent<CanvasGroup>();
             ApplyPanelFrame(success.rectTransform, ResultBorder);
             CreatePanel(success.rectTransform, "Result Accent", new Vector2(0f, 0.92f), new Vector2(1f, 1f), ResultAccent);
             CreatePanel(success.rectTransform, "Result Divider", new Vector2(0.04f, 0.74f), new Vector2(0.96f, 0.75f), new Color(0.89f, 0.37f, 0.30f, 0.16f));
@@ -473,8 +492,6 @@ namespace FluentEcho.Editor
             Button resultCloseButton = CreateButton(
                 success.rectTransform, "Result Close Button", "CLOSE",
                 new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink, out _);
-            CreateText(success.rectTransform, "Result Title", "LEVEL COMPLETE", 14, FontStyles.Bold, Coral,
-                new Vector2(0.04f, 0.78f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Left);
             TextMeshProUGUI progressDetails = CreateText(
                 success.rectTransform, "Progress Details", "Recent attempts will appear here.", 11, FontStyles.Normal, Ink,
                 new Vector2(0.04f, 0.50f), new Vector2(0.96f, 0.72f), TextAlignmentOptions.Left);
@@ -483,7 +500,13 @@ namespace FluentEcho.Editor
                 new Vector2(0.04f, 0.34f), new Vector2(0.96f, 0.48f), TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationFeedback = CreateText(
                 success.rectTransform, "Pronunciation Feedback", "Score feedback will appear here.", 12, FontStyles.Italic, Ink,
-                new Vector2(0.04f, 0.10f), new Vector2(0.96f, 0.30f), TextAlignmentOptions.Left);
+                new Vector2(0.04f, 0.18f), new Vector2(0.96f, 0.32f), TextAlignmentOptions.Left);
+            Button resultTryAgainButton = CreateButton(
+                success.rectTransform, "Result Try Again Button", "TRY AGAIN",
+                new Vector2(0.04f, 0.04f), new Vector2(0.31f, 0.15f), SurfaceRaised, Cream, out _);
+            Button resultNextButton = CreateButton(
+                success.rectTransform, "Result Next Mission Button", "NEXT MISSION",
+                new Vector2(0.33f, 0.04f), new Vector2(0.66f, 0.15f), Mint, Ink, out _);
             success.gameObject.SetActive(false);
 
             FluentEchoView view = lessonCard.gameObject.AddComponent<FluentEchoView>();
@@ -505,9 +528,14 @@ namespace FluentEcho.Editor
             Set(serialized, "listenButton", listenButton);
             Set(serialized, "previousButton", lessonPreviousButton);
             Set(serialized, "nextButton", lessonNextButton);
+            Set(serialized, "resultCloseButton", resultCloseButton);
+            Set(serialized, "resultNextButton", resultNextButton);
+            Set(serialized, "resultTryAgainButton", resultTryAgainButton);
             Set(serialized, "mockModeToggle", mockToggle);
             Set(serialized, "recordingIndicator", recordingIndicator);
             Set(serialized, "successPanel", success);
+            Set(serialized, "successPanelGroup", successGroup);
+            Set(serialized, "successPanelRect", success.rectTransform);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             view.ConfigureWordChipPrefab(chipPrefab);
             EditorUtility.SetDirty(view);
@@ -981,11 +1009,17 @@ namespace FluentEcho.Editor
         {
             Transform existing = parent.Find(name);
             RectTransform rect = existing != null ? existing.GetComponent<RectTransform>() : null;
+            bool created = false;
             if (rect == null)
+            {
                 rect = CreatePanel(parent, name, anchorMin, anchorMax, color);
+                created = true;
+            }
 
-            rect.SetParent(parent, false);
-            SetAnchors(rect, anchorMin, anchorMax);
+            if (rect.parent != parent)
+                rect.SetParent(parent, false);
+            if (created)
+                SetAnchors(rect, anchorMin, anchorMax);
             Image image = rect.GetComponent<Image>();
             if (image != null)
                 image.color = color;
@@ -1008,8 +1042,8 @@ namespace FluentEcho.Editor
             if (text == null)
                 return CreateText(parent, name, value, size, style, color, anchorMin, anchorMax, alignment);
 
-            text.transform.SetParent(parent, false);
-            SetAnchors(text.GetComponent<RectTransform>(), anchorMin, anchorMax);
+            if (text.transform.parent != parent)
+                text.transform.SetParent(parent, false);
             text.text = value;
             text.fontSize = size;
             text.fontStyle = style;
@@ -1034,8 +1068,8 @@ namespace FluentEcho.Editor
             if (button == null)
                 return CreateButton(parent, name, label, anchorMin, anchorMax, background, foreground, out _);
 
-            button.transform.SetParent(parent, false);
-            SetAnchors(button.GetComponent<RectTransform>(), anchorMin, anchorMax);
+            if (button.transform.parent != parent)
+                button.transform.SetParent(parent, false);
             Image image = button.GetComponent<Image>();
             if (image != null)
                 image.color = background;
