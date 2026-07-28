@@ -68,6 +68,8 @@ namespace FluentEcho.Views
 
         private readonly List<WordChipView> chips = new();
         private Coroutine resultAnimation;
+        private bool isSuccessVisible;
+        private bool canShowResultNextButton = true;
 
         public event Action MicPressed;
         public event Action DemoPressed;
@@ -459,6 +461,7 @@ namespace FluentEcho.Views
 
         public void SetSuccess(bool success)
         {
+            isSuccessVisible = success;
             SetResultPanelVisible(success);
             retryButton.gameObject.SetActive(success);
 
@@ -466,7 +469,7 @@ namespace FluentEcho.Views
                 resultCloseButton.gameObject.SetActive(success);
 
             if (resultNextButton != null)
-                resultNextButton.gameObject.SetActive(success);
+                resultNextButton.gameObject.SetActive(success && canShowResultNextButton);
 
             if (resultTryAgainButton != null)
                 resultTryAgainButton.gameObject.SetActive(success);
@@ -488,8 +491,13 @@ namespace FluentEcho.Views
             if (nextButton != null)
                 nextButton.interactable = canGoNext;
 
+            canShowResultNextButton = canGoNext;
+
             if (resultNextButton != null)
+            {
+                resultNextButton.gameObject.SetActive(isSuccessVisible && canGoNext);
                 resultNextButton.interactable = canGoNext;
+            }
         }
 
         private void HideResultPanel()

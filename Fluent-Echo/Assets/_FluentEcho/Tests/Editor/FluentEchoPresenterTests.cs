@@ -642,6 +642,7 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastPronunciationFeedback, Does.Contain("Confidence reason:"));
                     Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(view.LastMicInteractable, Is.False);
+                    Assert.That(view.LastResultNextVisible, Is.False);
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultAcceptedHeader));
                     Assert.That(saved.Attempts, Is.EqualTo(1));
                     Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
@@ -706,6 +707,7 @@ namespace FluentEcho.Tests
                 Assert.That(view.LastSuccessState, Is.False);
                     Assert.That(view.LastListeningState, Is.False);
                     Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
+                Assert.That(view.LastResultNextVisible, Is.False);
                 Assert.That(view.LastStatus, Does.Contain("Ready to practice").Or.Contain("Preparing"));
                 Assert.That(view.LastProgressDetails, Does.Contain("Current attempt:").Or.Contain(FluentEchoCopy.ResultAcceptedHeader));
                 Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.NextMissionPrompt));
@@ -1057,6 +1059,8 @@ namespace FluentEcho.Tests
             public bool LastListeningState { get; private set; }
             public bool LastMockMode { get; private set; }
             public bool LastMicInteractable { get; private set; }
+            public bool LastCanGoNext { get; private set; }
+            public bool LastResultNextVisible { get; private set; }
             public string NoticeTitle { get; private set; } = string.Empty;
             public string NoticeBody { get; private set; } = string.Empty;
             public string NoticeActionLabel { get; private set; } = string.Empty;
@@ -1110,13 +1114,18 @@ namespace FluentEcho.Tests
             public void SetSuccess(bool success)
             {
                 LastSuccessState = success;
+                LastResultNextVisible = success && LastCanGoNext;
             }
             public void SetMode(bool mockMode)
             {
                 LastMockMode = mockMode;
             }
 
-            public void SetNavigation(bool canGoPrevious, bool canGoNext) { }
+            public void SetNavigation(bool canGoPrevious, bool canGoNext)
+            {
+                LastCanGoNext = canGoNext;
+                LastResultNextVisible = LastSuccessState && canGoNext;
+            }
 
             public void SetLessonPosition(int currentLesson, int totalLessons) { }
 
