@@ -470,6 +470,7 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(view.LastProgressDetails, Does.Contain("Best attempt so far"));
                     Assert.That(view.LastProgressDetails, Does.Contain("word_01"));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.NextMissionPrompt));
                     Assert.That(view.LastPronunciationSummary, Does.Contain("Pronunciation estimate"));
                     Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(saved.Attempts, Is.EqualTo(1));

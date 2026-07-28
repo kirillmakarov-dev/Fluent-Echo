@@ -40,7 +40,7 @@ The plan intentionally avoids paid APIs and keeps the scoring pipeline local and
 
 ### 2. Improve progress tracking
 
-- Store best score, best transcript, and per-lesson attempt history.
+- Store best pronunciation estimate, best transcript, and per-lesson attempt history.
 - Show a clearer results summary when a lesson is cleared.
 - Add lightweight progression rules for unlocking or sequencing lessons.
 
@@ -65,7 +65,7 @@ The plan intentionally avoids paid APIs and keeps the scoring pipeline local and
 ### 6. Keep the portfolio story readable
 
 - Keep `MB_ARCHITECTURE.md` aligned with the current onboarding, honest scoring, and panel layout.
-- Keep the score UI honest by naming the current heuristic estimate and the future phoneme roadmap separately.
+- Keep the result UI honest by naming the current pronunciation estimate and the future phoneme roadmap separately.
 - Keep `CASE_STUDY_BRIEF.md` as the short portfolio-facing summary.
 - Keep `PORTFOLIO_DEMO_SCRIPT.md` as the live presentation walkthrough.
 - Make sure the case-study story fits a one-minute explanation: privacy, local Whisper, transparent estimate, coach-style feedback.

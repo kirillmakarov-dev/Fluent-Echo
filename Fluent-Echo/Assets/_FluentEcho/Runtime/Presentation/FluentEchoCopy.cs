@@ -28,7 +28,7 @@ namespace FluentEcho.Presentation
         public const string MicrophonePermissionNeededTitle = "Microphone permission needed";
         public const string SpeechModelMissingStatus = "Speech model missing.";
         public const string SpeechModelMissingTitle = "Speech model missing";
-        public const string NextMissionPrompt = "Choose Next Mission to continue, or Try Again to improve this score.";
+        public const string NextMissionPrompt = "Choose Next Mission to continue, or Try Again to improve this estimate.";
 
         public static string BuildProgressSummary(int totalWords)
         {
