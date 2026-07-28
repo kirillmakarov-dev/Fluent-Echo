@@ -30,6 +30,7 @@ namespace FluentEcho.Editor
         private const string EighthExercisePath = Root + "/Demo/Data/EighthLesson.asset";
         private const string WhisperSettingsPath = Root + "/Demo/Data/WhisperSettings.asset";
         private const string ChipPrefabPath = Root + "/Demo/Prefabs/WordChip.prefab";
+        private const string SyncSessionKey = "FluentEcho.SyncPrototypeSceneUiOnce";
 
         private static readonly Color Background = Hex("08171D");
         private static readonly Color Surface = Hex("10272E");
@@ -39,6 +40,12 @@ namespace FluentEcho.Editor
         private static readonly Color Mint = Hex("33D69F");
         private static readonly Color Coral = Hex("FF8066");
         private static readonly Color Ink = Hex("071416");
+        private static readonly Color SettingsFill = new(0.11f, 0.24f, 0.28f, 1f);
+        private static readonly Color SettingsBorder = new(0.20f, 0.90f, 0.68f, 0.24f);
+        private static readonly Color SettingsAccent = new(0.20f, 0.90f, 0.68f, 0.9f);
+        private static readonly Color ResultFill = new(0.94f, 0.89f, 0.80f, 1f);
+        private static readonly Color ResultBorder = new(0.89f, 0.37f, 0.30f, 0.20f);
+        private static readonly Color ResultAccent = new(0.89f, 0.37f, 0.30f, 0.92f);
 
         [InitializeOnLoadMethod]
         private static void BuildOnFirstImport()
@@ -48,6 +55,40 @@ namespace FluentEcho.Editor
                 if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null)
                     BuildPrototype();
             };
+        }
+
+        [InitializeOnLoadMethod]
+        private static void SyncOpenPrototypeSceneOnReload()
+        {
+            EditorApplication.playModeStateChanged -= HandlePlayModeStateChanged;
+            EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
+            EditorApplication.delayCall += () =>
+            {
+                if (EditorApplication.isPlayingOrWillChangePlaymode)
+                    return;
+
+                if (SessionState.GetBool(SyncSessionKey, false))
+                    return;
+
+                Scene scene = SceneManager.GetActiveScene();
+                if (scene.path != ScenePath)
+                    return;
+
+                SessionState.SetBool(SyncSessionKey, true);
+                SyncCurrentPrototypeSceneUi();
+            };
+        }
+
+        private static void HandlePlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state != PlayModeStateChange.EnteredEditMode)
+                return;
+
+            Scene scene = SceneManager.GetActiveScene();
+            if (scene.path != ScenePath)
+                return;
+
+            SyncCurrentPrototypeSceneUi();
         }
 
         [MenuItem("Tools/Fluent Echo/Rebuild Prototype")]
@@ -74,6 +115,106 @@ namespace FluentEcho.Editor
             AssetDatabase.Refresh();
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
             Debug.Log($"[FluentEcho] Prototype rebuilt at {ScenePath}");
+        }
+
+        [MenuItem("Tools/Fluent Echo/Sync Current Prototype Scene UI")]
+        public static void SyncCurrentPrototypeSceneUi()
+        {
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid() || scene.path != ScenePath)
+            {
+                Debug.LogWarning("[FluentEcho] Open FluentEchoPrototype.unity before syncing scene UI.");
+                return;
+            }
+
+            SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>(ExerciseCatalogPath);
+            WhisperSettingsSO settings = AssetDatabase.LoadAssetAtPath<WhisperSettingsSO>(WhisperSettingsPath);
+            RectTransform teacherCard = FindSceneRect(scene, "Teacher Card");
+            RectTransform lessonCard = FindSceneRect(scene, "Lesson Card");
+            if (teacherCard == null || lessonCard == null)
+            {
+                Debug.LogWarning("[FluentEcho] Scene UI sync skipped because Teacher Card or Lesson Card is missing.");
+                return;
+            }
+
+            RectTransform settingsPanel = FindSceneRect(scene, "Settings Panel");
+            if (settingsPanel == null)
+                settingsPanel = CreatePanel(teacherCard, "Settings Panel", new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f), SettingsFill);
+
+            settingsPanel.SetParent(teacherCard, false);
+            SetAnchors(settingsPanel, new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f));
+            settingsPanel.GetComponent<Image>().color = SettingsFill;
+            ApplyPanelFrame(settingsPanel, SettingsBorder);
+            EnsureChildPanel(settingsPanel, "Settings Accent", new Vector2(0f, 0.92f), Vector2.one, SettingsAccent);
+            EnsureChildPanel(settingsPanel, "Settings Divider", new Vector2(0.50f, 0.20f), new Vector2(0.505f, 0.84f), new Color(1f, 1f, 1f, 0.10f));
+            EnsureText(settingsPanel, "Settings Title", "SPEECH SETTINGS", 11, FontStyles.Bold, Mint, new Vector2(0.05f, 0.72f), new Vector2(0.95f, 0.94f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Microphone Label", "MICROPHONE", 11, FontStyles.Bold, Coral, new Vector2(0.05f, 0.58f), new Vector2(0.46f, 0.74f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Microphone Value", "Default microphone", 14, FontStyles.Bold, Cream, new Vector2(0.05f, 0.44f), new Vector2(0.46f, 0.56f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Whisper Profile Label", "WHISPER PROFILE", 11, FontStyles.Bold, Coral, new Vector2(0.54f, 0.58f), new Vector2(0.95f, 0.74f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Whisper Profile Value", settings != null ? settings.QualityProfile.ToString().ToUpperInvariant() : "FAST", 14, FontStyles.Bold, Cream, new Vector2(0.54f, 0.44f), new Vector2(0.95f, 0.56f), TextAlignmentOptions.Left);
+            EnsureButton(settingsPanel, "Settings Close Button", "CLOSE", new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink);
+
+            Dropdown microphoneDropdown = FindSceneDropdown(scene, "Microphone Dropdown");
+            if (microphoneDropdown == null)
+                microphoneDropdown = CreateDropdown(settingsPanel, "Microphone Dropdown", new Vector2(0.05f, 0.10f), new Vector2(0.46f, 0.42f), "Default microphone");
+
+            microphoneDropdown.transform.SetParent(settingsPanel, false);
+            SetAnchors(microphoneDropdown.GetComponent<RectTransform>(), new Vector2(0.05f, 0.10f), new Vector2(0.46f, 0.42f));
+            SetDropdownOptions(microphoneDropdown, "Default microphone");
+            StyleDropdown(microphoneDropdown, SettingsFill);
+
+            Dropdown whisperProfileDropdown = FindSceneDropdown(scene, "Whisper Profile Dropdown");
+            if (whisperProfileDropdown == null)
+                whisperProfileDropdown = CreateDropdown(settingsPanel, "Whisper Profile Dropdown", new Vector2(0.54f, 0.10f), new Vector2(0.95f, 0.42f), "FAST");
+
+            whisperProfileDropdown.transform.SetParent(settingsPanel, false);
+            SetAnchors(whisperProfileDropdown.GetComponent<RectTransform>(), new Vector2(0.54f, 0.10f), new Vector2(0.95f, 0.42f));
+            SetDropdownOptions(whisperProfileDropdown, "FAST", "BALANCED", "ACCURATE");
+            StyleDropdown(whisperProfileDropdown, SettingsFill);
+            settingsPanel.gameObject.SetActive(false);
+
+            EnsureButton(teacherCard, "Settings Toggle Button", "SETTINGS", new Vector2(0.08f, 0.05f), new Vector2(0.92f, 0.11f), SettingsFill, Cream);
+
+            Dropdown lessonDropdown = FindSceneDropdown(scene, "Lesson Dropdown");
+            if (lessonDropdown == null)
+                lessonDropdown = CreateDropdown(lessonCard, "Lesson Dropdown", new Vector2(0.17f, 0.86f), new Vector2(0.78f, 0.93f), "Describe the Dog");
+
+            lessonDropdown.transform.SetParent(lessonCard, false);
+            SetAnchors(lessonDropdown.GetComponent<RectTransform>(), new Vector2(0.17f, 0.86f), new Vector2(0.78f, 0.93f));
+            SetDropdownOptions(lessonDropdown, catalog != null ? catalog.GetDisplayNames() : new[] { "Describe the Dog" });
+            StyleDropdown(lessonDropdown, SurfaceRaised);
+            lessonDropdown.gameObject.SetActive(true);
+
+            Transform staleLessonTitle = lessonCard.Find("Lesson Title Panel");
+            if (staleLessonTitle != null)
+                staleLessonTitle.gameObject.SetActive(false);
+
+            Transform micLabel = lessonCard.Find("Mic Label");
+            if (micLabel != null)
+                micLabel.gameObject.SetActive(false);
+
+            MicrophoneRecord microphone = Object.FindFirstObjectByType<MicrophoneRecord>(FindObjectsInactive.Include);
+            if (microphone != null)
+            {
+                SerializedObject microphoneObject = new(microphone);
+                Set(microphoneObject, "microphoneDropdown", microphoneDropdown);
+                microphoneObject.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(microphone);
+            }
+
+            FluentEchoBootstrap bootstrap = Object.FindFirstObjectByType<FluentEchoBootstrap>(FindObjectsInactive.Include);
+            if (bootstrap != null)
+            {
+                SerializedObject bootstrapObject = new(bootstrap);
+                Set(bootstrapObject, "exerciseDropdown", lessonDropdown);
+                Set(bootstrapObject, "whisperProfileDropdown", whisperProfileDropdown);
+                bootstrapObject.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(bootstrap);
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("[FluentEcho] Current prototype scene UI synced for manual editing.");
         }
 
         private static Camera CreateWorld()
@@ -149,8 +290,42 @@ namespace FluentEcho.Editor
                 new Vector2(0.08f, 0.29f), new Vector2(0.92f, 0.36f), TextAlignmentOptions.Left);
             CreateText(mentorCard, "Teacher Note",
                 "Speak naturally. Your voice stays on this device and is processed by a local Whisper model.",
-                24, FontStyles.Normal, Cream,
-                new Vector2(0.08f, 0.08f), new Vector2(0.92f, 0.27f), TextAlignmentOptions.TopLeft);
+                20, FontStyles.Normal, Cream,
+                new Vector2(0.08f, 0.19f), new Vector2(0.92f, 0.29f), TextAlignmentOptions.TopLeft);
+
+            RectTransform settingsPanel = CreatePanel(
+                mentorCard, "Settings Panel", new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f), SettingsFill);
+            ApplyPanelFrame(settingsPanel, SettingsBorder);
+            CreatePanel(settingsPanel, "Settings Accent", new Vector2(0f, 0.92f), new Vector2(1f, 1f), SettingsAccent);
+            CreatePanel(settingsPanel, "Settings Divider", new Vector2(0.50f, 0.20f), new Vector2(0.505f, 0.84f), new Color(1f, 1f, 1f, 0.10f));
+            CreateText(settingsPanel, "Settings Title", "SPEECH SETTINGS", 11, FontStyles.Bold, Mint,
+                new Vector2(0.05f, 0.72f), new Vector2(0.95f, 0.94f), TextAlignmentOptions.Left);
+            Button settingsCloseButton = CreateButton(
+                settingsPanel, "Settings Close Button", "CLOSE",
+                new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink, out _);
+            CreateText(settingsPanel, "Microphone Label", "MICROPHONE", 11, FontStyles.Bold, Coral,
+                new Vector2(0.05f, 0.58f), new Vector2(0.46f, 0.74f), TextAlignmentOptions.Left);
+            CreateText(settingsPanel, "Microphone Value", "Microphone Array", 14, FontStyles.Bold, Cream,
+                new Vector2(0.05f, 0.44f), new Vector2(0.46f, 0.56f), TextAlignmentOptions.Left);
+            Dropdown microphoneDropdown = CreateDropdown(
+                settingsPanel,
+                "Microphone Dropdown",
+                new Vector2(0.05f, 0.10f),
+                new Vector2(0.46f, 0.42f),
+                "Default microphone");
+            SetDropdownOptions(microphoneDropdown, "Default microphone");
+            CreateText(settingsPanel, "Whisper Profile Label", "WHISPER PROFILE", 11, FontStyles.Bold, Coral,
+                new Vector2(0.54f, 0.58f), new Vector2(0.95f, 0.74f), TextAlignmentOptions.Left);
+            CreateText(settingsPanel, "Whisper Profile Value", "FAST", 14, FontStyles.Bold, Cream,
+                new Vector2(0.54f, 0.44f), new Vector2(0.95f, 0.56f), TextAlignmentOptions.Left);
+            Dropdown whisperProfileDropdown = CreateDropdown(
+                settingsPanel,
+                "Whisper Profile Dropdown",
+                new Vector2(0.54f, 0.10f),
+                new Vector2(0.95f, 0.42f),
+                "FAST");
+            SetDropdownOptions(whisperProfileDropdown, "FAST", "BALANCED", "ACCURATE");
+            settingsPanel.gameObject.SetActive(false);
 
             RectTransform lessonCard = CreatePanel(
                 root, "Lesson Card", new Vector2(0.37f, 0.10f), new Vector2(0.95f, 0.86f), Cream);
@@ -166,6 +341,7 @@ namespace FluentEcho.Editor
                 new Vector2(0.17f, 0.86f),
                 new Vector2(0.78f, 0.93f),
                 selectedExercise != null ? selectedExercise.name.ToUpperInvariant() : "LESSON 01");
+            SetDropdownOptions(lessonDropdown, catalog.GetDisplayNames());
             Button lessonNextButton = CreateButton(
                 lessonCard, "Lesson Next Button", "NEXT",
                 new Vector2(0.80f, 0.86f), new Vector2(0.94f, 0.93f), SurfaceRaised, Cream, out _);
@@ -199,14 +375,6 @@ namespace FluentEcho.Editor
                 lessonCard, "Status", "Loading speech engine...", 21, FontStyles.Normal, Ink,
                 new Vector2(0.06f, 0.28f), new Vector2(0.94f, 0.36f), TextAlignmentOptions.Left);
 
-            CreateText(
-                lessonCard, "Mic Label", "MICROPHONE DEVICE", 13, FontStyles.Bold, Coral,
-                new Vector2(0.06f, 0.15f), new Vector2(0.33f, 0.19f), TextAlignmentOptions.Left);
-            Dropdown microphoneDropdown = CreateDropdown(
-                lessonCard, "Microphone Dropdown",
-                new Vector2(0.06f, 0.08f), new Vector2(0.42f, 0.15f),
-                "Default microphone");
-
             Image recordingIndicator = CreatePanel(
                 lessonCard, "Recording Indicator", new Vector2(0.06f, 0.155f), new Vector2(0.075f, 0.185f), Coral)
                 .GetComponent<Image>();
@@ -232,16 +400,38 @@ namespace FluentEcho.Editor
             retryButton.gameObject.SetActive(false);
 
             Image success = CreatePanel(
-                lessonCard, "Success Badge", new Vector2(0.49f, 0.01f), new Vector2(0.72f, 0.07f), Mint)
+                lessonCard, "Result Panel", new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f), ResultFill)
                 .GetComponent<Image>();
-            CreateText(success.rectTransform, "Success Text", "ANSWER ACCEPTED", 14, FontStyles.Bold, Ink,
-                Vector2.zero, Vector2.one, TextAlignmentOptions.Center);
+            ApplyPanelFrame(success.rectTransform, ResultBorder);
+            CreatePanel(success.rectTransform, "Result Accent", new Vector2(0f, 0.92f), new Vector2(1f, 1f), ResultAccent);
+            CreatePanel(success.rectTransform, "Result Divider", new Vector2(0.04f, 0.74f), new Vector2(0.96f, 0.75f), new Color(0.89f, 0.37f, 0.30f, 0.16f));
+            CreateText(success.rectTransform, "Result Header", "FINAL FEEDBACK", 10, FontStyles.Bold, Mint,
+                new Vector2(0.04f, 0.79f), new Vector2(0.34f, 0.92f), TextAlignmentOptions.Left);
+            CreateText(success.rectTransform, "Result Badge", "CLEARED", 10, FontStyles.Bold, Coral,
+                new Vector2(0.78f, 0.79f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Right);
+            Button resultCloseButton = CreateButton(
+                success.rectTransform, "Result Close Button", "CLOSE",
+                new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink, out _);
+            CreateText(success.rectTransform, "Result Title", "LEVEL COMPLETE", 14, FontStyles.Bold, Coral,
+                new Vector2(0.04f, 0.78f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Left);
+            TextMeshProUGUI progressDetails = CreateText(
+                success.rectTransform, "Progress Details", "Recent attempts will appear here.", 11, FontStyles.Normal, Ink,
+                new Vector2(0.04f, 0.50f), new Vector2(0.96f, 0.72f), TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationSummary = CreateText(
+                success.rectTransform, "Pronunciation Summary", string.Empty, 14, FontStyles.Bold, Coral,
+                new Vector2(0.04f, 0.34f), new Vector2(0.96f, 0.48f), TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationFeedback = CreateText(
+                success.rectTransform, "Pronunciation Feedback", "Score feedback will appear here.", 12, FontStyles.Italic, Ink,
+                new Vector2(0.04f, 0.10f), new Vector2(0.96f, 0.30f), TextAlignmentOptions.Left);
             success.gameObject.SetActive(false);
 
             FluentEchoView view = lessonCard.gameObject.AddComponent<FluentEchoView>();
             SerializedObject serialized = new(view);
             Set(serialized, "promptLabel", prompt);
             Set(serialized, "progressLabel", progressLabel);
+            Set(serialized, "progressDetailsLabel", progressDetails);
+            Set(serialized, "pronunciationSummaryLabel", pronunciationSummary);
+            Set(serialized, "pronunciationFeedbackLabel", pronunciationFeedback);
             Set(serialized, "statusLabel", status);
             Set(serialized, "transcriptLabel", transcript);
             Set(serialized, "micButtonLabel", micLabel);
@@ -315,29 +505,52 @@ namespace FluentEcho.Editor
             EditorUtility.SetDirty(bootstrap);
 
             SerializedObject microphoneObject = new(microphone);
-            Set(microphoneObject, "microphoneDropdown", microphone.microphoneDropdown);
+            Transform teacherCard = view.transform.parent != null ? view.transform.parent.Find("Teacher Card") : null;
+            Transform settingsPanel = teacherCard != null ? teacherCard.Find("Settings Panel") : null;
+            Dropdown microphoneDropdown = settingsPanel != null
+                ? settingsPanel.Find("Microphone Dropdown")?.GetComponent<Dropdown>()
+                : null;
+            Set(microphoneObject, "microphoneDropdown", microphoneDropdown);
             microphoneObject.FindProperty("microphoneDefaultLabel").stringValue = "Default microphone";
             microphoneObject.FindProperty("rememberSelectedDevice").boolValue = true;
             microphoneObject.FindProperty("selectedDevicePrefsKey").stringValue = "FluentEcho.SelectedMicrophone";
             microphoneObject.ApplyModifiedPropertiesWithoutUndo();
 
-            CreateText(
-                view.transform,
-                "Whisper Profile Label",
-                "WHISPER PROFILE",
-                13,
-                FontStyles.Bold,
-                Coral,
-                new Vector2(0.46f, 0.23f),
-                new Vector2(0.82f, 0.27f),
-                TextAlignmentOptions.Left);
+            if (settingsPanel != null)
+            {
+                Transform existingLabel = settingsPanel.Find("Whisper Profile Label");
+                if (existingLabel == null)
+                {
+                    CreateText(
+                        settingsPanel,
+                        "Whisper Profile Label",
+                        "WHISPER PROFILE",
+                        11,
+                        FontStyles.Bold,
+                        Coral,
+                        new Vector2(0.54f, 0.48f),
+                        new Vector2(0.95f, 0.68f),
+                        TextAlignmentOptions.Left);
+                }
+            }
 
-            Dropdown whisperProfileDropdown = CreateDropdown(
-                view.transform,
-                "Whisper Profile Dropdown",
-                new Vector2(0.46f, 0.18f),
-                new Vector2(0.82f, 0.26f),
-                settings.QualityProfile.ToString().ToUpperInvariant());
+            Dropdown whisperProfileDropdown = settingsPanel != null
+                ? settingsPanel.Find("Whisper Profile Dropdown")?.GetComponent<Dropdown>()
+                : null;
+            if (whisperProfileDropdown == null && settingsPanel != null)
+            {
+                whisperProfileDropdown = CreateDropdown(
+                    settingsPanel,
+                    "Whisper Profile Dropdown",
+                    new Vector2(0.54f, 0.10f),
+                    new Vector2(0.95f, 0.42f),
+                    settings.QualityProfile.ToString().ToUpperInvariant());
+            }
+            else if (whisperProfileDropdown != null)
+            {
+                whisperProfileDropdown.captionText.text = settings.QualityProfile.ToString().ToUpperInvariant();
+                SetDropdownOptions(whisperProfileDropdown, "FAST", "BALANCED", "ACCURATE");
+            }
 
             SerializedObject bootstrapObject = new(bootstrap);
             Set(bootstrapObject, "exerciseCatalog", catalog);
@@ -606,7 +819,78 @@ namespace FluentEcho.Editor
             if (label != null)
                 label.text = caption;
 
+            StyleDropdown(dropdown, SurfaceRaised);
+            SetDropdownOptions(dropdown, caption);
+
             return dropdown;
+        }
+
+        private static void SetDropdownOptions(Dropdown dropdown, params string[] labels)
+        {
+            if (dropdown == null)
+                return;
+
+            dropdown.ClearOptions();
+            var options = new System.Collections.Generic.List<Dropdown.OptionData>();
+            if (labels != null)
+            {
+                for (int i = 0; i < labels.Length; i++)
+                {
+                    string label = string.IsNullOrWhiteSpace(labels[i])
+                        ? $"Option {i + 1}"
+                        : labels[i];
+                    options.Add(new Dropdown.OptionData(label));
+                }
+            }
+
+            if (options.Count == 0)
+                options.Add(new Dropdown.OptionData("Select"));
+
+            dropdown.AddOptions(options);
+            dropdown.SetValueWithoutNotify(0);
+            if (dropdown.captionText != null)
+                dropdown.captionText.text = options[0].text;
+
+            if (dropdown.itemText != null)
+                dropdown.itemText.text = options[0].text;
+        }
+
+        private static DefaultControls.Resources CreateUiResources()
+        {
+            Sprite sprite = CreateUiSprite();
+            return new DefaultControls.Resources
+            {
+                standard = sprite,
+                background = sprite,
+                inputField = sprite,
+                knob = sprite,
+                checkmark = sprite,
+                dropdown = sprite,
+                mask = sprite
+            };
+        }
+
+        private static Sprite CreateUiSprite()
+        {
+            Texture2D texture = new(2, 2, TextureFormat.RGBA32, false)
+            {
+                name = "FluentEcho.UI.WhiteTexture",
+                hideFlags = HideFlags.HideAndDontSave
+            };
+
+            texture.SetPixels(new[]
+            {
+                Color.white,
+                Color.white,
+                Color.white,
+                Color.white
+            });
+            texture.Apply();
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, 2f, 2f),
+                new Vector2(0.5f, 0.5f),
+                1f);
         }
 
         private static RectTransform CreatePanel(
@@ -625,6 +909,155 @@ namespace FluentEcho.Editor
             rect.offsetMax = Vector2.zero;
             panel.GetComponent<Image>().color = color;
             return rect;
+        }
+
+        private static RectTransform EnsureChildPanel(
+            Transform parent,
+            string name,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color color)
+        {
+            Transform existing = parent.Find(name);
+            RectTransform rect = existing != null ? existing.GetComponent<RectTransform>() : null;
+            if (rect == null)
+                rect = CreatePanel(parent, name, anchorMin, anchorMax, color);
+
+            rect.SetParent(parent, false);
+            SetAnchors(rect, anchorMin, anchorMax);
+            Image image = rect.GetComponent<Image>();
+            if (image != null)
+                image.color = color;
+            return rect;
+        }
+
+        private static TextMeshProUGUI EnsureText(
+            Transform parent,
+            string name,
+            string value,
+            float size,
+            FontStyles style,
+            Color color,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            TextAlignmentOptions alignment)
+        {
+            Transform existing = parent.Find(name);
+            TextMeshProUGUI text = existing != null ? existing.GetComponent<TextMeshProUGUI>() : null;
+            if (text == null)
+                return CreateText(parent, name, value, size, style, color, anchorMin, anchorMax, alignment);
+
+            text.transform.SetParent(parent, false);
+            SetAnchors(text.GetComponent<RectTransform>(), anchorMin, anchorMax);
+            text.text = value;
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = alignment;
+            text.textWrappingMode = TextWrappingModes.Normal;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private static Button EnsureButton(
+            Transform parent,
+            string name,
+            string label,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color background,
+            Color foreground)
+        {
+            Transform existing = parent.Find(name);
+            Button button = existing != null ? existing.GetComponent<Button>() : null;
+            if (button == null)
+                return CreateButton(parent, name, label, anchorMin, anchorMax, background, foreground, out _);
+
+            button.transform.SetParent(parent, false);
+            SetAnchors(button.GetComponent<RectTransform>(), anchorMin, anchorMax);
+            Image image = button.GetComponent<Image>();
+            if (image != null)
+                image.color = background;
+
+            TextMeshProUGUI text = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (text != null)
+            {
+                text.text = label;
+                text.color = foreground;
+            }
+
+            return button;
+        }
+
+        private static RectTransform FindSceneRect(Scene scene, string name)
+        {
+            Transform transform = FindSceneTransform(scene, name);
+            return transform != null ? transform.GetComponent<RectTransform>() : null;
+        }
+
+        private static Dropdown FindSceneDropdown(Scene scene, string name)
+        {
+            Transform transform = FindSceneTransform(scene, name);
+            return transform != null ? transform.GetComponent<Dropdown>() : null;
+        }
+
+        private static Transform FindSceneTransform(Scene scene, string name)
+        {
+            if (!scene.IsValid() || string.IsNullOrWhiteSpace(name))
+                return null;
+
+            GameObject[] roots = scene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                Transform match = FindDeep(roots[i].transform, name);
+                if (match != null)
+                    return match;
+            }
+
+            return null;
+        }
+
+        private static Transform FindDeep(Transform root, string name)
+        {
+            if (root == null)
+                return null;
+
+            if (root.name == name)
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform match = FindDeep(root.GetChild(i), name);
+                if (match != null)
+                    return match;
+            }
+
+            return null;
+        }
+
+        private static void SetAnchors(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax)
+        {
+            if (rect == null)
+                return;
+
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        private static void ApplyPanelFrame(RectTransform panel, Color borderColor)
+        {
+            if (panel == null)
+                return;
+
+            Outline outline = panel.GetComponent<Outline>();
+            if (outline == null)
+                outline = panel.gameObject.AddComponent<Outline>();
+
+            outline.effectColor = borderColor;
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            outline.useGraphicAlpha = true;
         }
 
         private static TextMeshProUGUI CreateText(
@@ -655,6 +1088,27 @@ namespace FluentEcho.Editor
             text.textWrappingMode = TextWrappingModes.Normal;
             text.raycastTarget = false;
             return text;
+        }
+
+        private static void StyleDropdown(Dropdown dropdown, Color fillColor)
+        {
+            if (dropdown == null)
+                return;
+
+            if (dropdown.targetGraphic != null)
+                dropdown.targetGraphic.color = fillColor;
+
+            if (dropdown.captionText != null)
+            {
+                dropdown.captionText.color = new Color(0.96f, 0.94f, 0.88f, 1f);
+                dropdown.captionText.fontSize = 12;
+            }
+
+            if (dropdown.itemText != null)
+            {
+                dropdown.itemText.color = new Color(0.10f, 0.12f, 0.13f, 1f);
+                dropdown.itemText.fontSize = 12;
+            }
         }
 
         private static Button CreateButton(
@@ -714,20 +1168,6 @@ namespace FluentEcho.Editor
                 color = color
             };
             return material;
-        }
-
-        private static DefaultControls.Resources CreateUiResources()
-        {
-            return new DefaultControls.Resources
-            {
-                standard = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd"),
-                background = Resources.GetBuiltinResource<Sprite>("UI/Skin/Background.psd"),
-                inputField = Resources.GetBuiltinResource<Sprite>("UI/Skin/InputFieldBackground.psd"),
-                knob = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd"),
-                checkmark = Resources.GetBuiltinResource<Sprite>("UI/Skin/Checkmark.psd"),
-                dropdown = Resources.GetBuiltinResource<Sprite>("UI/Skin/DropdownArrow.psd"),
-                mask = Resources.GetBuiltinResource<Sprite>("UI/Skin/UIMask.psd")
-            };
         }
 
         private static void EnsureTmpResources()

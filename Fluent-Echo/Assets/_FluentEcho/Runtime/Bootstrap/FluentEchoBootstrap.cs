@@ -14,6 +14,13 @@ namespace FluentEcho.Bootstrap
 {
     public sealed class FluentEchoBootstrap : MonoBehaviour
     {
+        private static readonly Color SettingsFill = new(0.11f, 0.24f, 0.28f, 1f);
+        private static readonly Color SettingsBorder = new(0.20f, 0.90f, 0.68f, 0.24f);
+        private static readonly Color SettingsAccent = new(0.20f, 0.90f, 0.68f, 0.9f);
+        private static readonly Color ResultFill = new(0.94f, 0.89f, 0.80f, 1f);
+        private static readonly Color ResultBorder = new(0.89f, 0.37f, 0.30f, 0.20f);
+        private static readonly Color ResultAccent = new(0.89f, 0.37f, 0.30f, 0.92f);
+
         [SerializeField] private SpeechExerciseSO exercise;
         [SerializeField] private SpeechExerciseCatalogSO exerciseCatalog;
         [SerializeField] private FluentEchoView view;
@@ -108,26 +115,84 @@ namespace FluentEcho.Bootstrap
                 return;
 
             MicrophoneRecord microphone = whisperService.GetComponent<MicrophoneRecord>();
+            Transform settingsPanel = GetOrCreateSettingsPanel();
+            if (settingsPanel == null)
+                return;
+
+            EnsureSettingsButton(settingsPanel.parent);
+            EnsurePanelCloseButton(settingsPanel, "Settings Close Button", "CLOSE");
+
+            TextMeshProUGUI title = MoveOrCreateText(
+                settingsPanel,
+                "Settings Title",
+                "SPEECH SETTINGS",
+                11,
+                FontStyles.Bold,
+                new Color(0.20f, 0.90f, 0.68f, 1f),
+                new Vector2(0.05f, 0.72f),
+                new Vector2(0.95f, 0.94f),
+                TextAlignmentOptions.Left,
+                Array.Empty<string>());
+            if (title != null)
+                title.transform.SetAsFirstSibling();
+
+            TextMeshProUGUI label = MoveOrCreateText(
+                settingsPanel,
+                "Microphone Label",
+                "MICROPHONE",
+                11,
+                FontStyles.Bold,
+                new Color(0.89f, 0.37f, 0.3f, 1f),
+                new Vector2(0.05f, 0.58f),
+                new Vector2(0.46f, 0.74f),
+                TextAlignmentOptions.Left,
+                new[] { "Mic Label" });
+
+            TextMeshProUGUI selectedDeviceLabel = MoveOrCreateText(
+                settingsPanel,
+                "Microphone Value",
+                string.Empty,
+                14,
+                FontStyles.Bold,
+                new Color(0.96f, 0.94f, 0.88f, 1f),
+                new Vector2(0.05f, 0.44f),
+                new Vector2(0.46f, 0.56f),
+                TextAlignmentOptions.Left,
+                Array.Empty<string>());
+
             Dropdown dropdown = microphone?.microphoneDropdown;
+            if (dropdown == null)
+                dropdown = FindDeepTransform(view.transform.root, "Microphone Dropdown")?.GetComponent<Dropdown>();
+
             if (dropdown == null)
             {
                 dropdown = CreateDropdown(
-                    view.transform,
+                    settingsPanel,
                     "Microphone Dropdown",
                     "Default microphone",
-                    new Vector2(0.06f, 0.08f),
-                    new Vector2(0.42f, 0.15f));
+                    new Vector2(0.05f, 0.12f),
+                    new Vector2(0.46f, 0.40f));
                 if (microphone == null)
                     return;
-
-                microphone.microphoneDropdown = dropdown;
             }
 
-            RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.06f, 0.03f);
-            rect.anchorMax = new Vector2(0.42f, 0.09f);
+            if (microphone != null)
+                microphone.microphoneDropdown = dropdown;
 
-            PopulateDropdown(microphone, dropdown);
+            dropdown.transform.SetParent(settingsPanel, false);
+            RectTransform rect = dropdown.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.05f, 0.12f);
+            rect.anchorMax = new Vector2(0.46f, 0.40f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            if (label != null)
+                label.transform.SetAsLastSibling();
+
+            StyleDropdown(dropdown, SettingsFill);
+            EnsureSettingsDivider(settingsPanel);
+            PopulateDropdown(microphone, dropdown, selectedDeviceLabel);
+            UpdateMicrophoneValueLabel(microphone, selectedDeviceLabel);
         }
 
         private void EnsureExerciseDropdown()
@@ -166,6 +231,18 @@ namespace FluentEcho.Bootstrap
             });
 
             dropdown.SetValueWithoutNotify(ResolveSelectedExerciseIndex());
+            dropdown.gameObject.SetActive(true);
+            HideLegacyExerciseTitle();
+        }
+
+        private void HideLegacyExerciseTitle()
+        {
+            if (view == null)
+                return;
+
+            Transform existing = view.transform.Find("Lesson Title Panel");
+            if (existing != null)
+                existing.gameObject.SetActive(false);
         }
 
         private void EnsureQualityDropdown()
@@ -173,22 +250,60 @@ namespace FluentEcho.Bootstrap
             if (whisperService == null)
                 return;
 
+            Transform settingsPanel = GetOrCreateSettingsPanel();
+            if (settingsPanel == null)
+                return;
+
+            EnsureSettingsButton(settingsPanel.parent);
+            EnsurePanelCloseButton(settingsPanel, "Settings Close Button", "CLOSE");
+
             Dropdown dropdown = whisperProfileDropdown;
+            if (dropdown == null)
+                dropdown = FindDeepTransform(view.transform.root, "Whisper Profile Dropdown")?.GetComponent<Dropdown>();
+
             if (dropdown == null)
             {
                 dropdown = CreateDropdown(
-                    view.transform,
+                    settingsPanel,
                     "Whisper Profile Dropdown",
                     "FAST",
-                    new Vector2(0.46f, 0.08f),
-                    new Vector2(0.82f, 0.15f));
-                whisperProfileDropdown = dropdown;
+                    new Vector2(0.54f, 0.10f),
+                    new Vector2(0.95f, 0.42f));
             }
 
+            whisperProfileDropdown = dropdown;
+
             WhisperQualityProfile currentProfile = whisperService.CurrentQualityProfile;
+            MoveOrCreateText(
+                settingsPanel,
+                "Whisper Profile Label",
+                "WHISPER PROFILE",
+                11,
+                FontStyles.Bold,
+                new Color(0.89f, 0.37f, 0.3f, 1f),
+                new Vector2(0.54f, 0.58f),
+                new Vector2(0.95f, 0.74f),
+                TextAlignmentOptions.Left,
+                new[] { "Whisper Profile Label" });
+
+            TextMeshProUGUI currentProfileLabel = MoveOrCreateText(
+                settingsPanel,
+                "Whisper Profile Value",
+                currentProfile.ToString().ToUpperInvariant(),
+                14,
+                FontStyles.Bold,
+                new Color(0.96f, 0.94f, 0.88f, 1f),
+                new Vector2(0.54f, 0.44f),
+                new Vector2(0.95f, 0.56f),
+                TextAlignmentOptions.Left,
+                Array.Empty<string>());
+
+            dropdown.transform.SetParent(settingsPanel, false);
             RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.46f, 0.03f);
-            rect.anchorMax = new Vector2(0.82f, 0.09f);
+            rect.anchorMin = new Vector2(0.54f, 0.12f);
+            rect.anchorMax = new Vector2(0.95f, 0.40f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
 
             var options = new List<Dropdown.OptionData>();
             foreach (string name in Enum.GetNames(typeof(WhisperQualityProfile)))
@@ -206,10 +321,14 @@ namespace FluentEcho.Bootstrap
                 };
 
                 whisperService.SetQualityProfile(profile);
+                if (currentProfileLabel != null)
+                    currentProfileLabel.text = profile.ToString().ToUpperInvariant();
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             });
 
             dropdown.SetValueWithoutNotify((int) currentProfile);
+            StyleDropdown(dropdown, SettingsFill);
+            EnsureSettingsDivider(settingsPanel);
         }
 
         private void EnsureProgressLabel()
@@ -241,22 +360,26 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform existing = view.transform.Find("Progress Details");
-            TextMeshProUGUI label = existing != null ? existing.GetComponent<TextMeshProUGUI>() : null;
-            if (label == null)
-            {
-                label = CreateText(
-                    view.transform,
-                    "Progress Details",
-                    "Recent attempts will appear here.",
-                    11,
-                    FontStyles.Normal,
-                    new Color(0.20f, 0.20f, 0.20f, 1f),
-                    new Vector2(0.62f, 0.67f),
-                    new Vector2(0.94f, 0.74f),
-                    TextAlignmentOptions.Right);
-            }
+            Transform resultPanel = GetOrCreateResultPanel();
+            if (resultPanel == null)
+                return;
 
+            TextMeshProUGUI label = MoveOrCreateText(
+                resultPanel,
+                "Progress Details",
+                "Recent attempts will appear here.",
+                11,
+                FontStyles.Normal,
+                new Color(0.20f, 0.20f, 0.20f, 1f),
+                new Vector2(0.04f, 0.50f),
+                new Vector2(0.96f, 0.72f),
+                TextAlignmentOptions.Left,
+                new[] { "Progress Details" });
+
+            label.color = new Color(0.18f, 0.18f, 0.18f, 1f);
+            label.fontStyle = FontStyles.Normal;
+            EnsureResultHeader(resultPanel);
+            EnsureResultCloseButton(resultPanel);
             view.ConfigureProgressDetailsLabel(label);
         }
 
@@ -265,42 +388,38 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform summaryExisting = view.transform.Find("Pronunciation Summary");
-            TextMeshProUGUI summaryLabel = summaryExisting != null
-                ? summaryExisting.GetComponent<TextMeshProUGUI>()
-                : null;
-            if (summaryLabel == null)
-            {
-                summaryLabel = CreateText(
-                    view.transform,
-                    "Pronunciation Summary",
-                    string.Empty,
-                    14,
-                    FontStyles.Bold,
-                    new Color(0.89f, 0.37f, 0.3f, 1f),
-                    new Vector2(0.62f, 0.23f),
-                    new Vector2(0.94f, 0.28f),
-                    TextAlignmentOptions.Right);
-            }
+            Transform resultPanel = GetOrCreateResultPanel();
+            if (resultPanel == null)
+                return;
 
-            Transform feedbackExisting = view.transform.Find("Pronunciation Feedback");
-            TextMeshProUGUI feedbackLabel = feedbackExisting != null
-                ? feedbackExisting.GetComponent<TextMeshProUGUI>()
-                : null;
-            if (feedbackLabel == null)
-            {
-                feedbackLabel = CreateText(
-                    view.transform,
-                    "Pronunciation Feedback",
-                    "Score feedback will appear here.",
-                    12,
-                    FontStyles.Italic,
-                    new Color(0.21f, 0.21f, 0.21f, 1f),
-                    new Vector2(0.62f, 0.18f),
-                    new Vector2(0.94f, 0.23f),
-                    TextAlignmentOptions.Right);
-            }
+            TextMeshProUGUI summaryLabel = MoveOrCreateText(
+                resultPanel,
+                "Pronunciation Summary",
+                string.Empty,
+                14,
+                FontStyles.Bold,
+                new Color(0.89f, 0.37f, 0.3f, 1f),
+                new Vector2(0.04f, 0.34f),
+                new Vector2(0.96f, 0.48f),
+                TextAlignmentOptions.Left,
+                new[] { "Pronunciation Summary" });
 
+            summaryLabel.color = new Color(0.89f, 0.37f, 0.30f, 1f);
+            TextMeshProUGUI feedbackLabel = MoveOrCreateText(
+                resultPanel,
+                "Pronunciation Feedback",
+                "Score feedback will appear here.",
+                12,
+                FontStyles.Italic,
+                new Color(0.21f, 0.21f, 0.21f, 1f),
+                new Vector2(0.04f, 0.10f),
+                new Vector2(0.96f, 0.30f),
+                TextAlignmentOptions.Left,
+                new[] { "Pronunciation Feedback" });
+
+            feedbackLabel.color = new Color(0.21f, 0.21f, 0.21f, 1f);
+            EnsureResultHeader(resultPanel);
+            EnsureResultCloseButton(resultPanel);
             view.ConfigurePronunciationLabels(summaryLabel, feedbackLabel);
         }
 
@@ -327,16 +446,7 @@ namespace FluentEcho.Bootstrap
             Vector2? anchorMin = null,
             Vector2? anchorMax = null)
         {
-            DefaultControls.Resources resources = new()
-            {
-                standard = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd"),
-                background = Resources.GetBuiltinResource<Sprite>("UI/Skin/Background.psd"),
-                inputField = Resources.GetBuiltinResource<Sprite>("UI/Skin/InputFieldBackground.psd"),
-                knob = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd"),
-                checkmark = Resources.GetBuiltinResource<Sprite>("UI/Skin/Checkmark.psd"),
-                dropdown = Resources.GetBuiltinResource<Sprite>("UI/Skin/DropdownArrow.psd"),
-                mask = Resources.GetBuiltinResource<Sprite>("UI/Skin/UIMask.psd")
-            };
+            DefaultControls.Resources resources = CreateUiResources();
 
             GameObject dropdownObject = DefaultControls.CreateDropdown(resources);
             dropdownObject.name = name;
@@ -352,7 +462,81 @@ namespace FluentEcho.Bootstrap
             if (dropdown.captionText != null)
                 dropdown.captionText.text = caption;
 
+            TextMeshProUGUI label = dropdownObject.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+                label.text = caption;
+
+            SetDropdownOptions(dropdown, caption);
+
             return dropdown;
+        }
+
+        private static void SetDropdownOptions(Dropdown dropdown, params string[] labels)
+        {
+            if (dropdown == null)
+                return;
+
+            dropdown.ClearOptions();
+            var options = new List<Dropdown.OptionData>();
+            if (labels != null)
+            {
+                for (int i = 0; i < labels.Length; i++)
+                {
+                    string label = string.IsNullOrWhiteSpace(labels[i])
+                        ? $"Option {i + 1}"
+                        : labels[i];
+                    options.Add(new Dropdown.OptionData(label));
+                }
+            }
+
+            if (options.Count == 0)
+                options.Add(new Dropdown.OptionData("Select"));
+
+            dropdown.AddOptions(options);
+            dropdown.SetValueWithoutNotify(0);
+            if (dropdown.captionText != null)
+                dropdown.captionText.text = options[0].text;
+
+            if (dropdown.itemText != null)
+                dropdown.itemText.text = options[0].text;
+        }
+
+        private static DefaultControls.Resources CreateUiResources()
+        {
+            Sprite sprite = CreateUiSprite();
+            return new DefaultControls.Resources
+            {
+                standard = sprite,
+                background = sprite,
+                inputField = sprite,
+                knob = sprite,
+                checkmark = sprite,
+                dropdown = sprite,
+                mask = sprite
+            };
+        }
+
+        private static Sprite CreateUiSprite()
+        {
+            Texture2D texture = new(2, 2, TextureFormat.RGBA32, false)
+            {
+                name = "FluentEcho.UI.WhiteTexture",
+                hideFlags = HideFlags.HideAndDontSave
+            };
+
+            texture.SetPixels(new[]
+            {
+                Color.white,
+                Color.white,
+                Color.white,
+                Color.white
+            });
+            texture.Apply();
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, 2f, 2f),
+                new Vector2(0.5f, 0.5f),
+                1f);
         }
 
         private static TextMeshProUGUI CreateText(
@@ -385,7 +569,429 @@ namespace FluentEcho.Bootstrap
             return text;
         }
 
-        private static void PopulateDropdown(MicrophoneRecord microphone, Dropdown dropdown)
+        private Transform GetOrCreateSettingsPanel()
+        {
+            if (view == null)
+                return null;
+
+            Transform mentorCard = view.transform.parent != null ? view.transform.parent.Find("Teacher Card") : null;
+            if (mentorCard == null)
+                return null;
+
+            Transform existing = mentorCard.Find("Settings Panel");
+            if (existing == null)
+            {
+                RectTransform rect = CreatePanel(
+                    mentorCard,
+                    "Settings Panel",
+                    new Vector2(0.08f, 0.03f),
+                    new Vector2(0.92f, 0.16f),
+                    new Color(0.11f, 0.24f, 0.28f, 1f));
+                return rect;
+            }
+
+            RectTransform existingRect = existing.GetComponent<RectTransform>();
+            if (existingRect != null)
+            {
+                existingRect.anchorMin = new Vector2(0.08f, 0.03f);
+                existingRect.anchorMax = new Vector2(0.92f, 0.34f);
+                existingRect.offsetMin = Vector2.zero;
+                existingRect.offsetMax = Vector2.zero;
+            }
+
+            Image image = existing.GetComponent<Image>();
+            if (image != null)
+                image.color = SettingsFill;
+
+            EnsurePanelAccent(existing, "Settings Accent", SettingsAccent);
+            ApplyPanelFrame(existing, SettingsBorder);
+            existing.gameObject.SetActive(false);
+
+            existing.SetAsLastSibling();
+            return existing;
+        }
+
+        private Transform GetOrCreateResultPanel()
+        {
+            if (view == null)
+                return null;
+
+            Transform existing = view.transform.Find("Result Panel") ?? view.transform.Find("Success Badge");
+            if (existing == null)
+            {
+                RectTransform rect = CreatePanel(
+                    view.transform,
+                    "Result Panel",
+                    new Vector2(0.06f, 0.02f),
+                    new Vector2(0.94f, 0.24f),
+                    new Color(0.90f, 0.86f, 0.78f, 1f));
+                return rect;
+            }
+
+            RectTransform existingRect = existing.GetComponent<RectTransform>();
+            if (existingRect != null)
+            {
+                existingRect.anchorMin = new Vector2(0.06f, 0.02f);
+                existingRect.anchorMax = new Vector2(0.94f, 0.38f);
+                existingRect.offsetMin = Vector2.zero;
+                existingRect.offsetMax = Vector2.zero;
+            }
+
+            Image image = existing.GetComponent<Image>();
+            if (image != null)
+                image.color = ResultFill;
+
+            EnsurePanelAccent(existing, "Result Accent", ResultAccent);
+            ApplyPanelFrame(existing, ResultBorder);
+            existing.gameObject.SetActive(false);
+
+            existing.name = "Result Panel";
+            existing.SetAsLastSibling();
+            return existing;
+        }
+
+        private static TextMeshProUGUI MoveOrCreateText(
+            Transform parent,
+            string name,
+            string value,
+            float size,
+            FontStyles style,
+            Color color,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            TextAlignmentOptions alignment,
+            IReadOnlyList<string> legacyNames)
+        {
+            Transform existing = parent.Find(name);
+            if (existing == null && legacyNames != null)
+            {
+                for (int i = 0; i < legacyNames.Count; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(legacyNames[i]))
+                        continue;
+
+                    existing = FindDeepTransform(parent.root, legacyNames[i]);
+                    if (existing != null)
+                        break;
+                }
+            }
+
+            TextMeshProUGUI label = existing != null ? existing.GetComponent<TextMeshProUGUI>() : null;
+            if (label == null)
+            {
+                label = CreateText(parent, name, value, size, style, color, anchorMin, anchorMax, alignment);
+                return label;
+            }
+
+            label.transform.SetParent(parent, false);
+            RectTransform rect = label.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            label.text = value;
+            label.fontSize = size;
+            label.fontStyle = style;
+            label.color = color;
+            label.alignment = alignment;
+            label.textWrappingMode = TextWrappingModes.Normal;
+            label.raycastTarget = false;
+            label.name = name;
+            return label;
+        }
+
+        private static void ApplyPanelFrame(Transform panel, Color borderColor)
+        {
+            if (panel == null)
+                return;
+
+            Outline outline = panel.GetComponent<Outline>();
+            if (outline == null)
+                outline = panel.gameObject.AddComponent<Outline>();
+
+            outline.effectColor = borderColor;
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            outline.useGraphicAlpha = true;
+        }
+
+        private static void EnsurePanelAccent(Transform panel, string name, Color accentColor)
+        {
+            if (panel == null)
+                return;
+
+            Transform existing = panel.Find(name);
+            RectTransform accent = existing != null ? existing.GetComponent<RectTransform>() : null;
+            if (accent == null)
+            {
+                GameObject accentObject = new(name, typeof(RectTransform), typeof(Image));
+                accentObject.transform.SetParent(panel, false);
+                accent = accentObject.GetComponent<RectTransform>();
+            }
+
+            accent.anchorMin = new Vector2(0f, 0.92f);
+            accent.anchorMax = new Vector2(1f, 1f);
+            accent.offsetMin = Vector2.zero;
+            accent.offsetMax = Vector2.zero;
+            Image image = accent.GetComponent<Image>();
+            image.color = accentColor;
+            accent.SetAsFirstSibling();
+        }
+
+        private void EnsureSettingsDivider(Transform settingsPanel)
+        {
+            if (settingsPanel == null)
+                return;
+
+            Transform existing = settingsPanel.Find("Settings Divider");
+            RectTransform divider = existing != null ? existing.GetComponent<RectTransform>() : null;
+            if (divider == null)
+            {
+                divider = CreatePanel(
+                    settingsPanel,
+                    "Settings Divider",
+                    new Vector2(0.50f, 0.20f),
+                    new Vector2(0.505f, 0.84f),
+                    new Color(1f, 1f, 1f, 0.10f));
+                return;
+            }
+
+            divider.anchorMin = new Vector2(0.50f, 0.20f);
+            divider.anchorMax = new Vector2(0.505f, 0.84f);
+            divider.offsetMin = Vector2.zero;
+            divider.offsetMax = Vector2.zero;
+            Image image = divider.GetComponent<Image>();
+            if (image != null)
+                image.color = new Color(1f, 1f, 1f, 0.10f);
+        }
+
+        private void EnsureResultHeader(Transform resultPanel)
+        {
+            if (resultPanel == null)
+                return;
+
+            MoveOrCreateText(
+                resultPanel,
+                "Result Header",
+                "FINAL FEEDBACK",
+                10,
+                FontStyles.Bold,
+                new Color(0.20f, 0.90f, 0.68f, 1f),
+                new Vector2(0.04f, 0.79f),
+                new Vector2(0.34f, 0.92f),
+                TextAlignmentOptions.Left,
+                new[] { "Result Header" });
+
+            MoveOrCreateText(
+                resultPanel,
+                "Result Badge",
+                "CLEARED",
+                10,
+                FontStyles.Bold,
+                new Color(0.89f, 0.37f, 0.30f, 1f),
+                new Vector2(0.78f, 0.79f),
+                new Vector2(0.96f, 0.92f),
+                TextAlignmentOptions.Right,
+                new[] { "Result Badge" });
+
+            Transform existing = resultPanel.Find("Result Divider");
+            RectTransform divider = existing != null ? existing.GetComponent<RectTransform>() : null;
+            if (divider == null)
+            {
+                divider = CreatePanel(
+                    resultPanel,
+                    "Result Divider",
+                    new Vector2(0.04f, 0.74f),
+                    new Vector2(0.96f, 0.75f),
+                    new Color(0.89f, 0.37f, 0.30f, 0.16f));
+                return;
+            }
+
+            divider.anchorMin = new Vector2(0.04f, 0.74f);
+            divider.anchorMax = new Vector2(0.96f, 0.75f);
+            divider.offsetMin = Vector2.zero;
+            divider.offsetMax = Vector2.zero;
+            Image image = divider.GetComponent<Image>();
+            if (image != null)
+                image.color = new Color(0.89f, 0.37f, 0.30f, 0.16f);
+        }
+
+        private void EnsureResultCloseButton(Transform resultPanel)
+        {
+            if (resultPanel == null)
+                return;
+
+            Button button = GetOrCreateButton(
+                resultPanel,
+                "Result Close Button",
+                "CLOSE",
+                new Vector2(0.84f, 0.83f),
+                new Vector2(0.96f, 0.95f),
+                new Color(0.89f, 0.37f, 0.30f, 1f),
+                new Color(0.08f, 0.10f, 0.11f, 1f));
+
+            if (button == null)
+                return;
+
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => resultPanel.gameObject.SetActive(false));
+        }
+
+        private void EnsureSettingsButton(Transform mentorCard)
+        {
+            if (mentorCard == null)
+                return;
+
+            Button button = GetOrCreateButton(
+                mentorCard,
+                "Settings Toggle Button",
+                "SETTINGS",
+                new Vector2(0.08f, 0.05f),
+                new Vector2(0.92f, 0.11f),
+                new Color(0.11f, 0.24f, 0.28f, 1f),
+                new Color(0.96f, 0.94f, 0.88f, 1f));
+
+            if (button == null)
+                return;
+
+            Transform settingsPanel = mentorCard.Find("Settings Panel");
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() =>
+            {
+                if (settingsPanel == null)
+                    return;
+
+                bool shouldOpen = !settingsPanel.gameObject.activeSelf;
+                settingsPanel.gameObject.SetActive(shouldOpen);
+                if (shouldOpen)
+                    settingsPanel.SetAsLastSibling();
+            });
+        }
+
+        private void EnsurePanelCloseButton(
+            Transform panel,
+            string name,
+            string labelText)
+        {
+            if (panel == null)
+                return;
+
+            Button button = GetOrCreateButton(
+                panel,
+                name,
+                labelText,
+                new Vector2(0.84f, 0.83f),
+                new Vector2(0.96f, 0.95f),
+                new Color(0.89f, 0.37f, 0.30f, 1f),
+                new Color(0.08f, 0.10f, 0.11f, 1f));
+
+            if (button == null)
+                return;
+
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => panel.gameObject.SetActive(false));
+        }
+
+        private static void StyleDropdown(Dropdown dropdown, Color fillColor)
+        {
+            if (dropdown == null)
+                return;
+
+            if (dropdown.targetGraphic != null)
+                dropdown.targetGraphic.color = fillColor;
+
+            if (dropdown.captionText != null)
+            {
+                dropdown.captionText.color = new Color(0.96f, 0.94f, 0.88f, 1f);
+                dropdown.captionText.fontSize = 12;
+            }
+
+            if (dropdown.itemText != null)
+            {
+                dropdown.itemText.color = new Color(0.10f, 0.12f, 0.13f, 1f);
+                dropdown.itemText.fontSize = 12;
+            }
+        }
+
+        private static Transform FindDeepTransform(Transform root, string name)
+        {
+            if (root == null || string.IsNullOrWhiteSpace(name))
+                return null;
+
+            if (root.name == name)
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                Transform match = FindDeepTransform(child, name);
+                if (match != null)
+                    return match;
+            }
+
+            return null;
+        }
+
+        private static RectTransform CreatePanel(
+            Transform parent,
+            string name,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color color)
+        {
+            GameObject panel = new(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            RectTransform rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            panel.GetComponent<Image>().color = color;
+            return rect;
+        }
+
+        private static Button GetOrCreateButton(
+            Transform parent,
+            string name,
+            string label,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color background,
+            Color foreground)
+        {
+            if (parent == null)
+                return null;
+
+            Transform existing = parent.Find(name);
+            if (existing != null)
+            {
+                Button existingButton = existing.GetComponent<Button>();
+                if (existingButton != null)
+                    return existingButton;
+            }
+
+            RectTransform rect = CreatePanel(parent, name, anchorMin, anchorMax, background);
+            Button button = rect.gameObject.AddComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.highlightedColor = Color.Lerp(background, Color.white, 0.16f);
+            colors.pressedColor = Color.Lerp(background, Color.black, 0.16f);
+            button.colors = colors;
+            CreateText(
+                rect,
+                "Label",
+                label,
+                13,
+                FontStyles.Bold,
+                foreground,
+                new Vector2(0.05f, 0.12f),
+                new Vector2(0.95f, 0.90f),
+                TextAlignmentOptions.Center);
+            return button;
+        }
+
+        private static void PopulateDropdown(
+            MicrophoneRecord microphone,
+            Dropdown dropdown,
+            TextMeshProUGUI selectedDeviceLabel)
         {
             var options = new List<Dropdown.OptionData>();
             options.Add(new Dropdown.OptionData("Default microphone"));
@@ -399,6 +1005,7 @@ namespace FluentEcho.Bootstrap
                 if (index <= 0)
                 {
                     microphone.SelectedMicDevice = null;
+                    UpdateMicrophoneValueLabel(microphone, selectedDeviceLabel);
                     return;
                 }
 
@@ -409,6 +1016,7 @@ namespace FluentEcho.Bootstrap
                     if (current == deviceIndex)
                     {
                         microphone.SelectedMicDevice = device;
+                        UpdateMicrophoneValueLabel(microphone, selectedDeviceLabel);
                         return;
                     }
 
@@ -434,6 +1042,19 @@ namespace FluentEcho.Bootstrap
             }
 
             dropdown.SetValueWithoutNotify(selectedIndex);
+        }
+
+        private static void UpdateMicrophoneValueLabel(
+            MicrophoneRecord microphone,
+            TextMeshProUGUI selectedDeviceLabel)
+        {
+            if (selectedDeviceLabel == null)
+                return;
+
+            string selected = microphone != null ? microphone.SelectedMicDevice : null;
+            selectedDeviceLabel.text = string.IsNullOrWhiteSpace(selected)
+                ? "Default microphone"
+                : selected;
         }
     }
 }
