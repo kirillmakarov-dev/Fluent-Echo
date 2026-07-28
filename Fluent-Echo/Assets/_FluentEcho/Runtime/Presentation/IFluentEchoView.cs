@@ -22,6 +22,7 @@ namespace FluentEcho.Presentation
         void SetTranscript(string transcript);
         void SetWordMatches(bool[] matches);
         void SetListening(bool listening);
+        void SetMicInteractable(bool interactable);
         void SetSuccess(bool success);
         void SetMode(bool mockMode);
         void SetNavigation(bool canGoPrevious, bool canGoNext);

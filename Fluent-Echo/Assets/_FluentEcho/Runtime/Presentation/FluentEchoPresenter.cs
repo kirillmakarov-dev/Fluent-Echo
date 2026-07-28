@@ -85,6 +85,7 @@ namespace FluentEcho.Presentation
             SelectService(useMock);
             ResetView();
             activeService.Prepare();
+            UpdateMicControlState();
             onboardingRequired = PlayerPrefs.GetInt(OnboardingPrefsKey, 0) == 0;
             if (onboardingRequired)
             {
@@ -134,6 +135,7 @@ namespace FluentEcho.Presentation
             {
                 if (session.Phase == SpeechSessionPhase.Preparing)
                     view.SetStatus(FluentEchoCopy.LoadingSpeechEngineStatus);
+                UpdateMicControlState();
                 return;
             }
 
@@ -145,6 +147,7 @@ namespace FluentEcho.Presentation
                 ? "Playing a demo attempt..."
                 : "Listening. Speak naturally, then press Check Answer.");
             view.SetListening(true);
+            UpdateMicControlState();
             session.BeginListening();
             attemptStartedAt = Time.realtimeSinceStartup;
             activeService.StartListening();
@@ -438,6 +441,7 @@ namespace FluentEcho.Presentation
             session.BeginAnalyzing();
             view.SetStatus(FluentEchoCopy.AnalyzingSpeechStatus);
             view.SetListening(false);
+            UpdateMicControlState();
         }
 
         private void HandleListeningStopped()
@@ -455,12 +459,16 @@ namespace FluentEcho.Presentation
             }
 
             if (success || session.Phase == SpeechSessionPhase.Error)
+            {
+                UpdateMicControlState();
                 return;
+            }
 
             session.BeginRetry();
             view.SetStatus(string.IsNullOrWhiteSpace(session.Transcript)
                 ? FluentEchoCopy.DidNotCatchThatDetailedStatus
                 : FluentEchoCopy.AFewWordsAreMissingStatus);
+            UpdateMicControlState();
         }
 
         private void HandleFailure(string message)
@@ -472,6 +480,7 @@ namespace FluentEcho.Presentation
             session.BeginError();
             view.SetListening(false);
             ShowUserFacingFailure(message);
+            UpdateMicControlState();
         }
 
         private void HandleServiceStatus(string message)
@@ -483,11 +492,13 @@ namespace FluentEcho.Presentation
                 || message.StartsWith("Warming", StringComparison.OrdinalIgnoreCase))
             {
                 session.BeginPreparing();
+                UpdateMicControlState();
             }
             else if (message.StartsWith("Whisper ready", StringComparison.OrdinalIgnoreCase))
             {
                 if (session.Phase == SpeechSessionPhase.Preparing)
                     session.BeginIdle();
+                UpdateMicControlState();
             }
 
             view.SetStatus(message);
@@ -508,6 +519,7 @@ namespace FluentEcho.Presentation
                 FluentEchoCopy.BuildUnavailablePronunciationDetails());
             view.SetListening(false);
             view.SetSuccess(false);
+            UpdateMicControlState();
             if (useMock)
                 view.SetStatus(FluentEchoCopy.DemoModeReadyStatus);
             else if (activeService != null && activeService.IsReady)
@@ -678,6 +690,7 @@ namespace FluentEcho.Presentation
             session.BeginCancelling();
             view.SetStatus(statusMessage);
             view.SetListening(false);
+            UpdateMicControlState();
             ClearAttemptState();
 
             UnbindService();
@@ -921,6 +934,23 @@ namespace FluentEcho.Presentation
             currentCategoryIndex = ResolveCategoryIndex(currentCategoryIndex);
             currentExerciseIndex = Mathf.Clamp(currentExerciseIndex, 0, Mathf.Max(0, GetCurrentExerciseCount() - 1));
             return exerciseCatalog.GetCategoryExercise(currentCategoryIndex, currentExerciseIndex);
+        }
+
+        private void UpdateMicControlState()
+        {
+            if (view == null)
+                return;
+
+            bool canPressMic =
+                activeService != null
+                && (activeService.IsListening
+                    || activeService.IsReady
+                    || useMock)
+                && session.Phase != SpeechSessionPhase.Preparing
+                && session.Phase != SpeechSessionPhase.Analyzing
+                && session.Phase != SpeechSessionPhase.Cancelling;
+
+            view.SetMicInteractable(canPressMic);
         }
 
         private int ResolveCategoryIndex(int selectedCategoryIndex)

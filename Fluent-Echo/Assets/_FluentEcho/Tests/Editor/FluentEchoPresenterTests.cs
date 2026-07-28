@@ -123,6 +123,36 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void LoadingStatus_DisablesMicUntilSpeechModelIsReady()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_loading_status");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = false };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+
+                Assert.That(view.LastMicInteractable, Is.False);
+
+                service.RaiseStatus("Loading speech engine...");
+                Assert.That(view.LastMicInteractable, Is.False);
+
+                service.IsReady = true;
+                service.RaiseStatus("Whisper ready.");
+                Assert.That(view.LastMicInteractable, Is.True);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void MissingMicrophoneFailure_OpensSettingsNotice()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_02");
@@ -941,6 +971,7 @@ namespace FluentEcho.Tests
             public bool LastSuccessState { get; private set; }
             public bool LastListeningState { get; private set; }
             public bool LastMockMode { get; private set; }
+            public bool LastMicInteractable { get; private set; }
             public string NoticeTitle { get; private set; } = string.Empty;
             public string NoticeBody { get; private set; } = string.Empty;
             public string NoticeActionLabel { get; private set; } = string.Empty;
@@ -984,6 +1015,11 @@ namespace FluentEcho.Tests
             public void SetListening(bool listening)
             {
                 LastListeningState = listening;
+            }
+
+            public void SetMicInteractable(bool interactable)
+            {
+                LastMicInteractable = interactable;
             }
 
             public void SetSuccess(bool success)

@@ -410,6 +410,12 @@ namespace FluentEcho.Views
             micButtonLabel.text = listening ? "CHECK ANSWER" : "START SPEAKING";
         }
 
+        public void SetMicInteractable(bool interactable)
+        {
+            if (micButton != null)
+                micButton.interactable = interactable;
+        }
+
         public void SetSuccess(bool success)
         {
             SetResultPanelVisible(success);
