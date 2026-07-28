@@ -8,6 +8,16 @@ namespace FluentEcho.Presentation
 {
     public sealed class FluentEchoPresenter : IDisposable
     {
+        private const string OnboardingPrefsKey = "FluentEcho.OnboardingSeenV1";
+
+        private enum NoticeAction
+        {
+            None,
+            CompleteOnboarding,
+            OpenSettings,
+            RetryAttempt
+        }
+
         private readonly SpeechExerciseCatalogSO exerciseCatalog;
         private readonly IFluentEchoView view;
         private readonly ISpeechRecognitionService realService;
@@ -25,8 +35,10 @@ namespace FluentEcho.Presentation
         private int currentExerciseIndex;
         private bool useMock;
         private bool success;
+        private bool onboardingRequired;
         private float attemptStartedAt = -1f;
         private PronunciationScoreResult lastPronunciationScore = PronunciationScoreResult.Unavailable;
+        private NoticeAction pendingNoticeAction = NoticeAction.None;
 
         public FluentEchoPresenter(
             SpeechExerciseSO exercise,
@@ -67,11 +79,21 @@ namespace FluentEcho.Presentation
             view.CategorySelected += HandleCategorySelected;
             view.LessonSelected += HandleLessonSelected;
             view.MockModeChanged += HandleMockModeChanged;
+            view.NoticeConfirmed += HandleNoticeConfirmed;
 
             SelectService(useMock);
             ResetView();
             activeService.Prepare();
-            view.SetCategoryScreenVisible(true);
+            onboardingRequired = PlayerPrefs.GetInt(OnboardingPrefsKey, 0) == 0;
+            if (onboardingRequired)
+            {
+                view.SetCategoryScreenVisible(false);
+                ShowOnboarding();
+            }
+            else
+            {
+                view.SetCategoryScreenVisible(true);
+            }
         }
 
         public void Dispose()
@@ -90,10 +112,14 @@ namespace FluentEcho.Presentation
             view.CategorySelected -= HandleCategorySelected;
             view.LessonSelected -= HandleLessonSelected;
             view.MockModeChanged -= HandleMockModeChanged;
+            view.NoticeConfirmed -= HandleNoticeConfirmed;
         }
 
         private void HandleMicPressed()
         {
+            if (onboardingRequired)
+                return;
+
             if (success || session.Phase == SpeechSessionPhase.Cancelling)
                 return;
 
@@ -125,6 +151,9 @@ namespace FluentEcho.Presentation
 
         private void HandleDemoPressed()
         {
+            if (onboardingRequired)
+                return;
+
             if (IsInteractionLocked())
                 return;
 
@@ -141,6 +170,9 @@ namespace FluentEcho.Presentation
 
         private void HandleRetry()
         {
+            if (onboardingRequired)
+                return;
+
             CancelCurrentService("Resetting attempt...");
             success = false;
             session.Reset();
@@ -150,6 +182,9 @@ namespace FluentEcho.Presentation
 
         private void HandleListen()
         {
+            if (onboardingRequired)
+                return;
+
             if (IsInteractionLocked())
                 return;
 
@@ -159,6 +194,9 @@ namespace FluentEcho.Presentation
 
         private void HandleMockModeChanged(bool value)
         {
+            if (onboardingRequired)
+                return;
+
             if (IsInteractionLocked())
             {
                 view.SetMode(useMock);
@@ -176,6 +214,9 @@ namespace FluentEcho.Presentation
 
         private void HandlePreviousExercise()
         {
+            if (onboardingRequired)
+                return;
+
             if (IsRecordingLocked())
                 return;
 
@@ -184,6 +225,9 @@ namespace FluentEcho.Presentation
 
         private void HandleNextExercise()
         {
+            if (onboardingRequired)
+                return;
+
             if (IsRecordingLocked())
                 return;
 
@@ -192,6 +236,9 @@ namespace FluentEcho.Presentation
 
         private void HandleCategoriesPressed()
         {
+            if (onboardingRequired)
+                return;
+
             if (IsRecordingLocked())
                 return;
 
@@ -200,6 +247,9 @@ namespace FluentEcho.Presentation
 
         private void HandleCategorySelected(int categoryIndex)
         {
+            if (onboardingRequired)
+                return;
+
             if (IsRecordingLocked())
                 return;
 
@@ -209,6 +259,9 @@ namespace FluentEcho.Presentation
 
         private void HandleLessonSelected(int exerciseIndex)
         {
+            if (onboardingRequired)
+                return;
+
             if (IsRecordingLocked())
                 return;
 
@@ -415,7 +468,7 @@ namespace FluentEcho.Presentation
             UpdatePronunciationScore();
             session.BeginError();
             view.SetListening(false);
-            view.SetStatus(message);
+            ShowUserFacingFailure(message);
         }
 
         private void HandleServiceStatus(string message)
@@ -456,6 +509,113 @@ namespace FluentEcho.Presentation
                 view.SetStatus("Ready to practice.");
             else
                 view.SetStatus("Preparing speech model...");
+        }
+
+        private void HandleNoticeConfirmed()
+        {
+            switch (pendingNoticeAction)
+            {
+                case NoticeAction.CompleteOnboarding:
+                    onboardingRequired = false;
+                    PlayerPrefs.SetInt(OnboardingPrefsKey, 1);
+                    PlayerPrefs.Save();
+                    view.HideNotice();
+                    view.SetCategoryScreenVisible(true);
+                    view.SetStatus(useMock
+                        ? "Demo mode is ready. Press Start Speaking to preview a correct answer."
+                        : "Ready to practice.");
+                    break;
+                case NoticeAction.OpenSettings:
+                    view.HideNotice();
+                    view.SetSettingsPanelVisible(true);
+                    break;
+                case NoticeAction.RetryAttempt:
+                    view.HideNotice();
+                    HandleRetry();
+                    break;
+            }
+
+            pendingNoticeAction = NoticeAction.None;
+        }
+
+        private void ShowOnboarding()
+        {
+            pendingNoticeAction = NoticeAction.CompleteOnboarding;
+            view.ShowNotice(
+                "Practice English privately",
+                "Fluent Echo listens on this device and uses a local speech model. Pick a category, record your voice, and keep all audio local.",
+                "CONTINUE");
+        }
+
+        private void ShowUserFacingFailure(string message)
+        {
+            string normalized = message ?? string.Empty;
+
+            if (normalized.IndexOf("microphone device was detected", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                pendingNoticeAction = NoticeAction.OpenSettings;
+                view.ShowNotice(
+                    "Microphone not found",
+                    "Connect a microphone or choose another input in Settings. Fluent Echo needs an input device before it can check your answer.",
+                    "OPEN SETTINGS");
+                view.SetStatus("Microphone not found.");
+                return;
+            }
+
+            if (normalized.IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0
+                || normalized.IndexOf("could not start", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                pendingNoticeAction = NoticeAction.OpenSettings;
+                view.ShowNotice(
+                    "Microphone permission needed",
+                    "Allow microphone access in Windows privacy settings, then try again. You can also confirm the input device in Settings.",
+                    "OPEN SETTINGS");
+                view.SetStatus("Microphone permission needed.");
+                return;
+            }
+
+            if (normalized.IndexOf("model is missing", StringComparison.OrdinalIgnoreCase) >= 0
+                || normalized.IndexOf("could not load", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                pendingNoticeAction = NoticeAction.OpenSettings;
+                view.ShowNotice(
+                    "Speech model missing",
+                    "Add the local Whisper model to StreamingAssets/Whisper, then open Settings to check the profile path.",
+                    "OPEN SETTINGS");
+                view.SetStatus("Speech model missing.");
+                return;
+            }
+
+            if (normalized.IndexOf("analysis could not start", StringComparison.OrdinalIgnoreCase) >= 0
+                || normalized.IndexOf("Listening failed", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                pendingNoticeAction = NoticeAction.RetryAttempt;
+                view.ShowNotice(
+                    "Could not check this attempt",
+                    "The recording stopped before analysis finished. Please try again.",
+                    "TRY AGAIN");
+                view.SetStatus("Could not check this attempt.");
+                return;
+            }
+
+            if (normalized.IndexOf("no clear speech", StringComparison.OrdinalIgnoreCase) >= 0
+                || normalized.IndexOf("did not catch", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                pendingNoticeAction = NoticeAction.RetryAttempt;
+                view.ShowNotice(
+                    "I did not catch that",
+                    "Move closer to the microphone and try again.",
+                    "TRY AGAIN");
+                view.SetStatus("I did not catch that.");
+                return;
+            }
+
+            pendingNoticeAction = NoticeAction.RetryAttempt;
+            view.ShowNotice(
+                "Could not check this attempt",
+                "Please try again.",
+                "TRY AGAIN");
+            view.SetStatus(normalized);
         }
 
         private void SaveProgress()

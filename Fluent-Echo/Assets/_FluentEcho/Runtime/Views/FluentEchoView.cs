@@ -8,6 +8,12 @@ namespace FluentEcho.Views
 {
     public sealed class FluentEchoView : MonoBehaviour, IFluentEchoView
     {
+        private static readonly Color NoticeFill = new(0.10f, 0.16f, 0.18f, 0.96f);
+        private static readonly Color NoticeBorder = new(0.20f, 0.90f, 0.68f, 0.35f);
+        private static readonly Color NoticeAccent = new(0.20f, 0.90f, 0.68f, 0.88f);
+        private static readonly Color NoticeActionFill = new(0.20f, 0.90f, 0.68f, 1f);
+        private static readonly Color NoticeActionText = new(0.06f, 0.13f, 0.15f, 1f);
+
         [SerializeField] private TextMeshProUGUI promptLabel;
         [SerializeField] private TextMeshProUGUI progressLabel;
         [SerializeField] private TextMeshProUGUI lessonPositionLabel;
@@ -31,6 +37,12 @@ namespace FluentEcho.Views
         [SerializeField] private Button resultCloseButton;
         [SerializeField] private Button resultNextButton;
         [SerializeField] private Button resultTryAgainButton;
+        [SerializeField] private GameObject noticePanel;
+        [SerializeField] private CanvasGroup noticePanelGroup;
+        [SerializeField] private TextMeshProUGUI noticeTitleLabel;
+        [SerializeField] private TextMeshProUGUI noticeBodyLabel;
+        [SerializeField] private Button noticeActionButton;
+        [SerializeField] private TextMeshProUGUI noticeActionLabel;
         [SerializeField] private Button wordsCategoryButton;
         [SerializeField] private Button shortSentencesCategoryButton;
         [SerializeField] private Button challengeCategoryButton;
@@ -61,6 +73,7 @@ namespace FluentEcho.Views
         public event Action<int> CategorySelected;
         public event Action<int> LessonSelected;
         public event Action<bool> MockModeChanged;
+        public event Action NoticeConfirmed;
 
         public void ConfigureWordChipPrefab(WordChipView prefab)
         {
@@ -125,6 +138,7 @@ namespace FluentEcho.Views
             if (mockModeToggle != null)
                 mockModeToggle.onValueChanged.AddListener(value => MockModeChanged?.Invoke(value));
             EnsureResultAnimationReferences();
+            EnsureNoticePanel();
         }
 
         private void EnsureCategoriesButton()
@@ -310,6 +324,60 @@ namespace FluentEcho.Views
                 categoryScreen.SetActive(visible);
         }
 
+        public void SetSettingsPanelVisible(bool visible)
+        {
+            Transform settingsPanel = FindDeepTransform(transform.root, "Settings Panel");
+            if (settingsPanel == null)
+                return;
+
+            settingsPanel.gameObject.SetActive(visible);
+            if (visible)
+                settingsPanel.SetAsLastSibling();
+        }
+
+        public void ShowNotice(string title, string body, string primaryActionLabel)
+        {
+            EnsureNoticePanel();
+            if (noticePanel == null)
+                return;
+
+            if (noticeTitleLabel != null)
+                noticeTitleLabel.text = string.IsNullOrWhiteSpace(title) ? "Notice" : title;
+
+            if (noticeBodyLabel != null)
+                noticeBodyLabel.text = string.IsNullOrWhiteSpace(body) ? string.Empty : body;
+
+            if (noticeActionLabel != null)
+                noticeActionLabel.text = string.IsNullOrWhiteSpace(primaryActionLabel) ? "CONTINUE" : primaryActionLabel;
+
+            noticePanel.SetActive(true);
+            if (noticePanelGroup != null)
+            {
+                noticePanelGroup.alpha = 1f;
+                noticePanelGroup.interactable = true;
+                noticePanelGroup.blocksRaycasts = true;
+            }
+
+            RectTransform rect = noticePanel.GetComponent<RectTransform>();
+            if (rect != null)
+                rect.SetAsLastSibling();
+        }
+
+        public void HideNotice()
+        {
+            if (noticePanel == null)
+                return;
+
+            if (noticePanelGroup != null)
+            {
+                noticePanelGroup.alpha = 0f;
+                noticePanelGroup.interactable = false;
+                noticePanelGroup.blocksRaycasts = false;
+            }
+
+            noticePanel.SetActive(false);
+        }
+
         public void SetProgressDetails(string details)
         {
             if (progressDetailsLabel != null)
@@ -335,6 +403,40 @@ namespace FluentEcho.Views
             if (string.IsNullOrWhiteSpace(status))
             {
                 statusLabel.text = string.Empty;
+                return;
+            }
+
+            if (status.StartsWith("No microphone device", StringComparison.OrdinalIgnoreCase))
+            {
+                statusLabel.text = "Microphone not found.";
+                return;
+            }
+
+            if (status.Contains("permission", StringComparison.OrdinalIgnoreCase)
+                || status.StartsWith("The microphone could not start", StringComparison.OrdinalIgnoreCase))
+            {
+                statusLabel.text = "Microphone permission needed.";
+                return;
+            }
+
+            if (status.StartsWith("Speech model is missing", StringComparison.OrdinalIgnoreCase)
+                || status.StartsWith("Speech model failed to load", StringComparison.OrdinalIgnoreCase)
+                || status.StartsWith("The selected speech model could not load", StringComparison.OrdinalIgnoreCase))
+            {
+                statusLabel.text = "Speech model missing.";
+                return;
+            }
+
+            if (status.StartsWith("Could not check this attempt", StringComparison.OrdinalIgnoreCase))
+            {
+                statusLabel.text = "Could not check this attempt.";
+                return;
+            }
+
+            if (status.StartsWith("I did not catch that", StringComparison.OrdinalIgnoreCase)
+                || status.StartsWith("No clear speech", StringComparison.OrdinalIgnoreCase))
+            {
+                statusLabel.text = "I did not catch that.";
                 return;
             }
 
@@ -441,6 +543,224 @@ namespace FluentEcho.Views
                 if (successPanelGroup == null)
                     successPanelGroup = successPanel.gameObject.AddComponent<CanvasGroup>();
             }
+        }
+
+        private void EnsureNoticePanel()
+        {
+            if (noticePanel == null)
+                noticePanel = FindDeepTransform(transform.root, "Notice Panel")?.gameObject;
+
+            if (noticePanel == null)
+            {
+                GameObject panelObject = new("Notice Panel", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
+                panelObject.transform.SetParent(transform.root, false);
+                RectTransform panelRect = panelObject.GetComponent<RectTransform>();
+                panelRect.anchorMin = Vector2.zero;
+                panelRect.anchorMax = Vector2.one;
+                panelRect.offsetMin = Vector2.zero;
+                panelRect.offsetMax = Vector2.zero;
+
+                Image backdrop = panelObject.GetComponent<Image>();
+                backdrop.color = new Color(0.02f, 0.05f, 0.06f, 0.72f);
+
+                noticePanel = panelObject;
+            }
+
+            noticePanelGroup = noticePanel.GetComponent<CanvasGroup>();
+            if (noticePanelGroup == null)
+                noticePanelGroup = noticePanel.AddComponent<CanvasGroup>();
+
+            Transform card = noticePanel.transform.Find("Notice Card");
+            RectTransform cardRect = card != null ? card.GetComponent<RectTransform>() : null;
+            if (cardRect == null)
+            {
+                GameObject cardObject = new("Notice Card", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
+                cardObject.transform.SetParent(noticePanel.transform, false);
+                cardRect = cardObject.GetComponent<RectTransform>();
+                cardRect.anchorMin = new Vector2(0.5f, 0.5f);
+                cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+                cardRect.sizeDelta = new Vector2(720f, 300f);
+                cardRect.anchoredPosition = Vector2.zero;
+
+                Image cardImage = cardObject.GetComponent<Image>();
+                cardImage.color = NoticeFill;
+
+                CanvasGroup cardGroup = cardObject.GetComponent<CanvasGroup>();
+                cardGroup.interactable = true;
+                cardGroup.blocksRaycasts = true;
+
+                Outline outline = cardObject.AddComponent<Outline>();
+                outline.effectColor = NoticeBorder;
+                outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+                GameObject accentObject = new("Notice Accent", typeof(RectTransform), typeof(Image));
+                accentObject.transform.SetParent(cardObject.transform, false);
+                RectTransform accentRect = accentObject.GetComponent<RectTransform>();
+                accentRect.anchorMin = new Vector2(0f, 0.92f);
+                accentRect.anchorMax = new Vector2(1f, 1f);
+                accentRect.offsetMin = Vector2.zero;
+                accentRect.offsetMax = Vector2.zero;
+                accentObject.GetComponent<Image>().color = NoticeAccent;
+
+                noticeTitleLabel = CreateNoticeText(
+                    cardObject.transform,
+                    "Notice Title",
+                    "Practice English privately",
+                    24,
+                    FontStyles.Bold,
+                    new Color(0.96f, 0.94f, 0.88f, 1f),
+                    new Vector2(0.08f, 0.62f),
+                    new Vector2(0.92f, 0.84f),
+                    TextAlignmentOptions.Center);
+
+                noticeBodyLabel = CreateNoticeText(
+                    cardObject.transform,
+                    "Notice Body",
+                    "Fluent Echo listens on this device and uses a local speech model.",
+                    17,
+                    FontStyles.Normal,
+                    new Color(0.88f, 0.91f, 0.89f, 1f),
+                    new Vector2(0.10f, 0.32f),
+                    new Vector2(0.90f, 0.62f),
+                    TextAlignmentOptions.Center);
+
+                noticeActionButton = CreateNoticeButton(
+                    cardObject.transform,
+                    "Notice Action Button",
+                    "CONTINUE",
+                    new Vector2(0.34f, 0.10f),
+                    new Vector2(0.66f, 0.26f),
+                    NoticeActionFill,
+                    NoticeActionText);
+
+                noticeActionButton.onClick.RemoveAllListeners();
+                noticeActionButton.onClick.AddListener(() => NoticeConfirmed?.Invoke());
+                noticeActionLabel = noticeActionButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            }
+            else
+            {
+                Image image = cardRect.GetComponent<Image>();
+                if (image != null)
+                    image.color = NoticeFill;
+
+                Outline outline = cardRect.GetComponent<Outline>();
+                if (outline == null)
+                    outline = cardRect.gameObject.AddComponent<Outline>();
+
+                outline.effectColor = NoticeBorder;
+                outline.effectDistance = new Vector2(1.5f, -1.5f);
+                CanvasGroup cardGroup = cardRect.GetComponent<CanvasGroup>();
+                if (cardGroup == null)
+                    cardGroup = cardRect.gameObject.AddComponent<CanvasGroup>();
+
+                cardGroup.interactable = true;
+                cardGroup.blocksRaycasts = true;
+
+                Transform accent = cardRect.Find("Notice Accent");
+                if (accent != null && accent.TryGetComponent(out Image accentImage))
+                    accentImage.color = NoticeAccent;
+
+                noticeTitleLabel = noticeTitleLabel != null ? noticeTitleLabel : cardRect.Find("Notice Title")?.GetComponent<TextMeshProUGUI>();
+                noticeBodyLabel = noticeBodyLabel != null ? noticeBodyLabel : cardRect.Find("Notice Body")?.GetComponent<TextMeshProUGUI>();
+                noticeActionButton = noticeActionButton != null ? noticeActionButton : cardRect.Find("Notice Action Button")?.GetComponent<Button>();
+                noticeActionLabel = noticeActionLabel != null ? noticeActionLabel : noticeActionButton?.GetComponentInChildren<TextMeshProUGUI>(true);
+
+                if (noticeActionButton != null)
+                {
+                    noticeActionButton.onClick.RemoveAllListeners();
+                    noticeActionButton.onClick.AddListener(() => NoticeConfirmed?.Invoke());
+                }
+            }
+
+            HideNotice();
+        }
+
+        private static TextMeshProUGUI CreateNoticeText(
+            Transform parent,
+            string name,
+            string value,
+            float size,
+            FontStyles style,
+            Color color,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            TextAlignmentOptions alignment)
+        {
+            GameObject textObject = new(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+            textObject.transform.SetParent(parent, false);
+            RectTransform rect = textObject.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
+            text.text = value;
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = alignment;
+            text.textWrappingMode = TextWrappingModes.Normal;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private static Button CreateNoticeButton(
+            Transform parent,
+            string name,
+            string label,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color background,
+            Color foreground)
+        {
+            GameObject buttonObject = new(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            RectTransform rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            Image image = buttonObject.GetComponent<Image>();
+            image.color = background;
+
+            Button button = buttonObject.GetComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.highlightedColor = Color.Lerp(background, Color.white, 0.16f);
+            colors.pressedColor = Color.Lerp(background, Color.black, 0.16f);
+            button.colors = colors;
+
+            CreateNoticeText(
+                buttonObject.transform,
+                "Label",
+                label,
+                14,
+                FontStyles.Bold,
+                foreground,
+                new Vector2(0.03f, 0.12f),
+                new Vector2(0.97f, 0.90f),
+                TextAlignmentOptions.Center);
+            return button;
+        }
+
+        private static Transform FindDeepTransform(Transform root, string name)
+        {
+            if (root == null || string.IsNullOrWhiteSpace(name))
+                return null;
+
+            if (root.name == name)
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                Transform match = FindDeepTransform(child, name);
+                if (match != null)
+                    return match;
+            }
+
+            return null;
         }
 
         private System.Collections.IEnumerator AnimateResultPanelIn()

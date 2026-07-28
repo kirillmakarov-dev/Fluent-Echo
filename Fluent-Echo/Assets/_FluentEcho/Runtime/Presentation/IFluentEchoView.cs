@@ -4,6 +4,7 @@ namespace FluentEcho.Presentation
 {
     public interface IFluentEchoView
     {
+        event Action NoticeConfirmed;
         event Action MicPressed;
         event Action DemoPressed;
         event Action RetryPressed;
@@ -28,6 +29,9 @@ namespace FluentEcho.Presentation
         void SetLessonOptions(string[] lessonNames, int selectedIndex);
         void SetCategory(string categoryName, string categoryDescription);
         void SetCategoryScreenVisible(bool visible);
+        void SetSettingsPanelVisible(bool visible);
+        void ShowNotice(string title, string body, string primaryActionLabel);
+        void HideNotice();
         void SetProgressDetails(string details);
         void SetPronunciation(string summary, string feedback);
     }
