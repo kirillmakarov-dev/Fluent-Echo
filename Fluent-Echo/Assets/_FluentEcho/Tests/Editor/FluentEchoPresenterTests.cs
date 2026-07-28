@@ -1264,6 +1264,38 @@ namespace FluentEcho.Tests
             }
         }
 
+        [Test]
+        public void FuzzyTranscript_ShowsApproximateMatchCountInResultDetails()
+        {
+            SpeechExerciseSO exercise = CreateExercise("dog");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+
+                presenter.Initialize();
+                view.RaiseMicPressed();
+                service.RaiseTranscript("The dug is big.");
+                service.RaiseListeningStopped();
+
+                Assert.That(view.LastSuccessState, Is.True);
+                Assert.That(view.LastProgressDetails, Does.Contain("Approximate matches:"));
+                Assert.That(view.LastProgressDetails, Does.Contain("fuzzy").Or.Contain("alt"));
+                Assert.That(view.LastPronunciationFeedback, Does.Contain("approximately").Or.Contain("careful"));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
         private static FluentEchoPresenter CreatePresenter(
             SpeechExerciseSO exercise,
             SpeechExerciseCatalogSO catalog,

@@ -758,6 +758,9 @@ namespace FluentEcho.Presentation
                 lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
                 lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
                 lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
+                string approximateMatches = BuildApproximateMatchText(lastPronunciationScore.WordScores);
+                if (!string.IsNullOrWhiteSpace(approximateMatches))
+                    lines.Add(approximateMatches);
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
                     lines.Add(lastPronunciationScore.EstimateBasisText);
 
@@ -842,6 +845,9 @@ namespace FluentEcho.Presentation
             lines.Add($"Precision: {lastPronunciationScore.PrecisionScore}%");
             lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
             lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
+            string approximateMatches = BuildApproximateMatchText(lastPronunciationScore.WordScores);
+            if (!string.IsNullOrWhiteSpace(approximateMatches))
+                lines.Add(approximateMatches);
 
             string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -1068,6 +1074,26 @@ namespace FluentEcho.Presentation
             }
 
             return $"Word focus: {string.Join(" | ", parts)}";
+        }
+
+        private static string BuildApproximateMatchText(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
+        {
+            if (wordScores == null || wordScores.Count == 0)
+                return string.Empty;
+
+            int approximateCount = 0;
+            for (int i = 0; i < wordScores.Count; i++)
+            {
+                if (wordScores[i].Kind is PronunciationMatchKind.Alternative or PronunciationMatchKind.Fuzzy)
+                    approximateCount++;
+            }
+
+            if (approximateCount <= 0)
+                return string.Empty;
+
+            return approximateCount == 1
+                ? "Approximate matches: 1 word"
+                : $"Approximate matches: {approximateCount} words";
         }
 
         private static string BuildCategoryLessonLabel(SpeechExerciseSO exercise)
