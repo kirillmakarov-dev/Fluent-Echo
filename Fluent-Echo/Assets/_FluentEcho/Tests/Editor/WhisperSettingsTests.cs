@@ -151,6 +151,8 @@ namespace FluentEcho.Tests
                 Assert.That(score.FeedbackText, Does.Contain("Strong delivery"));
                 Assert.That(score.WordScores, Has.Length.EqualTo(4));
                 Assert.That(score.WordScores[0].Score, Is.GreaterThanOrEqualTo(90));
+                Assert.That(score.WordQualityScore, Is.GreaterThanOrEqualTo(90));
+                Assert.That(score.WordScores[0].Kind, Is.EqualTo(PronunciationMatchKind.Exact));
             }
             finally
             {
@@ -177,6 +179,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.FeedbackText, Does.Contain("Missing 1 word"));
                 Assert.That(score.FeedbackText, Does.Contain("Focus on big"));
                 Assert.That(score.WordScores[3].Score, Is.LessThan(score.WordScores[0].Score));
+                Assert.That(score.WordScores[3].Kind, Is.EqualTo(PronunciationMatchKind.Missing));
             }
             finally
             {
@@ -201,6 +204,31 @@ namespace FluentEcho.Tests
                 Assert.That(score.WordScores[1].Word, Is.EqualTo("dog"));
                 Assert.That(score.WordScores[1].Score, Is.GreaterThanOrEqualTo(95));
                 Assert.That(score.WordScores[1].Matched, Is.True);
+                Assert.That(score.WordScores[1].Kind, Is.EqualTo(PronunciationMatchKind.Alternative));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        [Test]
+        public void FuzzyWord_ProducesFuzzyKind()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "The dug is big.",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    3f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.WordScores[1].Kind, Is.EqualTo(PronunciationMatchKind.Fuzzy));
+                Assert.That(score.WordScores[1].Score, Is.LessThan(100));
+                Assert.That(score.WordQualityScore, Is.LessThan(100));
             }
             finally
             {

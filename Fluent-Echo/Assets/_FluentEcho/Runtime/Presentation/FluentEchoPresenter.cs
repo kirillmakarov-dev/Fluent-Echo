@@ -483,6 +483,7 @@ namespace FluentEcho.Presentation
             return string.Join(
                 "\n",
                 $"Coverage {score.CoverageScore}% | Precision {score.PrecisionScore}% | Tempo {score.TempoScore}%",
+                $"Word quality {score.WordQualityScore}%",
                 $"Matched {score.MatchedWordCount}/{score.ExpectedWordCount} | Missing {score.MissingWordCount} | Extra {score.ExtraWordCount}",
                 string.IsNullOrWhiteSpace(wordBreakdown) ? string.Empty : wordBreakdown,
                 focus,
@@ -499,11 +500,13 @@ namespace FluentEcho.Presentation
             for (int i = 0; i < limit; i++)
             {
                 PronunciationWordScore wordScore = wordScores[i];
-                string marker = wordScore.Score >= 90
-                    ? "ok"
-                    : wordScore.Score >= 70
-                        ? "near"
-                        : "work";
+                string marker = wordScore.Kind == PronunciationMatchKind.Exact
+                    ? "exact"
+                    : wordScore.Kind == PronunciationMatchKind.Alternative
+                        ? "alt"
+                        : wordScore.Kind == PronunciationMatchKind.Fuzzy
+                            ? "fuzzy"
+                            : "miss";
                 parts.Add($"{wordScore.Word} {wordScore.Score}% {marker}");
             }
 
