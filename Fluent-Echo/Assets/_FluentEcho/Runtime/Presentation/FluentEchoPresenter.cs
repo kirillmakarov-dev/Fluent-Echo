@@ -854,6 +854,14 @@ namespace FluentEcho.Presentation
                 lines.Add(lastPronunciationScore.FeedbackText);
             }
 
+            string focusNext = BuildFocusNextText(lastPronunciationScore);
+            if (!string.IsNullOrWhiteSpace(focusNext))
+            {
+                lines.Add(string.Empty);
+                lines.Add("Focus next:");
+                lines.Add(focusNext);
+            }
+
             if (progress != null)
             {
                 lines.Add(string.Empty);
@@ -944,9 +952,7 @@ namespace FluentEcho.Presentation
             if (!score.IsAvailable)
                 return string.Empty;
 
-            string focus = score.MissingWordCount > 0
-                ? $"Focus next: say the missing word{(score.MissingWordCount == 1 ? string.Empty : "s")} slowly once, then repeat the full line."
-                : "Focus next: keep the same clear rhythm on the next mission.";
+            string focus = BuildFocusNextText(score);
 
             string wordBreakdown = BuildWordBreakdown(score.WordScores);
 
@@ -976,6 +982,39 @@ namespace FluentEcho.Presentation
                 lines.Add(score.FeedbackText);
 
             return string.Join("\n", lines);
+        }
+
+        private static string BuildFocusNextText(PronunciationScoreResult score)
+        {
+            if (!score.IsAvailable)
+                return string.Empty;
+
+            if (score.MissingWordCount > 0)
+            {
+                if (score.MissingWordCount == 1)
+                    return "Focus next: say the missing word slowly once, then repeat the full line.";
+
+                return $"Focus next: say the {score.MissingWordCount} missing words slowly once, then repeat the full line.";
+            }
+
+            if (score.ExtraWordCount > 0)
+            {
+                if (score.ExtraWordCount == 1)
+                    return "Focus next: drop the extra word and keep the line tighter.";
+
+                return $"Focus next: trim the {score.ExtraWordCount} extra words and keep the line cleaner.";
+            }
+
+            if (score.TempoScore <= 45)
+                return "Focus next: slow down a little so each word lands cleanly.";
+
+            if (score.TempoScore >= 90 && score.OverallScore < 100)
+                return "Focus next: keep the pace steady and natural.";
+
+            if (string.Equals(score.ConfidenceBand, "low", StringComparison.OrdinalIgnoreCase))
+                return "Focus next: try a cleaner full-line repeat.";
+
+            return "Focus next: keep the same clear rhythm on the next mission.";
         }
 
         private static string Capitalize(string value)
