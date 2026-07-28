@@ -25,6 +25,7 @@ namespace FluentEcho.Services
             bool[] matchedWordFlags = matchResult.MatchedWords ?? Array.Empty<bool>();
             string[][] acceptedWordGroups = exercise.GetAcceptedWordGroups();
             List<string> spokenWords = Tokenize(transcript);
+            bool transcriptWasEmpty = string.IsNullOrWhiteSpace(transcript);
             PronunciationWordScore[] wordScores = BuildWordScores(
                 expectedWords,
                 acceptedWordGroups,
@@ -37,7 +38,7 @@ namespace FluentEcho.Services
             int missingCount = Mathf.Max(0, expectedCount - matchedWords);
             int extraCount = Mathf.Max(0, spokenCount - matchedWords);
 
-            if (string.IsNullOrWhiteSpace(transcript))
+            if (transcriptWasEmpty)
             {
                 int emptyScore = 0;
                 string emptyConfidence = GetConfidenceBand(emptyScore);
@@ -55,8 +56,9 @@ namespace FluentEcho.Services
                         missingCount,
                         extraCount,
                         emptyConfidence,
-                        true),
-                    BuildEstimateBasisText(true),
+                        true,
+                        transcriptWasEmpty),
+                    BuildEstimateBasisText(true, transcriptWasEmpty),
                     matchedWords,
                     expectedCount,
                     missingCount,
@@ -96,7 +98,8 @@ namespace FluentEcho.Services
                 missingCount,
                 extraCount,
                 confidenceBand,
-                matchResult.IsComplete);
+                matchResult.IsComplete,
+                transcriptWasEmpty);
 
             float raw = (coverage * 0.40f)
                 + (precision * 0.15f)
@@ -124,7 +127,7 @@ namespace FluentEcho.Services
                 summary,
                 feedback,
                 confidenceReason,
-                BuildEstimateBasisText(matchResult.IsComplete),
+                BuildEstimateBasisText(matchResult.IsComplete, transcriptWasEmpty),
                 matchedWords,
                 expectedCount,
                 missingCount,
@@ -157,7 +160,7 @@ namespace FluentEcho.Services
             string band)
         {
             if (string.IsNullOrWhiteSpace(transcript))
-                return "Try saying the sentence once, then let the estimate finish the turn.";
+                return FluentEchoCopy.DidNotCatchThatDetailedStatus;
 
             string focus = BuildFocusText(expectedWords, matchResult.MatchedWords);
             if (missingCount > 0)
@@ -188,10 +191,14 @@ namespace FluentEcho.Services
             int missingCount,
             int extraCount,
             string confidenceBand,
-            bool isComplete)
+            bool isComplete,
+            bool transcriptWasEmpty)
         {
             if (expectedCount <= 0)
                 return string.Empty;
+
+            if (transcriptWasEmpty)
+                return "No speech was transcribed, so confidence stays low.";
 
             if (matchedWords <= 0)
                 return "No target words matched, so confidence stays low.";
@@ -210,9 +217,18 @@ namespace FluentEcho.Services
 
         private static string BuildEstimateBasisText(bool isComplete)
         {
+            return BuildEstimateBasisText(isComplete, false);
+        }
+
+        private static string BuildEstimateBasisText(bool isComplete, bool transcriptWasEmpty)
+        {
+            string basis = "Estimate basis: transcript coverage, word quality, and pacing.";
+            if (transcriptWasEmpty)
+                return $"{basis} No speech was transcribed.";
+
             return isComplete
-                ? "Estimate basis: transcript coverage, word quality, and pacing. This is not phoneme-level scoring."
-                : "Estimate basis: transcript coverage, word quality, and pacing. Missing words keep the estimate conservative.";
+                ? $"{basis} This is not phoneme-level scoring."
+                : $"{basis} Missing words keep the estimate conservative.";
         }
 
         private static int ComputeConfidenceScore(

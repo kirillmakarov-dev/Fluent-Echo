@@ -301,12 +301,11 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.OverallScore, Is.EqualTo(0));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("low"));
-                Assert.That(score.ConfidenceReason, Does.Contain("No target words matched"));
+                Assert.That(score.ConfidenceReason, Does.Contain("No speech was transcribed"));
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.SummaryText, Does.Contain("LOW"));
-                Assert.That(score.EstimateBasisText, Does.Contain("Missing words keep the estimate conservative"));
-                Assert.That(score.FeedbackText, Does.Contain("pause"));
-                Assert.That(score.FeedbackText, Does.Contain("pronunciation estimate"));
+                Assert.That(score.EstimateBasisText, Does.Contain("No speech was transcribed"));
+                Assert.That(score.FeedbackText, Is.EqualTo(FluentEchoCopy.DidNotCatchThatDetailedStatus));
             }
             finally
             {
@@ -332,6 +331,53 @@ namespace FluentEcho.Tests
                 Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
                 Assert.That(score.ConfidenceReason, Does.Contain("Extra words"));
                 Assert.That(score.FeedbackText, Does.Contain("extra word"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        [Test]
+        public void SlowRecording_ProducesQuickerRhythmFeedback()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "The dog is big.",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    7.5f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.TempoScore, Is.LessThan(70));
+                Assert.That(score.FeedbackText, Does.Contain("quicker"));
+                Assert.That(score.EstimateBasisText, Does.Contain("not phoneme-level scoring"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        [Test]
+        public void FastRecording_ProducesSlowerRhythmFeedback()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "The dog is big.",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    0.8f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.TempoScore, Is.LessThan(80));
+                Assert.That(score.FeedbackText, Does.Contain("Slow down"));
             }
             finally
             {
