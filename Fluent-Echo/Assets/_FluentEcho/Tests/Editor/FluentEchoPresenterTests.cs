@@ -1,0 +1,392 @@
+using System;
+using FluentEcho.Data;
+using FluentEcho.Domain;
+using FluentEcho.Presentation;
+using FluentEcho.Services;
+using NUnit.Framework;
+using UnityEditor;
+using UnityEngine;
+
+namespace FluentEcho.Tests
+{
+    public sealed class FluentEchoPresenterTests
+    {
+        private const string OnboardingPrefsKey = "FluentEcho.OnboardingSeenV1";
+
+        [SetUp]
+        public void SetUp()
+        {
+            PlayerPrefs.SetInt(OnboardingPrefsKey, 1);
+            PlayerPrefs.Save();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            PlayerPrefs.DeleteKey(OnboardingPrefsKey);
+            PlayerPrefs.Save();
+        }
+
+        [Test]
+        public void MicPress_WhenAlreadyListening_StopsCurrentRecording()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_01");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true, IsListening = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                Assert.That(service.StopListeningCalls, Is.EqualTo(1));
+                Assert.That(service.StartListeningCalls, Is.EqualTo(0));
+                Assert.That(view.LastStatus, Does.Contain("Ready to practice").Or.Contain("Listening"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void MissingMicrophoneFailure_OpensSettingsNotice()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_02");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                service.RaiseFailure("No microphone device was detected.");
+
+                Assert.That(view.NoticeVisible, Is.True);
+                Assert.That(view.NoticeTitle, Is.EqualTo("Microphone not found"));
+                Assert.That(view.NoticeActionLabel, Is.EqualTo("OPEN SETTINGS"));
+
+                view.RaiseNoticeConfirmed();
+
+                Assert.That(view.SettingsPanelVisible, Is.True);
+                Assert.That(view.NoticeVisible, Is.False);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void AnalysisFailure_ConfirmationCancelsServiceAndResetsFlow()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_03");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                view.RaiseMicPressed();
+                service.RaiseFailure("Speech analysis could not start.");
+
+                Assert.That(view.NoticeVisible, Is.True);
+                Assert.That(view.NoticeTitle, Is.EqualTo("Could not check this attempt"));
+                Assert.That(view.NoticeActionLabel, Is.EqualTo("TRY AGAIN"));
+
+                view.RaiseNoticeConfirmed();
+
+                Assert.That(service.CancelCalls, Is.EqualTo(1));
+                Assert.That(view.NoticeVisible, Is.False);
+                Assert.That(view.StatusHistory, Has.Some.Contains("Resetting attempt"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void NextPress_SwitchesToFollowingExerciseAndPersistsSelection()
+        {
+            SpeechExerciseSO first = CreateExercise("word_01", "Say the first word.", "lesson_test_word_04");
+            SpeechExerciseSO second = CreateExercise("word_02", "Say the second word.", "lesson_test_word_05");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { first, second });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            int persistedCategory = -1;
+            int persistedExercise = -1;
+            var presenter = new FluentEchoPresenter(
+                first,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                0,
+                0,
+                (categoryIndex, exerciseIndex) =>
+                {
+                    persistedCategory = categoryIndex;
+                    persistedExercise = exerciseIndex;
+                });
+
+            try
+            {
+                presenter.Initialize();
+                string initialPrompt = view.LastPrompt;
+
+                view.RaiseNextPressed();
+
+                Assert.That(view.LastPrompt, Is.Not.EqualTo(initialPrompt));
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the second word."));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(2));
+                Assert.That(persistedCategory, Is.EqualTo(0));
+                Assert.That(persistedExercise, Is.EqualTo(1));
+                Assert.That(view.LessonOptions, Is.EqualTo(new[] { "word_01", "word_02" }));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(first);
+                UnityEngine.Object.DestroyImmediate(second);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        private static FluentEchoPresenter CreatePresenter(
+            SpeechExerciseSO exercise,
+            SpeechExerciseCatalogSO catalog,
+            FakeView view,
+            FakeSpeechService service,
+            FakeSpeechService mockService)
+        {
+            return new FluentEchoPresenter(
+                exercise,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                0,
+                0,
+                null);
+        }
+
+        private static SpeechExerciseSO CreateExercise(string name, string prompt, string progressKey)
+        {
+            SpeechExerciseSO exercise = ScriptableObject.CreateInstance<SpeechExerciseSO>();
+            exercise.name = name;
+
+            SerializedObject serialized = new(exercise);
+            serialized.FindProperty("prompt").stringValue = prompt;
+            serialized.FindProperty("targetWords").arraySize = 1;
+            serialized.FindProperty("targetWords").GetArrayElementAtIndex(0).stringValue = name;
+            serialized.FindProperty("acceptedPhrases").stringValue = name;
+            serialized.FindProperty("progressKey").stringValue = progressKey;
+            serialized.FindProperty("requireWordOrder").boolValue = true;
+            serialized.FindProperty("allowFuzzyMatch").boolValue = true;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return exercise;
+        }
+
+        private static SpeechExerciseCatalogSO CreateCatalog(SpeechExerciseSO[] exercises)
+        {
+            SpeechExerciseCatalogSO catalog = ScriptableObject.CreateInstance<SpeechExerciseCatalogSO>();
+            SerializedObject serialized = new(catalog);
+
+            SerializedProperty exercisesProperty = serialized.FindProperty("exercises");
+            exercisesProperty.arraySize = exercises.Length;
+            for (int i = 0; i < exercises.Length; i++)
+                exercisesProperty.GetArrayElementAtIndex(i).objectReferenceValue = exercises[i];
+
+            SerializedProperty categoriesProperty = serialized.FindProperty("categories");
+            categoriesProperty.arraySize = 1;
+            SerializedProperty category = categoriesProperty.GetArrayElementAtIndex(0);
+            category.FindPropertyRelative("displayName").stringValue = "Words";
+            category.FindPropertyRelative("description").stringValue = "Practice one word at a time.";
+
+            SerializedProperty categoryExercises = category.FindPropertyRelative("exercises");
+            categoryExercises.arraySize = exercises.Length;
+            for (int i = 0; i < exercises.Length; i++)
+                categoryExercises.GetArrayElementAtIndex(i).objectReferenceValue = exercises[i];
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return catalog;
+        }
+
+        private sealed class FakeSpeechService : ISpeechRecognitionService
+        {
+            public event Action<string> TranscriptUpdated;
+            public event Action AnalysisStarted;
+            public event Action ListeningStopped;
+            public event Action<string> Failed;
+            public event Action<string> StatusChanged;
+
+            public bool IsListening { get; set; }
+            public bool IsReady { get; set; }
+            public int PrepareCalls { get; private set; }
+            public int StartListeningCalls { get; private set; }
+            public int StopListeningCalls { get; private set; }
+            public int CancelCalls { get; private set; }
+            public int ConfigureCalls { get; private set; }
+            public SpeechExerciseSO LastConfiguredExercise { get; private set; }
+
+            public void Configure(SpeechExerciseSO exercise)
+            {
+                ConfigureCalls++;
+                LastConfiguredExercise = exercise;
+            }
+
+            public void Prepare()
+            {
+                PrepareCalls++;
+            }
+
+            public void StartListening()
+            {
+                StartListeningCalls++;
+                IsListening = true;
+            }
+
+            public void StopListening()
+            {
+                StopListeningCalls++;
+                IsListening = false;
+            }
+
+            public void Cancel()
+            {
+                CancelCalls++;
+                IsListening = false;
+            }
+
+            public void RaiseFailure(string message) => Failed?.Invoke(message);
+
+            public void RaiseStatus(string message) => StatusChanged?.Invoke(message);
+
+            public void RaiseTranscript(string transcript) => TranscriptUpdated?.Invoke(transcript);
+
+            public void RaiseAnalysisStarted() => AnalysisStarted?.Invoke();
+
+            public void RaiseListeningStopped() => ListeningStopped?.Invoke();
+        }
+
+        private sealed class FakeView : IFluentEchoView
+        {
+            private readonly System.Collections.Generic.List<string> statusHistory = new();
+
+            public event Action MicPressed;
+            public event Action DemoPressed;
+            public event Action RetryPressed;
+            public event Action ListenPressed;
+            public event Action PreviousPressed;
+            public event Action NextPressed;
+            public event Action CategoriesPressed;
+            public event Action<int> CategorySelected;
+            public event Action<int> LessonSelected;
+            public event Action<bool> MockModeChanged;
+            public event Action NoticeConfirmed;
+
+            public string LastPrompt { get; private set; }
+            public string[] LastTargetWords { get; private set; } = Array.Empty<string>();
+            public string LastStatus { get; private set; } = string.Empty;
+            public string LastTranscript { get; private set; } = string.Empty;
+            public string[] LessonOptions { get; private set; } = Array.Empty<string>();
+            public bool CategoryScreenVisible { get; private set; }
+            public bool SettingsPanelVisible { get; private set; }
+            public bool NoticeVisible { get; private set; }
+            public string NoticeTitle { get; private set; } = string.Empty;
+            public string NoticeBody { get; private set; } = string.Empty;
+            public string NoticeActionLabel { get; private set; } = string.Empty;
+            public System.Collections.Generic.IReadOnlyList<string> StatusHistory => statusHistory;
+
+            public void RaiseMicPressed() => MicPressed?.Invoke();
+            public void RaiseDemoPressed() => DemoPressed?.Invoke();
+            public void RaiseRetryPressed() => RetryPressed?.Invoke();
+            public void RaiseListenPressed() => ListenPressed?.Invoke();
+            public void RaisePreviousPressed() => PreviousPressed?.Invoke();
+            public void RaiseNextPressed() => NextPressed?.Invoke();
+            public void RaiseCategoriesPressed() => CategoriesPressed?.Invoke();
+            public void RaiseCategorySelected(int index) => CategorySelected?.Invoke(index);
+            public void RaiseLessonSelected(int index) => LessonSelected?.Invoke(index);
+            public void RaiseMockModeChanged(bool value) => MockModeChanged?.Invoke(value);
+            public void RaiseNoticeConfirmed() => NoticeConfirmed?.Invoke();
+
+            public void Build(string prompt, string[] targetWords)
+            {
+                LastPrompt = prompt;
+                LastTargetWords = targetWords ?? Array.Empty<string>();
+            }
+
+            public void SetProgress(string progress) { }
+
+            public void SetStatus(string status)
+            {
+                LastStatus = status ?? string.Empty;
+                statusHistory.Add(LastStatus);
+            }
+
+            public void SetTranscript(string transcript)
+            {
+                LastTranscript = transcript ?? string.Empty;
+            }
+
+            public void SetWordMatches(bool[] matches) { }
+            public void SetListening(bool listening) { }
+            public void SetSuccess(bool success) { }
+            public void SetMode(bool mockMode) { }
+
+            public void SetNavigation(bool canGoPrevious, bool canGoNext) { }
+
+            public void SetLessonPosition(int currentLesson, int totalLessons) { }
+
+            public void SetLessonOptions(string[] lessonNames, int selectedIndex)
+            {
+                LessonOptions = lessonNames ?? Array.Empty<string>();
+            }
+
+            public void SetCategory(string categoryName, string categoryDescription) { }
+
+            public void SetCategoryScreenVisible(bool visible)
+            {
+                CategoryScreenVisible = visible;
+            }
+
+            public void SetSettingsPanelVisible(bool visible)
+            {
+                SettingsPanelVisible = visible;
+            }
+
+            public void ShowNotice(string title, string body, string primaryActionLabel)
+            {
+                NoticeVisible = true;
+                NoticeTitle = title ?? string.Empty;
+                NoticeBody = body ?? string.Empty;
+                NoticeActionLabel = primaryActionLabel ?? string.Empty;
+            }
+
+            public void HideNotice()
+            {
+                NoticeVisible = false;
+            }
+
+            public void SetProgressDetails(string details) { }
+
+            public void SetPronunciation(string summary, string feedback) { }
+        }
+    }
+}
