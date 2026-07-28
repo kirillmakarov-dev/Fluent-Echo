@@ -487,7 +487,7 @@ namespace FluentEcho.Bootstrap
                 label = CreateText(
                     view.transform,
                     "Progress",
-                    "Progress: no attempts yet",
+                    "Progress: ready for first recording",
                     14,
                     FontStyles.Bold,
                     new Color(0.89f, 0.37f, 0.3f, 1f),
