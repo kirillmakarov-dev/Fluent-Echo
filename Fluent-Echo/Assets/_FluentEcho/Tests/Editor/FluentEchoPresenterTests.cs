@@ -304,6 +304,51 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void RetryAfterSuccess_ResetsViewButKeepsSavedProgress()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_retry_after_success");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+
+                presenter.Initialize();
+                view.RaiseMicPressed();
+                service.RaiseTranscript("word_01");
+                service.RaiseListeningStopped();
+
+                view.RaiseRetryPressed();
+
+                LessonProgressState saved = LessonProgressRepository.Load(exercise.ProgressKey, 1);
+                try
+                {
+                    Assert.That(service.CancelCalls, Is.EqualTo(1));
+                    Assert.That(view.LastSuccessState, Is.False);
+                    Assert.That(view.LastListeningState, Is.False);
+                    Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
+                    Assert.That(view.LastStatus, Does.Contain("Ready to practice"));
+                    Assert.That(saved.Attempts, Is.EqualTo(1));
+                    Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
+                    Assert.That(saved.GetSummaryText(), Does.Contain("cleared 1"));
+                }
+                finally
+                {
+                    LessonProgressRepository.Clear(exercise.ProgressKey);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void PartialTranscript_SavesRetryProgressWithoutSuccess()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_retry");
