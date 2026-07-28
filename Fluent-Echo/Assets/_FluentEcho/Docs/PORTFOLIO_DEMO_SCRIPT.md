@@ -73,7 +73,7 @@ Say:
 
 If you are on the final lesson, note that `NEXT MISSION` will not be shown, so the user can only close the result or try again.
 
-If inspector preview mode is enabled for the demo build, point to the compact `Alignment preview` block and say:
+If inspector preview mode is enabled for the demo build, point to the compact `Alignment preview (demo only)` block and say:
 
 > This is a demo-only preview of the future alignment boundary. It is intentionally labeled as preview, so the app stays honest about the fact that true phoneme scoring is not shipped yet.
 

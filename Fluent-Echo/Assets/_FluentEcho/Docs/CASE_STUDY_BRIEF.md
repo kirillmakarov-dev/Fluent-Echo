@@ -6,7 +6,7 @@ Fluent Echo is a private, local English speech-practice app built in Unity.
 The user starts on a category screen, chooses Words, Short Sentences, or Challenge Sentences, records a response, gets a local transcript from Whisper, and sees an honest practice score with clear coaching feedback.
 The result panel separates practice score, confidence, word match, rhythm, and a focused next step so the feedback reads like a coach, not a log.
 On the final lesson, the panel keeps the same structure but only shows the actions that make sense for that lesson, so the flow stays clean and easy to present.
-For internal demos, the inspector can optionally enable an `Alignment preview` block, but the public story stays honest: the app is still not claiming true phoneme scoring yet.
+For internal demos, the inspector can optionally enable an `Alignment preview (demo only)` block, but the public story stays honest: the app is still not claiming true phoneme scoring yet.
 
 The product story is intentionally simple:
 
