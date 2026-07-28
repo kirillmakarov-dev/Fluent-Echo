@@ -710,7 +710,7 @@ namespace FluentEcho.Presentation
             if (lastPronunciationScore.IsAvailable)
             {
                 lines.Add(
-                    $"Practice score: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
+                    $"Pronunciation estimate: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
                 lines.Add(
                     $"Recognition confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
                 lines.Add(
@@ -727,7 +727,7 @@ namespace FluentEcho.Presentation
 
                 if (progress != null && progress.BestPronunciationScore > 0)
                 {
-                    string bestAttempt = $"Best attempt so far: {progress.BestPronunciationScore}/100";
+                    string bestAttempt = $"Best estimate so far: {progress.BestPronunciationScore}/100";
                     if (!string.IsNullOrWhiteSpace(progress.BestPronunciationConfidenceBand))
                         bestAttempt += $" | confidence {Capitalize(progress.BestPronunciationConfidenceBand)}";
 
@@ -780,7 +780,7 @@ namespace FluentEcho.Presentation
 
             var lines = new System.Collections.Generic.List<string>
             {
-                $"Practice score: {score.OverallScore}/100 | {score.BandLabel}",
+                $"Pronunciation estimate: {score.OverallScore}/100 | {score.BandLabel}",
                 $"Recognition confidence: {Capitalize(score.ConfidenceBand)}",
                 $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
                 $"Transcript match: coverage {score.CoverageScore}% | precision {score.PrecisionScore}%",

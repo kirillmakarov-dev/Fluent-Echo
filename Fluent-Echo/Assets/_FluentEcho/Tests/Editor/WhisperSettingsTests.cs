@@ -68,7 +68,7 @@ namespace FluentEcho.Tests
                 4,
                 67,
                 "steady",
-                "PRACTICE SCORE | 67/100 | HIGH",
+                "PRONUNCIATION ESTIMATE | 67/100 | HIGH",
                 "high",
                 81);
             LessonProgressRepository.Save(state);
@@ -112,7 +112,7 @@ namespace FluentEcho.Tests
                 4,
                 94,
                 "strong",
-                "PRACTICE SCORE | 94/100 | HIGH",
+                "PRONUNCIATION ESTIMATE | 94/100 | HIGH",
                 "high",
                 92);
 
@@ -179,7 +179,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.OverallScore, Is.GreaterThanOrEqualTo(90));
                 Assert.That(score.BandLabel, Is.EqualTo("strong"));
-                Assert.That(score.SummaryText, Does.Contain("PRACTICE SCORE"));
+                Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
                 Assert.That(score.FeedbackText, Does.Contain("Strong delivery"));
                 Assert.That(score.WordScores, Has.Length.EqualTo(4));
@@ -287,7 +287,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.OverallScore, Is.EqualTo(0));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("low"));
-                Assert.That(score.SummaryText, Does.Contain("PRACTICE SCORE"));
+                Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.SummaryText, Does.Contain("LOW"));
                 Assert.That(score.FeedbackText, Does.Contain("pause"));
             }

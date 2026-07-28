@@ -5,7 +5,7 @@ namespace FluentEcho.Presentation
         public const string FirstProgressSummary = "Progress: ready for first recording";
         public const string FirstLocalEstimateText = "Your first local estimate will appear here.";
         public const string FirstCoachingTipText = "Your first coaching tip will appear here.";
-        public const string FirstPronunciationSummary = "PRACTICE SCORE | READY FOR YOUR FIRST ATTEMPT";
+        public const string FirstPronunciationSummary = "PRONUNCIATION ESTIMATE | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstEstimatePrompt = "Speak once to generate the first local estimate.";
         public const string PhonemeRoadmapText = "Phoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.";
         public const string ReadyToPracticeStatus = "Ready to practice.";

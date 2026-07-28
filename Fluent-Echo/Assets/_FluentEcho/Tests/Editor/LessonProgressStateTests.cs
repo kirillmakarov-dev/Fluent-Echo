@@ -38,7 +38,7 @@ namespace FluentEcho.Tests
                         4,
                         60 + i,
                         i >= 5 ? "high" : "medium",
-                        $"PRACTICE SCORE | {60 + i}/100 | {(i >= 5 ? "HIGH" : "MEDIUM")}",
+                        $"PRONUNCIATION ESTIMATE | {60 + i}/100 | {(i >= 5 ? "HIGH" : "MEDIUM")}",
                         i >= 5 ? "high" : "medium",
                         70 + i);
                 }
