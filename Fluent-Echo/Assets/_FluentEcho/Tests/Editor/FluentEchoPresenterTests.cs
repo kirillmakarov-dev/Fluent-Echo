@@ -584,6 +584,43 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void CategoryScreen_ShowsStartLessonForUntouchedCategory()
+        {
+            SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_category_start_01");
+            SpeechExerciseSO wordsTwo = CreateExercise("word_02", "Say the second word.", "lesson_test_category_start_02");
+            SpeechExerciseCatalogSO catalog = CreateCategorizedCatalog(
+                new[]
+                {
+                    ("Words", "Practice one word at a time.", new[] { wordsOne, wordsTwo })
+                });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(wordsOne, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(wordsOne.ProgressKey);
+                LessonProgressRepository.Clear(wordsTwo.ProgressKey);
+
+                presenter.Initialize();
+
+                Assert.That(view.LastCategoryProgress, Does.Contain("Progress: 0/2 lessons cleared"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("start with Say the first word."));
+                Assert.That(view.LastCategoryProgress, Does.Not.Contain("attempted"));
+                Assert.That(view.LastCategoryProgress, Does.Not.Contain("avg best score"));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(wordsOne.ProgressKey);
+                LessonProgressRepository.Clear(wordsTwo.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(wordsOne);
+                UnityEngine.Object.DestroyImmediate(wordsTwo);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void GuidedCatalog_ContainsThreeCategoriesWithExpectedLessonCounts()
         {
             SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>("Assets/_FluentEcho/Demo/Data/ExerciseCatalog.asset");
