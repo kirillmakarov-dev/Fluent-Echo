@@ -165,6 +165,9 @@ namespace FluentEcho.Services
             string focus = BuildFocusText(expectedWords, matchResult.MatchedWords);
             if (missingCount > 0)
             {
+                if (!HasAnyMatchedWord(matchResult.MatchedWords) && expectedWords != null && expectedWords.Length > 0)
+                    return $"I heard speech, but none of the target words matched. Start with \"{expectedWords[0]}\" and try the full line again.";
+
                 if (missingCount == 1 && !string.IsNullOrWhiteSpace(focus))
                     return $"Missing 1 word. Repeat \"{focus}\" once, then say the full line again.";
 
@@ -563,6 +566,20 @@ namespace FluentEcho.Services
             }
 
             return result;
+        }
+
+        private static bool HasAnyMatchedWord(bool[] matches)
+        {
+            if (matches == null || matches.Length == 0)
+                return false;
+
+            for (int i = 0; i < matches.Length; i++)
+            {
+                if (matches[i])
+                    return true;
+            }
+
+            return false;
         }
 
         private static string NormalizeToken(string word)

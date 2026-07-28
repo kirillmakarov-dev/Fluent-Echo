@@ -235,6 +235,30 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void NoTargetWordsMatched_ProducesStartWithFirstWordFeedback()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "banana banana",
+                    new SpeechMatchResult(false, new[] { false, false, false, false }),
+                    2f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.MissingWordCount, Is.EqualTo(4));
+                Assert.That(score.FeedbackText, Is.EqualTo("I heard speech, but none of the target words matched. Start with \"the\" and try the full line again."));
+                Assert.That(score.ConfidenceReason, Does.Contain("No target words matched"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        [Test]
         public void AcceptedAlternative_ProducesHighPerWordScore()
         {
             SpeechExerciseSO exercise = CreateExercise("dog|hound");
