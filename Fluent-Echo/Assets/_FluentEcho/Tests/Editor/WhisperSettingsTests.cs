@@ -124,8 +124,7 @@ namespace FluentEcho.Tests
 
             try
             {
-                Assert.That(state.GetSummaryText(), Does.Contain("ready for first recording"));
-                Assert.That(state.GetSummaryText(), Does.Contain("0/4 matched"));
+                Assert.That(state.GetSummaryText(), Is.EqualTo(FluentEchoCopy.BuildProgressSummary(4)));
                 Assert.That(state.GetHistoryText(), Does.Contain(FluentEchoCopy.FirstLocalEstimateText));
             }
             finally
