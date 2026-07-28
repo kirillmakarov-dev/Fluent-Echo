@@ -38,7 +38,8 @@ namespace FluentEcho.Presentation
         public const string SpeechModelMissingTitle = "Speech model missing";
         public const string SpeechModelMissingBody = "Add the local Whisper model to StreamingAssets/Whisper, then open Settings to check the profile path.";
         public const string MicrophoneNotFoundBody = "Connect a microphone or choose another input in Settings. Fluent Echo needs an input device before it can check your answer.";
-        public const string NextMissionPrompt = "Choose NEXT MISSION to continue, or TRY AGAIN to improve the score.";
+        public const string ResultAcceptedHeader = "Result: accepted.";
+        public const string NextMissionPrompt = "Choose NEXT MISSION to continue, CLOSE to dismiss this result, or TRY AGAIN to improve the score.";
 
         public static string BuildProgressSummary(int totalWords)
         {

@@ -640,6 +640,7 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastPronunciationFeedback, Does.Contain("Confidence reason:"));
                     Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(view.LastMicInteractable, Is.False);
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultAcceptedHeader));
                     Assert.That(saved.Attempts, Is.EqualTo(1));
                     Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
                     Assert.That(saved.BestPronunciationScore, Is.GreaterThan(0));
@@ -694,8 +695,8 @@ namespace FluentEcho.Tests
                 service.RaiseTranscript("word_01");
                 service.RaiseListeningStopped();
 
-                Assert.That(view.LastSuccessState, Is.True);
-                Assert.That(view.LastStatus, Does.Contain("Excellent"));
+                    Assert.That(view.LastSuccessState, Is.True);
+                    Assert.That(view.LastStatus, Does.Contain("Excellent"));
 
                 view.RaiseNextPressed();
 
@@ -704,6 +705,7 @@ namespace FluentEcho.Tests
                 Assert.That(view.LastListeningState, Is.False);
                 Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
                 Assert.That(view.LastStatus, Does.Contain("Ready to practice").Or.Contain("Preparing"));
+                Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultAcceptedHeader).Or.Contain("Current attempt:"));
                 Assert.That(persistedCategory, Is.EqualTo(0));
                 Assert.That(persistedExercise, Is.EqualTo(1));
                 Assert.That(service.ConfigureCalls, Is.EqualTo(2));

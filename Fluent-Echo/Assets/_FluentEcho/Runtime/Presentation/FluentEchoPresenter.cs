@@ -746,7 +746,10 @@ namespace FluentEcho.Presentation
 
             if (lastPronunciationScore.IsAvailable)
             {
-                lines.Add("Current attempt:");
+                if (session.Phase == SpeechSessionPhase.Success)
+                    lines.Add(FluentEchoCopy.ResultAcceptedHeader);
+                else
+                    lines.Add("Current attempt:");
                 lines.Add($"Practice score: {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel}");
                 lines.Add($"Confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.ConfidenceReason))
@@ -797,6 +800,12 @@ namespace FluentEcho.Presentation
                     lines.Add("Focus next:");
                     lines.Add(lastPronunciationScore.FeedbackText);
                 }
+
+                if (session.Phase == SpeechSessionPhase.Success)
+                {
+                    lines.Add(string.Empty);
+                    lines.Add(FluentEchoCopy.NextMissionPrompt);
+                }
             }
 
             string history = progress?.GetHistoryText(2);
@@ -806,15 +815,6 @@ namespace FluentEcho.Presentation
                     lines.Add(string.Empty);
 
                 lines.Add(history);
-            }
-
-            if (lastPronunciationScore.IsAvailable)
-            {
-                if (lines.Count > 0)
-                    lines.Add(string.Empty);
-
-                lines.Add(FluentEchoCopy.NextMissionPrompt);
-                return string.Join("\n", lines);
             }
 
             return lines.Count == 0
