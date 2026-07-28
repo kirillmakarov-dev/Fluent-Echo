@@ -633,6 +633,7 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastPronunciationRhythm, Does.Contain("RHYTHM"));
                     Assert.That(view.LastPronunciationFeedback, Does.Contain("Confidence reason:"));
                     Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
+                    Assert.That(view.LastMicInteractable, Is.False);
                     Assert.That(saved.Attempts, Is.EqualTo(1));
                     Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
                     Assert.That(saved.BestPronunciationScore, Is.GreaterThan(0));
@@ -738,6 +739,7 @@ namespace FluentEcho.Tests
                     Assert.That(service.CancelCalls, Is.EqualTo(1));
                     Assert.That(view.LastSuccessState, Is.False);
                     Assert.That(view.LastListeningState, Is.False);
+                    Assert.That(view.LastMicInteractable, Is.True);
                     Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
                     Assert.That(view.LastStatus, Does.Contain("Ready to practice"));
                     Assert.That(saved.Attempts, Is.EqualTo(1));

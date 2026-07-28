@@ -25,6 +25,10 @@ namespace FluentEcho.Domain
             or SpeechSessionPhase.Listening
             or SpeechSessionPhase.Analyzing
             or SpeechSessionPhase.Cancelling;
+        public bool CanStartRecording => Phase is SpeechSessionPhase.Idle
+            or SpeechSessionPhase.Retry
+            or SpeechSessionPhase.Error;
+        public bool IsCancelling => Phase == SpeechSessionPhase.Cancelling;
 
         public void BeginPreparing() => SetPhase(SpeechSessionPhase.Preparing);
         public void BeginListening() => SetPhase(SpeechSessionPhase.Listening);

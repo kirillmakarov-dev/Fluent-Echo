@@ -35,7 +35,6 @@ namespace FluentEcho.Presentation
         private int currentCategoryIndex;
         private int currentExerciseIndex;
         private bool useMock;
-        private bool success;
         private bool onboardingRequired;
         private float attemptStartedAt = -1f;
         private PronunciationScoreResult lastPronunciationScore = PronunciationScoreResult.Unavailable;
@@ -122,7 +121,7 @@ namespace FluentEcho.Presentation
             if (onboardingRequired)
                 return;
 
-            if (success || session.Phase == SpeechSessionPhase.Cancelling)
+            if (session.IsCancelling)
                 return;
 
             if (activeService.IsListening)
@@ -130,6 +129,9 @@ namespace FluentEcho.Presentation
                 activeService.StopListening();
                 return;
             }
+
+            if (!session.CanStartRecording)
+                return;
 
             if (IsInteractionLocked())
             {
@@ -178,7 +180,6 @@ namespace FluentEcho.Presentation
                 return;
 
             CancelCurrentService("Resetting attempt...");
-            success = false;
             session.Reset();
             ClearAttemptState();
             ResetView();
@@ -420,10 +421,9 @@ namespace FluentEcho.Presentation
             view.SetTranscript(transcript);
             view.SetWordMatches(result.MatchedWords);
 
-            if (!result.IsComplete || success)
+            if (!result.IsComplete || session.Phase == SpeechSessionPhase.Success)
                 return;
 
-            success = true;
             session.BeginSuccess();
             view.SetSuccess(true);
             view.SetStatus(FluentEchoCopy.ExcellentResultStatus);
@@ -435,7 +435,7 @@ namespace FluentEcho.Presentation
 
         private void HandleAnalysisStarted()
         {
-            if (success)
+            if (session.Phase == SpeechSessionPhase.Success || session.IsCancelling)
                 return;
 
             session.BeginAnalyzing();
@@ -446,7 +446,7 @@ namespace FluentEcho.Presentation
 
         private void HandleListeningStopped()
         {
-            if (session.Phase == SpeechSessionPhase.Cancelling)
+            if (session.IsCancelling)
                 return;
 
             view.SetListening(false);
@@ -458,7 +458,7 @@ namespace FluentEcho.Presentation
                 SaveProgress();
             }
 
-            if (success || session.Phase == SpeechSessionPhase.Error)
+            if (session.Phase == SpeechSessionPhase.Error || session.Phase == SpeechSessionPhase.Success)
             {
                 UpdateMicControlState();
                 return;
@@ -507,7 +507,6 @@ namespace FluentEcho.Presentation
         private void ResetView()
         {
             session.Reset();
-            success = false;
             ClearAttemptState();
             lastPronunciationScore = PronunciationScoreResult.Unavailable;
             view.SetTranscript(string.Empty);
@@ -979,11 +978,7 @@ namespace FluentEcho.Presentation
             bool canPressMic =
                 activeService != null
                 && (activeService.IsListening
-                    || activeService.IsReady
-                    || useMock)
-                && session.Phase != SpeechSessionPhase.Preparing
-                && session.Phase != SpeechSessionPhase.Analyzing
-                && session.Phase != SpeechSessionPhase.Cancelling;
+                    || (session.CanStartRecording && (activeService.IsReady || useMock)));
 
             view.SetMicInteractable(canPressMic);
         }
