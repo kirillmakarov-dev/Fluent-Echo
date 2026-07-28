@@ -742,14 +742,14 @@ namespace FluentEcho.Presentation
 
         private string BuildProgressDetailsText()
         {
+            if (session.Phase == SpeechSessionPhase.Success && lastPronunciationScore.IsAvailable)
+                return BuildAcceptedResultDetailsText();
+
             var lines = new System.Collections.Generic.List<string>();
 
             if (lastPronunciationScore.IsAvailable)
             {
-                if (session.Phase == SpeechSessionPhase.Success)
-                    lines.Add(FluentEchoCopy.ResultAcceptedHeader);
-                else
-                    lines.Add("Current attempt:");
+                lines.Add("Current attempt:");
                 lines.Add($"Practice score: {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel}");
                 lines.Add($"Confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.ConfidenceReason))
@@ -800,12 +800,6 @@ namespace FluentEcho.Presentation
                     lines.Add("Focus next:");
                     lines.Add(lastPronunciationScore.FeedbackText);
                 }
-
-                if (session.Phase == SpeechSessionPhase.Success)
-                {
-                    lines.Add(string.Empty);
-                    lines.Add(FluentEchoCopy.NextMissionPrompt);
-                }
             }
 
             string history = progress?.GetHistoryText(2);
@@ -820,6 +814,56 @@ namespace FluentEcho.Presentation
             return lines.Count == 0
                 ? FluentEchoCopy.FirstLocalEstimateText
                 : string.Join("\n", lines);
+        }
+
+        private string BuildAcceptedResultDetailsText()
+        {
+            var lines = new System.Collections.Generic.List<string>
+            {
+                FluentEchoCopy.ResultAcceptedHeader,
+                FluentEchoCopy.ResultWhatWeHeardHeader
+            };
+
+            lines.Add(string.IsNullOrWhiteSpace(session.Transcript)
+                ? "Your transcript will appear here."
+                : $"\"{session.Transcript.Trim()}\"");
+
+            lines.Add(string.Empty);
+            lines.Add(FluentEchoCopy.ResultEstimateHeader);
+            lines.Add($"Practice score: {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel}");
+            lines.Add($"Confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
+            if (!string.IsNullOrWhiteSpace(lastPronunciationScore.ConfidenceReason))
+                lines.Add($"Confidence reason: {lastPronunciationScore.ConfidenceReason}");
+            if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
+                lines.Add(lastPronunciationScore.EstimateBasisText);
+            lines.Add($"Word match: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
+            lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
+            lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
+            lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
+
+            string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
+            if (!string.IsNullOrWhiteSpace(wordBreakdown))
+                lines.Add(wordBreakdown);
+
+            if (progress != null)
+            {
+                lines.Add(string.Empty);
+                lines.Add(FluentEchoCopy.ResultLessonRecapHeader);
+                lines.Add(progress.GetSummaryText());
+            }
+
+            string history = progress?.GetHistoryText(2);
+            if (!string.IsNullOrWhiteSpace(history))
+            {
+                lines.Add(string.Empty);
+                lines.Add(history);
+            }
+
+            lines.Add(string.Empty);
+            lines.Add(FluentEchoCopy.ResultNextStepHeader);
+            lines.Add(FluentEchoCopy.NextMissionPrompt);
+
+            return string.Join("\n", lines);
         }
 
         private string BuildCategoryProgressSummary(int categoryIndex)

@@ -623,14 +623,14 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastSuccessState, Is.True);
                     Assert.That(view.LastListeningState, Is.False);
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
-                    Assert.That(view.LastProgressDetails, Does.Contain("Current attempt:"));
-                    Assert.That(view.LastProgressDetails, Does.Contain("Best attempt so far"));
-                    Assert.That(view.LastProgressDetails, Does.Contain("this attempt is the new best"));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultAcceptedHeader));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultWhatWeHeardHeader));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultEstimateHeader));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultLessonRecapHeader));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultNextStepHeader));
                     Assert.That(view.LastProgressDetails, Does.Contain("word_01"));
-                    Assert.That(view.LastProgressDetails, Does.Contain("Lesson progress:"));
                     Assert.That(view.LastProgressDetails, Does.Contain(saved.GetSummaryText()));
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.NextMissionPrompt));
-                    Assert.That(view.LastProgressDetails, Does.Contain("Focus next:"));
                     Assert.That(view.LastProgressDetails, Does.Contain("Confidence reason:"));
                     Assert.That(view.LastPronunciationSummary, Does.Contain("Pronunciation estimate"));
                     Assert.That(view.LastPronunciationConfidence, Does.Contain("High").Or.Contain("Medium").Or.Contain("Low"));
@@ -702,10 +702,10 @@ namespace FluentEcho.Tests
 
                 Assert.That(view.LastPrompt, Is.EqualTo("Say the second word."));
                 Assert.That(view.LastSuccessState, Is.False);
-                Assert.That(view.LastListeningState, Is.False);
-                Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
-                Assert.That(view.LastStatus, Does.Contain("Ready to practice").Or.Contain("Preparing"));
-                Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultAcceptedHeader).Or.Contain("Current attempt:"));
+                    Assert.That(view.LastListeningState, Is.False);
+                    Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
+                    Assert.That(view.LastStatus, Does.Contain("Ready to practice").Or.Contain("Preparing"));
+                Assert.That(view.LastProgressDetails, Does.Contain("Current attempt:").Or.Contain(FluentEchoCopy.ResultAcceptedHeader));
                 Assert.That(persistedCategory, Is.EqualTo(0));
                 Assert.That(persistedExercise, Is.EqualTo(1));
                 Assert.That(service.ConfigureCalls, Is.EqualTo(2));
