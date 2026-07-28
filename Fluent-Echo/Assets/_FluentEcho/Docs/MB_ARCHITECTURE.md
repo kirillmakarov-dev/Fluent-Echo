@@ -102,6 +102,7 @@ Important note:
 - the current build still uses a no-op alignment default until a real phoneme-aware scorer is introduced.
 - the phoneme roadmap note stays in the initial empty-state copy, while post-attempt result details only show actual alignment evidence.
 - the inspector can toggle a preview alignment mode for demos, but the preview remains clearly separate from real phoneme assessment.
+- the preview block is intentionally compact and reads as `Alignment preview` instead of pretending to be a measured phoneme report.
 
 ### `Runtime/Presentation`
 

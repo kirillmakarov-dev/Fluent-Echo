@@ -1126,21 +1126,12 @@ namespace FluentEcho.Presentation
 
             var lines = new System.Collections.Generic.List<string>
             {
-                "Phoneme alignment:",
-                $"Alignment score: {alignment.AlignmentScore}/100 | {Capitalize(alignment.ConfidenceBand)}"
+                "Alignment preview:",
+                $"Preview score: {alignment.AlignmentScore}/100 | {Capitalize(alignment.ConfidenceBand)}"
             };
 
             if (!string.IsNullOrWhiteSpace(alignment.EvidenceText))
                 lines.Add(alignment.EvidenceText);
-
-            if (alignment.MatchedPhonemes.Count > 0)
-                lines.Add($"Matched phonemes: {string.Join(", ", alignment.MatchedPhonemes)}");
-
-            if (alignment.MissingPhonemes.Count > 0)
-                lines.Add($"Missing phonemes: {string.Join(", ", alignment.MissingPhonemes)}");
-
-            if (alignment.WeakPhonemes.Count > 0)
-                lines.Add($"Weak phonemes: {string.Join(", ", alignment.WeakPhonemes)}");
 
             if (!string.IsNullOrWhiteSpace(alignment.FeedbackText))
                 lines.Add(alignment.FeedbackText);

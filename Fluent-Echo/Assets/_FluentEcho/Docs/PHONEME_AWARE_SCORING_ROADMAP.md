@@ -31,6 +31,7 @@ The next step is to add a separate scoring layer, not to rewrite Whisper.
 - Allow the bootstrap inspector to switch into a preview alignment mode for demos and testing.
 - Keep the UI honest about what is estimated and what is actually measured.
 - Keep roadmap text out of post-attempt result details unless a real alignment signal exists.
+- Keep the preview block compact, labeled as `Alignment preview`, and clearly distinct from true phoneme scoring.
 
 ## Proposed Service Boundary
 
