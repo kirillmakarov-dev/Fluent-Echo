@@ -349,6 +349,36 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void MockModeToggle_SwitchesToDemoServiceAndResetsFlow()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_mock_mode");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var realService = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, realService, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                view.RaiseMockModeChanged(true);
+
+                Assert.That(realService.ConfigureCalls, Is.EqualTo(1));
+                Assert.That(mockService.ConfigureCalls, Is.EqualTo(1));
+                Assert.That(mockService.PrepareCalls, Is.EqualTo(1));
+                Assert.That(view.LastMockMode, Is.True);
+                Assert.That(view.LastStatus, Does.Contain("Demo mode is ready"));
+                Assert.That(view.LastTranscript, Is.EqualTo(string.Empty));
+                Assert.That(view.LastListeningState, Is.False);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void PartialTranscript_SavesRetryProgressWithoutSuccess()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_retry");
@@ -564,6 +594,7 @@ namespace FluentEcho.Tests
             public bool NoticeVisible { get; private set; }
             public bool LastSuccessState { get; private set; }
             public bool LastListeningState { get; private set; }
+            public bool LastMockMode { get; private set; }
             public string NoticeTitle { get; private set; } = string.Empty;
             public string NoticeBody { get; private set; } = string.Empty;
             public string NoticeActionLabel { get; private set; } = string.Empty;
@@ -610,7 +641,10 @@ namespace FluentEcho.Tests
             {
                 LastSuccessState = success;
             }
-            public void SetMode(bool mockMode) { }
+            public void SetMode(bool mockMode)
+            {
+                LastMockMode = mockMode;
+            }
 
             public void SetNavigation(bool canGoPrevious, bool canGoNext) { }
 
