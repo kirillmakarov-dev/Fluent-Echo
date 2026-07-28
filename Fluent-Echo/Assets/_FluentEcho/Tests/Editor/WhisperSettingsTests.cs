@@ -321,7 +321,9 @@ namespace FluentEcho.Tests
         public void SharedCopy_HelperBuildsExpectedFirstStateText()
         {
             Assert.That(FluentEchoCopy.BuildProgressSummary(0), Is.EqualTo(FluentEchoCopy.FirstProgressSummary));
-            Assert.That(FluentEchoCopy.BuildProgressSummary(4), Is.EqualTo("Progress: ready for first recording | 0/4 matched"));
+            Assert.That(
+                FluentEchoCopy.BuildProgressSummary(4),
+                Is.EqualTo($"{FluentEchoCopy.FirstProgressSummary} | 0/4 matched"));
 
             string unavailableDetails = FluentEchoCopy.BuildUnavailablePronunciationDetails();
             Assert.That(unavailableDetails, Does.Contain(FluentEchoCopy.FirstEstimatePrompt));
