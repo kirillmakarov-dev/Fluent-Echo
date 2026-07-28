@@ -27,7 +27,7 @@ The app should stay honest about what local Whisper can do. It can produce trans
 - Notice overlay is now scene-owned instead of being created from code.
 - Settings panel and notice UI are now assigned through the scene instead of being reconstructed at runtime.
 - Progress, Whisper profile, and pronunciation labels are now also bound directly from scene-owned references.
-- Sprint 3 lesson catalog and progress UX is now the active focus: category screens should surface how much has already been cleared.
+- Sprint 3 lesson catalog and progress UX is now the active focus: category screens now surface cleared lessons in a separate progress label.
 - Next pass should keep polishing category/progress visibility, then move back to the broader portfolio polish sprint if no content gaps remain.
 
 ## Sprint 0 - Scene-Owned UI and Layout Lock-Down

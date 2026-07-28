@@ -28,6 +28,7 @@ namespace FluentEcho.Presentation
         void SetLessonPosition(int currentLesson, int totalLessons);
         void SetLessonOptions(string[] lessonNames, int selectedIndex);
         void SetCategory(string categoryName, string categoryDescription);
+        void SetCategoryProgress(string categoryProgress);
         void SetCategoryScreenVisible(bool visible);
         void SetSettingsPanelVisible(bool visible);
         void ShowNotice(string title, string body, string primaryActionLabel);

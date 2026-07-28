@@ -1,5 +1,6 @@
 using FluentEcho.Bootstrap;
 using FluentEcho.Data;
+using FluentEcho.Presentation;
 using FluentEcho.Services;
 using FluentEcho.Views;
 using TMPro;
@@ -418,6 +419,7 @@ namespace FluentEcho.Editor
                 Set(viewObject, "lessonDropdown", lessonDropdown);
                 Set(viewObject, "categoryScreen", categoryScreen.gameObject);
                 Set(viewObject, "selectedCategoryLabel", FindDeep(categoryScreen, "Selected Category Label")?.GetComponent<TextMeshProUGUI>());
+                Set(viewObject, "selectedCategoryProgressLabel", FindDeep(categoryScreen, "Selected Category Progress")?.GetComponent<TextMeshProUGUI>());
                 Set(viewObject, "selectedCategoryDescriptionLabel", FindDeep(categoryScreen, "Selected Category Description")?.GetComponent<TextMeshProUGUI>());
                 viewObject.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(view);
@@ -786,6 +788,7 @@ namespace FluentEcho.Editor
             Set(serialized, "successPanelRect", success.rectTransform);
             Set(serialized, "categoryScreen", categoryScreen.gameObject);
             Set(serialized, "selectedCategoryLabel", FindDeep(categoryScreen, "Selected Category Label")?.GetComponent<TextMeshProUGUI>());
+            Set(serialized, "selectedCategoryProgressLabel", FindDeep(categoryScreen, "Selected Category Progress")?.GetComponent<TextMeshProUGUI>());
             Set(serialized, "selectedCategoryDescriptionLabel", FindDeep(categoryScreen, "Selected Category Description")?.GetComponent<TextMeshProUGUI>());
             serialized.ApplyModifiedPropertiesWithoutUndo();
             view.ConfigureWordChipPrefab(chipPrefab);
@@ -1379,6 +1382,16 @@ namespace FluentEcho.Editor
                 TextAlignmentOptions.Left);
             EnsureText(screen, "Selected Category Label", "Practice Menu", 15, FontStyles.Bold, MintInk,
                 new Vector2(0.06f, 0.05f), new Vector2(0.36f, 0.10f), TextAlignmentOptions.Left);
+            EnsureText(
+                screen,
+                "Selected Category Progress",
+                FluentEchoCopy.FirstProgressSummary,
+                12,
+                FontStyles.Bold,
+                MintInk,
+                new Vector2(0.38f, 0.11f),
+                new Vector2(0.94f, 0.16f),
+                TextAlignmentOptions.Right);
             EnsureText(
                 screen,
                 "Selected Category Description",

@@ -461,9 +461,9 @@ namespace FluentEcho.Tests
                 presenter.Initialize();
 
                 Assert.That(view.LastCategoryName, Is.EqualTo("Words"));
-                Assert.That(view.LastCategoryDescription, Does.Contain("Practice one word at a time."));
-                Assert.That(view.LastCategoryDescription, Does.Contain("Progress: 1/2 lessons cleared"));
-                Assert.That(view.LastCategoryDescription, Does.Contain("best score 92/100"));
+                Assert.That(view.LastCategoryDescription, Is.EqualTo("Practice one word at a time."));
+                Assert.That(view.LastCategoryProgress, Does.Contain("Progress: 1/2 lessons cleared"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("best score 92/100"));
             }
             finally
             {
@@ -923,6 +923,7 @@ namespace FluentEcho.Tests
             public string LastProgress { get; private set; } = string.Empty;
             public string LastCategoryName { get; private set; } = string.Empty;
             public string LastCategoryDescription { get; private set; } = string.Empty;
+            public string LastCategoryProgress { get; private set; } = string.Empty;
             public string[] LessonOptions { get; private set; } = Array.Empty<string>();
             public string LastProgressDetails { get; private set; } = string.Empty;
             public string LastPronunciationSummary { get; private set; } = string.Empty;
@@ -1000,6 +1001,11 @@ namespace FluentEcho.Tests
             {
                 LastCategoryName = categoryName ?? string.Empty;
                 LastCategoryDescription = categoryDescription ?? string.Empty;
+            }
+
+            public void SetCategoryProgress(string categoryProgress)
+            {
+                LastCategoryProgress = categoryProgress ?? string.Empty;
             }
 
             public void SetCategoryScreenVisible(bool visible)

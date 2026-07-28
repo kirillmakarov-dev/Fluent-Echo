@@ -55,6 +55,7 @@ namespace FluentEcho.Views
         [SerializeField] private GameObject categoryScreen;
         [SerializeField] private GameObject settingsPanel;
         [SerializeField] private TextMeshProUGUI selectedCategoryLabel;
+        [SerializeField] private TextMeshProUGUI selectedCategoryProgressLabel;
         [SerializeField] private TextMeshProUGUI selectedCategoryDescriptionLabel;
         [SerializeField] private RectTransform noticeCard;
 
@@ -245,6 +246,14 @@ namespace FluentEcho.Views
                 selectedCategoryDescriptionLabel.text = string.IsNullOrWhiteSpace(categoryDescription)
                     ? "Pick a lesson set and practice at your own pace."
                     : categoryDescription;
+        }
+
+        public void SetCategoryProgress(string categoryProgress)
+        {
+            if (selectedCategoryProgressLabel != null)
+                selectedCategoryProgressLabel.text = string.IsNullOrWhiteSpace(categoryProgress)
+                    ? FluentEchoCopy.FirstProgressSummary
+                    : categoryProgress;
         }
 
         public void SetCategoryScreenVisible(bool visible)

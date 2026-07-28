@@ -375,11 +375,10 @@ namespace FluentEcho.Presentation
             string categoryName = category != null ? category.DisplayName : "Practice Menu";
             string categoryDescription = category != null ? category.Description : "Pick a lesson set and practice at your own pace.";
             string categoryProgress = BuildCategoryProgressSummary(currentCategoryIndex);
-            if (!string.IsNullOrWhiteSpace(categoryProgress))
-                categoryDescription = $"{categoryDescription}\n{categoryProgress}";
             int exerciseCount = GetCurrentExerciseCount();
 
             view.SetCategory(categoryName, categoryDescription);
+            view.SetCategoryProgress(categoryProgress);
             view.SetLessonOptions(
                 exerciseCatalog != null
                     ? exerciseCatalog.GetCategoryExerciseDisplayNames(currentCategoryIndex)
