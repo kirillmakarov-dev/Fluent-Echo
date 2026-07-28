@@ -384,7 +384,7 @@ namespace FluentEcho.Domain
                 : $"{totalEntries} attempts";
 
             string visibleText = visibleEntries >= totalEntries
-                ? string.Empty
+                ? $" | showing all {totalEntries}"
                 : $" | showing last {visibleEntries}";
 
             string successText = successfulAttempts > 0

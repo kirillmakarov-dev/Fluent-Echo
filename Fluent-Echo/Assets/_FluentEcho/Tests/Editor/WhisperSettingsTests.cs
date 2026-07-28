@@ -186,6 +186,13 @@ namespace FluentEcho.Tests
                 Assert.That(history, Does.Contain("1."));
                 Assert.That(history, Does.Contain("2."));
                 Assert.That(history, Does.Not.Contain("3."));
+
+                string fullHistory = state.GetHistoryText(5);
+                Assert.That(fullHistory, Does.Contain("History: 3 attempts | showing all 3 | cleared 1"));
+                Assert.That(fullHistory, Does.Contain("Recent attempts:"));
+                Assert.That(fullHistory, Does.Contain("1."));
+                Assert.That(fullHistory, Does.Contain("2."));
+                Assert.That(fullHistory, Does.Contain("3."));
             }
             finally
             {
