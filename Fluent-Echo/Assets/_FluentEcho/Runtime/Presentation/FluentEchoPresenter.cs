@@ -704,11 +704,15 @@ namespace FluentEcho.Presentation
             if (lastPronunciationScore.IsAvailable)
             {
                 lines.Add(
-                    $"Score: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
+                    $"Pronunciation estimate: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
+                lines.Add(
+                    $"Recognition confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
                 lines.Add(
                     $"Matched words: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
                 lines.Add(
-                    $"Pronunciation: clarity {lastPronunciationScore.WordQualityScore}% | coverage {lastPronunciationScore.CoverageScore}% | rhythm {lastPronunciationScore.TempoScore}%");
+                    $"Transcript match: coverage {lastPronunciationScore.CoverageScore}% | precision {lastPronunciationScore.PrecisionScore}%");
+                lines.Add(
+                    $"Rhythm: {lastPronunciationScore.TempoScore}% | clarity estimate {lastPronunciationScore.WordQualityScore}%");
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -757,9 +761,11 @@ namespace FluentEcho.Presentation
 
             var lines = new System.Collections.Generic.List<string>
             {
+                $"Pronunciation estimate: {score.OverallScore}/100 | {score.BandLabel}",
+                $"Recognition confidence: {Capitalize(score.ConfidenceBand)}",
                 $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
-                $"Recognition: coverage {score.CoverageScore}% | precision {score.PrecisionScore}% | rhythm {score.TempoScore}%",
-                $"Pronunciation clarity: {score.WordQualityScore}%"
+                $"Transcript match: coverage {score.CoverageScore}% | precision {score.PrecisionScore}%",
+                $"Rhythm: {score.TempoScore}% | clarity estimate: {score.WordQualityScore}%"
             };
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -770,6 +776,14 @@ namespace FluentEcho.Presentation
                 lines.Add(score.FeedbackText);
 
             return string.Join("\n", lines);
+        }
+
+        private static string Capitalize(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "Unknown";
+
+            return char.ToUpperInvariant(value[0]) + value.Substring(1).ToLowerInvariant();
         }
 
         private static string BuildWordBreakdown(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)

@@ -220,7 +220,7 @@ namespace FluentEcho.Domain
                 return $"Progress: {attempts} attempts";
 
             string completion = $"{Math.Min(bestMatchedWords, totalWords)}/{totalWords}";
-            string score = bestPronunciationScore > 0 ? $" | score {bestPronunciationScore}/100" : string.Empty;
+            string score = bestPronunciationScore > 0 ? $" | estimate {bestPronunciationScore}/100" : string.Empty;
             string attemptsText = attempts == 0 ? "no attempts yet" : $"{attempts} attempts";
             string successText = successfulAttempts > 0 ? $" | cleared {successfulAttempts}" : string.Empty;
             return $"Progress: best {completion}{score} | {attemptsText}{successText}";

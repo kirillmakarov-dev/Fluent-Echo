@@ -67,7 +67,7 @@ namespace FluentEcho.Tests
                 4,
                 67,
                 "steady",
-                "PRONUNCIATION | 67/100 | STEADY");
+                "PRONUNCIATION ESTIMATE | 67/100 | HIGH");
             LessonProgressRepository.Save(state);
 
             LessonProgressState reloaded = LessonProgressRepository.Load(key, 4);
@@ -79,9 +79,9 @@ namespace FluentEcho.Tests
                 Assert.That(reloaded.BestPronunciationScore, Is.EqualTo(67));
                 Assert.That(reloaded.BestPronunciationBand, Is.EqualTo("steady"));
                 Assert.That(reloaded.BestPronunciationSummary, Does.Contain("67/100"));
+                Assert.That(reloaded.GetSummaryText(), Does.Contain("estimate 67/100"));
                 Assert.That(reloaded.TotalWords, Is.EqualTo(4));
                 Assert.That(reloaded.GetSummaryText(), Does.Contain("best 3/4"));
-                Assert.That(reloaded.GetSummaryText(), Does.Contain("score 67/100"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("67/100"));
             }
             finally
@@ -103,7 +103,7 @@ namespace FluentEcho.Tests
                 4,
                 94,
                 "strong",
-                "PRONUNCIATION | 94/100 | STRONG");
+                "PRONUNCIATION ESTIMATE | 94/100 | HIGH");
 
                 Assert.That(state.SuccessfulAttempts, Is.EqualTo(1));
                 Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
@@ -147,7 +147,8 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.OverallScore, Is.GreaterThanOrEqualTo(90));
                 Assert.That(score.BandLabel, Is.EqualTo("strong"));
-                Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION"));
+                Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
+                Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
                 Assert.That(score.FeedbackText, Does.Contain("Strong delivery"));
                 Assert.That(score.WordScores, Has.Length.EqualTo(4));
                 Assert.That(score.WordScores[0].Score, Is.GreaterThanOrEqualTo(90));
@@ -176,6 +177,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.OverallScore, Is.LessThan(90));
                 Assert.That(score.MissingWordCount, Is.EqualTo(1));
+                Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
                 Assert.That(score.FeedbackText, Does.Contain("Missing 1 word"));
                 Assert.That(score.FeedbackText, Does.Contain("Focus on big"));
                 Assert.That(score.WordScores[3].Score, Is.LessThan(score.WordScores[0].Score));
@@ -229,6 +231,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.WordScores[1].Kind, Is.EqualTo(PronunciationMatchKind.Fuzzy));
                 Assert.That(score.WordScores[1].Score, Is.LessThan(100));
                 Assert.That(score.WordQualityScore, Is.LessThan(100));
+                Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
             }
             finally
             {

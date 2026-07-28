@@ -63,8 +63,10 @@ namespace FluentEcho.Services
             false,
             0,
             "UNAVAILABLE",
+            "UNAVAILABLE",
             "Pronunciation score is not available yet.",
             string.Empty,
+            0,
             0,
             0,
             0,
@@ -80,6 +82,7 @@ namespace FluentEcho.Services
             bool isAvailable,
             int overallScore,
             string bandLabel,
+            string confidenceBand,
             string summaryText,
             string feedbackText,
             int matchedWordCount,
@@ -90,12 +93,14 @@ namespace FluentEcho.Services
             int precisionScore,
             int tempoScore,
             int wordQualityScore,
+            int confidenceScore,
             float recordingSeconds,
             PronunciationWordScore[] wordScores)
         {
             IsAvailable = isAvailable;
             OverallScore = Mathf.Clamp(overallScore, 0, 100);
             BandLabel = bandLabel ?? string.Empty;
+            ConfidenceBand = confidenceBand ?? string.Empty;
             SummaryText = summaryText ?? string.Empty;
             FeedbackText = feedbackText ?? string.Empty;
             MatchedWordCount = Mathf.Max(0, matchedWordCount);
@@ -106,6 +111,7 @@ namespace FluentEcho.Services
             PrecisionScore = Mathf.Clamp(precisionScore, 0, 100);
             TempoScore = Mathf.Clamp(tempoScore, 0, 100);
             WordQualityScore = Mathf.Clamp(wordQualityScore, 0, 100);
+            ConfidenceScore = Mathf.Clamp(confidenceScore, 0, 100);
             RecordingSeconds = Mathf.Max(0f, recordingSeconds);
             WordScores = wordScores ?? Array.Empty<PronunciationWordScore>();
         }
@@ -113,6 +119,7 @@ namespace FluentEcho.Services
         public bool IsAvailable { get; }
         public int OverallScore { get; }
         public string BandLabel { get; }
+        public string ConfidenceBand { get; }
         public string SummaryText { get; }
         public string FeedbackText { get; }
         public int MatchedWordCount { get; }
@@ -123,6 +130,7 @@ namespace FluentEcho.Services
         public int PrecisionScore { get; }
         public int TempoScore { get; }
         public int WordQualityScore { get; }
+        public int ConfidenceScore { get; }
         public float RecordingSeconds { get; }
         public IReadOnlyList<PronunciationWordScore> WordScores { get; }
     }
@@ -160,11 +168,13 @@ namespace FluentEcho.Services
             if (string.IsNullOrWhiteSpace(transcript))
             {
                 int emptyScore = 0;
-                string emptySummary = BuildSummary(emptyScore, "needs work");
+                string emptyConfidence = GetConfidenceBand(emptyScore);
+                string emptySummary = BuildSummary(emptyScore, "needs work", emptyConfidence);
                 return new PronunciationScoreResult(
                     true,
                     emptyScore,
                     "needs work",
+                    emptyConfidence,
                     emptySummary,
                     "Say the sentence once, then pause so the score can be calculated.",
                     matchedWords,
@@ -175,6 +185,7 @@ namespace FluentEcho.Services
                     0,
                     0,
                     ComputeWordQualityScore(wordScores),
+                    0,
                     recordingSeconds,
                     wordScores);
             }
@@ -189,6 +200,16 @@ namespace FluentEcho.Services
             int precisionScore = Mathf.RoundToInt(precision * 100f);
             int tempoScore = Mathf.RoundToInt(tempo * 100f);
             int wordQualityScore = ComputeWordQualityScore(wordScores);
+            int confidenceScore = ComputeConfidenceScore(
+                matchedWords,
+                expectedCount,
+                missingCount,
+                extraCount,
+                tempoScore,
+                wordQualityScore,
+                matchResult.IsComplete,
+                transcript);
+            string confidenceBand = GetConfidenceBand(confidenceScore);
 
             float raw = (coverage * 0.40f)
                 + (precision * 0.15f)
@@ -197,7 +218,7 @@ namespace FluentEcho.Services
                 + completenessBonus;
             int overallScore = Mathf.Clamp(Mathf.RoundToInt(raw * 100f), 0, 100);
             string band = GetBandLabel(overallScore);
-            string summary = BuildSummary(overallScore, band);
+            string summary = BuildSummary(overallScore, band, confidenceBand);
             string feedback = BuildFeedback(
                 matchResult,
                 transcript,
@@ -212,6 +233,7 @@ namespace FluentEcho.Services
                 true,
                 overallScore,
                 band,
+                confidenceBand,
                 summary,
                 feedback,
                 matchedWords,
@@ -222,16 +244,17 @@ namespace FluentEcho.Services
                 precisionScore,
                 tempoScore,
                 wordQualityScore,
+                confidenceScore,
                 recordingSeconds,
                 wordScores);
         }
 
-        private static string BuildSummary(int score, string band)
+        private static string BuildSummary(int score, string band, string confidenceBand)
         {
             if (score <= 0)
-                return "PRONUNCIATION | 0/100 | needs work";
+                return $"PRONUNCIATION ESTIMATE | 0/100 | {confidenceBand.ToUpperInvariant()}";
 
-            return $"PRONUNCIATION | {score:0}/100 | {band.ToUpperInvariant()}";
+            return $"PRONUNCIATION ESTIMATE | {score:0}/100 | {confidenceBand.ToUpperInvariant()}";
         }
 
         private static string BuildFeedback(
@@ -265,9 +288,51 @@ namespace FluentEcho.Services
                 return "Good word match. Slow down a little so each word lands cleanly.";
 
             if (score >= 85)
-                return $"Strong delivery. {band.ToUpperInvariant()} pronunciation.";
+                return $"Strong delivery. {band.ToUpperInvariant()} pronunciation estimate.";
 
-            return $"Good transcript match. Keep the rhythm steady and natural.";
+            return $"Good transcript match. Keep the rhythm steady and natural for the next estimate.";
+        }
+
+        private static int ComputeConfidenceScore(
+            int matchedWords,
+            int expectedCount,
+            int missingCount,
+            int extraCount,
+            int tempoScore,
+            int wordQualityScore,
+            bool isComplete,
+            string transcript)
+        {
+            if (string.IsNullOrWhiteSpace(transcript) || expectedCount <= 0)
+                return 0;
+
+            float matchRatio = expectedCount <= 0
+                ? 0f
+                : Mathf.Clamp01((float) matchedWords / expectedCount);
+            float extraPenalty = Mathf.Clamp01(extraCount / Mathf.Max(1f, expectedCount * 0.6f));
+            float missingPenalty = Mathf.Clamp01(missingCount / Mathf.Max(1f, expectedCount));
+            float rhythm = Mathf.Clamp01(tempoScore / 100f);
+            float clarity = Mathf.Clamp01(wordQualityScore / 100f);
+
+            float score = (matchRatio * 0.48f)
+                + (clarity * 0.26f)
+                + (rhythm * 0.16f)
+                + (isComplete ? 0.12f : 0f)
+                - (extraPenalty * 0.18f)
+                - (missingPenalty * 0.10f);
+
+            return Mathf.RoundToInt(Mathf.Clamp01(score) * 100f);
+        }
+
+        private static string GetConfidenceBand(int score)
+        {
+            if (score >= 75)
+                return "high";
+
+            if (score >= 45)
+                return "medium";
+
+            return "low";
         }
 
         private static string BuildFocusText(string[] expectedWords, bool[] matches)
