@@ -221,7 +221,7 @@ namespace FluentEcho.Presentation
             if (onboardingRequired)
                 return;
 
-            if (IsRecordingLocked())
+            if (IsInteractionLocked())
                 return;
 
             SwitchExercise(currentExerciseIndex - 1);
@@ -232,7 +232,7 @@ namespace FluentEcho.Presentation
             if (onboardingRequired)
                 return;
 
-            if (IsRecordingLocked())
+            if (IsInteractionLocked())
                 return;
 
             SwitchExercise(currentExerciseIndex + 1);
@@ -243,7 +243,7 @@ namespace FluentEcho.Presentation
             if (onboardingRequired)
                 return;
 
-            if (IsRecordingLocked())
+            if (IsInteractionLocked())
                 return;
 
             view.SetCategoryScreenVisible(true);
@@ -254,7 +254,7 @@ namespace FluentEcho.Presentation
             if (onboardingRequired)
                 return;
 
-            if (IsRecordingLocked())
+            if (IsInteractionLocked())
                 return;
 
             SwitchCategory(categoryIndex);
@@ -266,7 +266,7 @@ namespace FluentEcho.Presentation
             if (onboardingRequired)
                 return;
 
-            if (IsRecordingLocked())
+            if (IsInteractionLocked())
                 return;
 
             SwitchExercise(exerciseIndex);

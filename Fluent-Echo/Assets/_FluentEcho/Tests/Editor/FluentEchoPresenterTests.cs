@@ -421,6 +421,51 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void NavigationInputs_AreBlockedWhileSpeechModelIsPreparing()
+        {
+            SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_prepare_lock_01");
+            SpeechExerciseSO wordsTwo = CreateExercise("word_02", "Say the second word.", "lesson_test_prepare_lock_02");
+            SpeechExerciseSO sentencesOne = CreateExercise("sentence_01", "Say the sentence.", "lesson_test_prepare_lock_03");
+            SpeechExerciseCatalogSO catalog = CreateCategorizedCatalog(
+                new[]
+                {
+                    ("Words", "Practice one word at a time.", new[] { wordsOne, wordsTwo }),
+                    ("Sentences", "Practice short sentence lines.", new[] { sentencesOne })
+                });
+
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = false };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(wordsOne, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                string initialPrompt = view.LastPrompt;
+
+                service.RaiseStatus("Loading speech engine...");
+
+                view.RaiseNextPressed();
+                view.RaisePreviousPressed();
+                view.RaiseLessonSelected(1);
+                view.RaiseCategoriesPressed();
+                view.RaiseCategorySelected(1);
+
+                Assert.That(view.LastPrompt, Is.EqualTo(initialPrompt));
+                Assert.That(view.LastTargetWords, Is.EqualTo(new[] { "word_01" }));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(1));
+                Assert.That(view.CategoryScreenVisible, Is.True);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(wordsOne);
+                UnityEngine.Object.DestroyImmediate(wordsTwo);
+                UnityEngine.Object.DestroyImmediate(sentencesOne);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void SavedSelection_RestoresCategoryAndExerciseOnInitialize()
         {
             SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_saved_selection_01");
