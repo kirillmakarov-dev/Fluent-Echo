@@ -136,5 +136,21 @@ namespace FluentEcho.Tests
             Assert.That(text, Does.Contain("Preview mode: 4/5 target words matched from the transcript."));
             Assert.That(text, Does.Contain("Preview only: keep going."));
         }
+
+        [Test]
+        public void PreviewFormatter_ReturnsEmptyForUnavailableAlignment()
+        {
+            string text = PhonemeAlignmentTextFormatter.BuildPreviewText(PhonemeAlignmentResult.Unavailable);
+
+            Assert.That(text, Is.Empty);
+        }
+
+        [Test]
+        public void PreviewFormatter_ReturnsEmptyForNullAlignment()
+        {
+            string text = PhonemeAlignmentTextFormatter.BuildPreviewText(null);
+
+            Assert.That(text, Is.Empty);
+        }
     }
 }
