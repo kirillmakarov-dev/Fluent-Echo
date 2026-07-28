@@ -46,6 +46,7 @@ namespace FluentEcho.Tests
                 Assert.That(state.AttemptHistory[4].Transcript, Is.EqualTo("attempt 1"));
                 Assert.That(state.GetHistoryText(10), Does.Contain("attempt 5"));
                 Assert.That(state.GetHistoryText(10), Does.Not.Contain("attempt 0"));
+                Assert.That(state.GetHistoryText(10), Does.Contain("Best transcript: attempt 5"));
                 Assert.That(state.GetSummaryText(), Does.Contain("estimate 65/100"));
                 Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
             }

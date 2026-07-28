@@ -80,10 +80,12 @@ namespace FluentEcho.Tests
                 Assert.That(reloaded.BestPronunciationScore, Is.EqualTo(67));
                 Assert.That(reloaded.BestPronunciationBand, Is.EqualTo("steady"));
                 Assert.That(reloaded.BestPronunciationSummary, Does.Contain("67/100"));
+                Assert.That(reloaded.BestTranscript, Is.EqualTo("the dog is"));
                 Assert.That(reloaded.GetSummaryText(), Does.Contain("score 67/100"));
                 Assert.That(reloaded.TotalWords, Is.EqualTo(4));
                 Assert.That(reloaded.GetSummaryText(), Does.Contain("best 3/4"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("67/100"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Best transcript: the dog is"));
             }
             finally
             {
@@ -109,6 +111,7 @@ namespace FluentEcho.Tests
                 Assert.That(state.SuccessfulAttempts, Is.EqualTo(1));
                 Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
                 Assert.That(state.GetHistoryText(), Does.Contain("cleared"));
+                Assert.That(state.GetHistoryText(), Does.Contain("Best transcript: the dog is big"));
                 Assert.That(state.LastPronunciationSummary, Does.Contain("94/100"));
 
             LessonProgressRepository.Clear(key);

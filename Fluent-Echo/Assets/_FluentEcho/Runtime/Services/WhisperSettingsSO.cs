@@ -320,17 +320,24 @@ namespace FluentEcho.Domain
             if (attempts <= 0 && bestPronunciationScore <= 0)
                 return string.Empty;
 
+            var parts = new List<string>();
+
             string bestText = bestPronunciationScore > 0
                 ? $"Best score: {bestPronunciationScore}/100 {bestPronunciationBand}".Trim()
                 : $"Best match: {bestMatchedWords}/{Math.Max(1, totalWords)}";
+            parts.Add(bestText);
+
+            if (!string.IsNullOrWhiteSpace(bestTranscript))
+                parts.Add($"Best transcript: {bestTranscript}");
 
             string lastText = !string.IsNullOrWhiteSpace(lastPronunciationSummary)
                 ? $"Last attempt: {lastPronunciationSummary}"
                 : lastPronunciationScore > 0
                     ? $"Last attempt: {lastPronunciationScore}/100 {lastPronunciationBand}".Trim()
                     : (string.IsNullOrWhiteSpace(lastTranscript) ? "Last attempt pending" : $"Last attempt: {lastTranscript}");
+            parts.Add(lastText);
 
-            return $"{bestText} | {lastText}";
+            return string.Join(" | ", parts);
         }
     }
 }
