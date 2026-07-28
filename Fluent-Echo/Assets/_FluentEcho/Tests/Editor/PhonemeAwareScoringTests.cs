@@ -1,5 +1,6 @@
 using FluentEcho.Data;
 using FluentEcho.Domain;
+using FluentEcho.Presentation;
 using FluentEcho.Services;
 using NUnit.Framework;
 
@@ -101,6 +102,29 @@ namespace FluentEcho.Tests
             Assert.That(result.EvidenceText, Does.Contain("Preview mode"));
             Assert.That(result.FeedbackText, Does.Contain("Preview only"));
             Assert.That(result.HasEvidence, Is.True);
+        }
+
+        [Test]
+        public void PreviewFormatter_ReturnsCompactInspectableBlock()
+        {
+            PhonemeAlignmentResult alignment = new(
+                true,
+                82,
+                "high",
+                "Preview summary",
+                "Preview only: keep going.",
+                "Preview mode: 4/5 target words matched from the transcript.",
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                System.Array.Empty<string>(),
+                1.75f);
+
+            string text = PhonemeAlignmentTextFormatter.BuildPreviewText(alignment);
+
+            Assert.That(text, Does.Contain("Alignment preview:"));
+            Assert.That(text, Does.Contain("Preview score: 82/100 | High"));
+            Assert.That(text, Does.Contain("Preview mode: 4/5 target words matched from the transcript."));
+            Assert.That(text, Does.Contain("Preview only: keep going."));
         }
     }
 }

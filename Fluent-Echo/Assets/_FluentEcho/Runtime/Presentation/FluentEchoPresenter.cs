@@ -790,7 +790,7 @@ namespace FluentEcho.Presentation
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
                     lines.Add(lastPronunciationScore.EstimateBasisText);
 
-                string phonemeAlignment = BuildPhonemeAlignmentText(lastPhonemeAlignment);
+                string phonemeAlignment = PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment);
                 if (!string.IsNullOrWhiteSpace(phonemeAlignment))
                     lines.Add(phonemeAlignment);
 
@@ -875,7 +875,7 @@ namespace FluentEcho.Presentation
             lines.Add($"Precision: {lastPronunciationScore.PrecisionScore}%");
             lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
             lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
-            string phonemeAlignment = BuildPhonemeAlignmentText(lastPhonemeAlignment);
+            string phonemeAlignment = PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment);
             if (!string.IsNullOrWhiteSpace(phonemeAlignment))
                 lines.Add(phonemeAlignment);
             string matchQuality = BuildMatchQualityText(lastPronunciationScore.WordScores);
@@ -1037,7 +1037,7 @@ namespace FluentEcho.Presentation
             if (!string.IsNullOrWhiteSpace(score.EstimateBasisText))
                 lines.Add(score.EstimateBasisText);
 
-            string phonemeAlignment = BuildPhonemeAlignmentText(lastPhonemeAlignment);
+            string phonemeAlignment = PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment);
             if (!string.IsNullOrWhiteSpace(phonemeAlignment))
                 lines.Add(phonemeAlignment);
 
@@ -1114,29 +1114,6 @@ namespace FluentEcho.Presentation
             }
 
             return $"Word focus: {string.Join(" | ", parts)}";
-        }
-
-        private static string BuildPhonemeAlignmentText(PhonemeAlignmentResult alignment)
-        {
-            if (alignment == null)
-                return string.Empty;
-
-            if (!alignment.IsAvailable)
-                return string.Empty;
-
-            var lines = new System.Collections.Generic.List<string>
-            {
-                "Alignment preview:",
-                $"Preview score: {alignment.AlignmentScore}/100 | {Capitalize(alignment.ConfidenceBand)}"
-            };
-
-            if (!string.IsNullOrWhiteSpace(alignment.EvidenceText))
-                lines.Add(alignment.EvidenceText);
-
-            if (!string.IsNullOrWhiteSpace(alignment.FeedbackText))
-                lines.Add(alignment.FeedbackText);
-
-            return string.Join("\n", lines);
         }
 
         private static int CountExactWordScores(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
