@@ -41,6 +41,8 @@ namespace FluentEcho.Presentation
         public const string ResultAcceptedHeader = "Result: accepted.";
         public const string ResultWhatWeHeardHeader = "What we heard:";
         public const string ResultEstimateHeader = "Pronunciation estimate:";
+        public const string ResultSignalBreakdownHeader = "Signal breakdown:";
+        public const string ResultTakeawayHeader = "Takeaway:";
         public const string ResultLessonRecapHeader = "Lesson recap:";
         public const string ResultNextStepHeader = "Next step:";
         public const string NextMissionPrompt = "Choose NEXT MISSION to continue, CLOSE to dismiss this result, or TRY AGAIN to improve the score.";

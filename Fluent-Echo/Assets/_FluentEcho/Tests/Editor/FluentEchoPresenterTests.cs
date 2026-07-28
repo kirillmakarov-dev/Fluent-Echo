@@ -626,6 +626,8 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultAcceptedHeader));
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultWhatWeHeardHeader));
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultEstimateHeader));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultSignalBreakdownHeader));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultTakeawayHeader));
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultLessonRecapHeader));
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.ResultNextStepHeader));
                     Assert.That(view.LastProgressDetails, Does.Contain("word_01"));

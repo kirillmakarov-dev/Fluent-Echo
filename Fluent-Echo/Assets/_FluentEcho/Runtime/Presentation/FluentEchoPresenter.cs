@@ -836,14 +836,23 @@ namespace FluentEcho.Presentation
                 lines.Add($"Confidence reason: {lastPronunciationScore.ConfidenceReason}");
             if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
                 lines.Add(lastPronunciationScore.EstimateBasisText);
-            lines.Add($"Word match: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
-            lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
+            lines.Add(string.Empty);
+            lines.Add(FluentEchoCopy.ResultSignalBreakdownHeader);
+            lines.Add($"Coverage: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
+            lines.Add($"Precision: {lastPronunciationScore.PrecisionScore}%");
             lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
             lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
 
             string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
                 lines.Add(wordBreakdown);
+
+            if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
+            {
+                lines.Add(string.Empty);
+                lines.Add(FluentEchoCopy.ResultTakeawayHeader);
+                lines.Add(lastPronunciationScore.FeedbackText);
+            }
 
             if (progress != null)
             {
