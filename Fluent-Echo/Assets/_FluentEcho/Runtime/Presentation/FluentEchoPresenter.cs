@@ -543,7 +543,7 @@ namespace FluentEcho.Presentation
             pendingNoticeAction = NoticeAction.CompleteOnboarding;
             view.ShowNotice(
                 "Practice English privately",
-                "Fluent Echo listens on this device and uses a local speech model. Pick a category, record your voice, and keep all audio local.",
+                "Fluent Echo listens on this device and uses a local speech model. Choose Words, Short Sentences, or Challenge Sentences, then record your voice with audio kept local.",
                 "CONTINUE");
         }
 

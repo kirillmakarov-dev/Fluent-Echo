@@ -88,6 +88,31 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void ReturningUser_SkipsOnboardingAndShowsCategoryScreen()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_00_returning");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+
+                Assert.That(view.NoticeVisible, Is.False);
+                Assert.That(view.CategoryScreenVisible, Is.True);
+                Assert.That(view.LastStatus, Does.Contain("Ready").Or.Contain("Preparing"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void MissingMicrophoneFailure_OpensSettingsNotice()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_02");
@@ -104,6 +129,68 @@ namespace FluentEcho.Tests
 
                 Assert.That(view.NoticeVisible, Is.True);
                 Assert.That(view.NoticeTitle, Is.EqualTo("Microphone not found"));
+                Assert.That(view.NoticeActionLabel, Is.EqualTo("OPEN SETTINGS"));
+
+                view.RaiseNoticeConfirmed();
+
+                Assert.That(view.SettingsPanelVisible, Is.True);
+                Assert.That(view.NoticeVisible, Is.False);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void MicrophonePermissionFailure_OpensSettingsNotice()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_02_permission");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                service.RaiseFailure("The microphone could not start. Check operating-system permission.");
+
+                Assert.That(view.NoticeVisible, Is.True);
+                Assert.That(view.NoticeTitle, Is.EqualTo("Microphone permission needed"));
+                Assert.That(view.NoticeActionLabel, Is.EqualTo("OPEN SETTINGS"));
+
+                view.RaiseNoticeConfirmed();
+
+                Assert.That(view.SettingsPanelVisible, Is.True);
+                Assert.That(view.NoticeVisible, Is.False);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void SpeechModelMissingFailure_OpensSettingsNotice()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_02_model");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                service.RaiseFailure("Speech model is missing.");
+
+                Assert.That(view.NoticeVisible, Is.True);
+                Assert.That(view.NoticeTitle, Is.EqualTo("Speech model missing"));
                 Assert.That(view.NoticeActionLabel, Is.EqualTo("OPEN SETTINGS"));
 
                 view.RaiseNoticeConfirmed();
@@ -143,6 +230,38 @@ namespace FluentEcho.Tests
                 Assert.That(service.CancelCalls, Is.EqualTo(1));
                 Assert.That(view.NoticeVisible, Is.False);
                 Assert.That(view.StatusHistory, Has.Some.Contains("Resetting attempt"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void NoSpeechDetectedFailure_OffersRetryNotice()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_word_03_no_speech");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                service.RaiseFailure("I did not catch that. Check the microphone and try again.");
+
+                Assert.That(view.NoticeVisible, Is.True);
+                Assert.That(view.NoticeTitle, Is.EqualTo("I did not catch that"));
+                Assert.That(view.NoticeActionLabel, Is.EqualTo("TRY AGAIN"));
+
+                view.RaiseNoticeConfirmed();
+
+                Assert.That(service.CancelCalls, Is.EqualTo(1));
+                Assert.That(view.NoticeVisible, Is.False);
+                Assert.That(view.LastStatus, Does.Contain("Resetting attempt"));
             }
             finally
             {
