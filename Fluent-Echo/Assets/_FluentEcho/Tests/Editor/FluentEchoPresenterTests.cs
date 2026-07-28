@@ -114,6 +114,8 @@ namespace FluentEcho.Tests
                 Assert.That(view.LastProgress, Does.Contain(FluentEchoCopy.FirstProgressSummary));
                 Assert.That(view.LastPronunciationSummary, Does.Contain(FluentEchoCopy.FirstPronunciationSummary));
                 Assert.That(view.LastPronunciationConfidence, Does.Contain(FluentEchoCopy.FirstConfidenceSummary));
+                Assert.That(view.LastPronunciationWordMatch, Does.Contain(FluentEchoCopy.FirstWordMatchSummary));
+                Assert.That(view.LastPronunciationRhythm, Does.Contain(FluentEchoCopy.FirstRhythmSummary));
                 Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
             }
             finally
@@ -565,6 +567,9 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastProgressDetails, Does.Contain("Coach tip:"));
                     Assert.That(view.LastPronunciationSummary, Does.Contain("Pronunciation estimate"));
                     Assert.That(view.LastPronunciationConfidence, Does.Contain("High").Or.Contain("Medium").Or.Contain("Low"));
+                    Assert.That(view.LastPronunciationWordMatch, Does.Contain("WORD MATCH"));
+                    Assert.That(view.LastPronunciationWordMatch, Does.Contain("1/1"));
+                    Assert.That(view.LastPronunciationRhythm, Does.Contain("RHYTHM"));
                     Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(saved.Attempts, Is.EqualTo(1));
                     Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
@@ -967,6 +972,8 @@ namespace FluentEcho.Tests
             public string LastProgressDetails { get; private set; } = string.Empty;
             public string LastPronunciationSummary { get; private set; } = string.Empty;
             public string LastPronunciationConfidence { get; private set; } = string.Empty;
+            public string LastPronunciationWordMatch { get; private set; } = string.Empty;
+            public string LastPronunciationRhythm { get; private set; } = string.Empty;
             public string LastPronunciationFeedback { get; private set; } = string.Empty;
             public bool CategoryScreenVisible { get; private set; }
             public bool SettingsPanelVisible { get; private set; }
@@ -1091,6 +1098,12 @@ namespace FluentEcho.Tests
             public void SetPronunciationConfidence(string confidence)
             {
                 LastPronunciationConfidence = confidence ?? string.Empty;
+            }
+
+            public void SetPronunciationBreakdown(string wordMatch, string rhythm)
+            {
+                LastPronunciationWordMatch = wordMatch ?? string.Empty;
+                LastPronunciationRhythm = rhythm ?? string.Empty;
             }
         }
     }

@@ -374,6 +374,26 @@ namespace FluentEcho.Editor
                 new Vector2(0.68f, 0.34f),
                 new Vector2(0.94f, 0.49f),
                 TextAlignmentOptions.Right);
+            TextMeshProUGUI pronunciationWordMatch = EnsureText(
+                resultPanel,
+                "Pronunciation Word Match",
+                FluentEchoCopy.FirstWordMatchSummary,
+                12,
+                FontStyles.Bold,
+                MintInk,
+                new Vector2(0.06f, 0.26f),
+                new Vector2(0.47f, 0.33f),
+                TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationRhythm = EnsureText(
+                resultPanel,
+                "Pronunciation Rhythm",
+                FluentEchoCopy.FirstRhythmSummary,
+                12,
+                FontStyles.Bold,
+                MintInk,
+                new Vector2(0.50f, 0.26f),
+                new Vector2(0.94f, 0.33f),
+                TextAlignmentOptions.Right);
             TextMeshProUGUI pronunciationFeedback = EnsureText(
                 resultPanel,
                 "Pronunciation Feedback",
@@ -415,6 +435,8 @@ namespace FluentEcho.Editor
                 Set(viewObject, "progressDetailsLabel", progressDetails);
                 Set(viewObject, "pronunciationSummaryLabel", pronunciationSummary);
                 Set(viewObject, "pronunciationConfidenceLabel", pronunciationConfidence);
+                Set(viewObject, "pronunciationWordMatchLabel", pronunciationWordMatch);
+                Set(viewObject, "pronunciationRhythmLabel", pronunciationRhythm);
                 Set(viewObject, "pronunciationFeedbackLabel", pronunciationFeedback);
                 if (resultImage != null)
                     Set(viewObject, "successPanel", resultImage);
@@ -743,6 +765,12 @@ namespace FluentEcho.Editor
             TextMeshProUGUI pronunciationConfidence = CreateText(
                 success.rectTransform, "Pronunciation Confidence", FluentEchoCopy.FirstConfidenceSummary, 12, FontStyles.Bold, MintInk,
                 new Vector2(0.68f, 0.34f), new Vector2(0.94f, 0.49f), TextAlignmentOptions.Right);
+            TextMeshProUGUI pronunciationWordMatch = CreateText(
+                success.rectTransform, "Pronunciation Word Match", FluentEchoCopy.FirstWordMatchSummary, 12, FontStyles.Bold, MintInk,
+                new Vector2(0.06f, 0.26f), new Vector2(0.47f, 0.33f), TextAlignmentOptions.Left);
+            TextMeshProUGUI pronunciationRhythm = CreateText(
+                success.rectTransform, "Pronunciation Rhythm", FluentEchoCopy.FirstRhythmSummary, 12, FontStyles.Bold, MintInk,
+                new Vector2(0.50f, 0.26f), new Vector2(0.94f, 0.33f), TextAlignmentOptions.Right);
             TextMeshProUGUI pronunciationFeedback = CreateText(
                 success.rectTransform, "Pronunciation Feedback", "Your coach tip will appear here.", 18, FontStyles.Italic, Ink,
                 new Vector2(0.06f, 0.19f), new Vector2(0.94f, 0.33f), TextAlignmentOptions.Left);

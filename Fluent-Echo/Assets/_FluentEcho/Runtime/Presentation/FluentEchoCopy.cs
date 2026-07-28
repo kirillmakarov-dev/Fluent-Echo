@@ -7,6 +7,8 @@ namespace FluentEcho.Presentation
         public const string FirstCoachingTipText = "Your first coaching tip will appear here.";
         public const string FirstPronunciationSummary = "PRACTICE SCORE | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstConfidenceSummary = "CONFIDENCE | READY FOR YOUR FIRST ATTEMPT";
+        public const string FirstWordMatchSummary = "WORD MATCH | READY FOR YOUR FIRST ATTEMPT";
+        public const string FirstRhythmSummary = "RHYTHM | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstEstimatePrompt = "Speak once to generate the first practice score.";
         public const string OnboardingWelcomeTitle = "Practice English privately";
         public const string OnboardingWelcomeBody = "Fluent Echo listens on this device and uses a local speech model.";

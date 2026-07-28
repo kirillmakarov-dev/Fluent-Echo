@@ -21,6 +21,8 @@ namespace FluentEcho.Views
         [SerializeField] private TextMeshProUGUI progressDetailsLabel;
         [SerializeField] private TextMeshProUGUI pronunciationSummaryLabel;
         [SerializeField] private TextMeshProUGUI pronunciationConfidenceLabel;
+        [SerializeField] private TextMeshProUGUI pronunciationWordMatchLabel;
+        [SerializeField] private TextMeshProUGUI pronunciationRhythmLabel;
         [SerializeField] private TextMeshProUGUI pronunciationFeedbackLabel;
         [SerializeField] private TextMeshProUGUI statusLabel;
         [SerializeField] private TextMeshProUGUI transcriptLabel;
@@ -340,6 +342,19 @@ namespace FluentEcho.Views
                 pronunciationConfidenceLabel.text = string.IsNullOrWhiteSpace(confidence)
                     ? FluentEchoCopy.FirstConfidenceSummary
                     : confidence;
+        }
+
+        public void SetPronunciationBreakdown(string wordMatch, string rhythm)
+        {
+            if (pronunciationWordMatchLabel != null)
+                pronunciationWordMatchLabel.text = string.IsNullOrWhiteSpace(wordMatch)
+                    ? FluentEchoCopy.FirstWordMatchSummary
+                    : wordMatch;
+
+            if (pronunciationRhythmLabel != null)
+                pronunciationRhythmLabel.text = string.IsNullOrWhiteSpace(rhythm)
+                    ? FluentEchoCopy.FirstRhythmSummary
+                    : rhythm;
         }
 
         public void SetStatus(string status)
