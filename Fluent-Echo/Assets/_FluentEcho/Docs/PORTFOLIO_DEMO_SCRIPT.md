@@ -104,4 +104,4 @@ If you are recording video, capture these moments:
 
 ## One-Line Closing
 
-> Fluent Echo is a privacy-first Unity speech practice prototype with a local transcription pipeline, a transparent scoring estimate, and a portfolio-ready presentation flow.
+> Fluent Echo is a privacy-first Unity speech practice prototype with a local transcription pipeline, a transparent pronunciation estimate, and a portfolio-ready presentation flow.
