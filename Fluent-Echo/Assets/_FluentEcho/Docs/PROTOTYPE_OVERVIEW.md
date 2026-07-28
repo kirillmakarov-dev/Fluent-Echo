@@ -10,11 +10,13 @@ The project is intentionally built as a 2D interface inside a 3D URP project so 
 ## What Already Works
 
 - Ready scene: `Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`
+- First-launch onboarding that explains privacy and practice paths in two steps
 - Practice flow: say `The dog is big`
 - Local speech recognition through Whisper without sending audio to the cloud
 - Automatic pause detection and recognized-text output
 - Word coverage checking, accepted alternatives like `big|large`, and small recognition errors
 - Correct word highlighting, practice-score result flow, and retry support
+- Separate result breakdown for practice score, confidence, word match, rhythm, and focus next
 - Deterministic Demo Mode for UI verification without a microphone
 - ScriptableObject lesson configuration
 - Editor tests for the core matching logic
@@ -58,9 +60,11 @@ The expected result is the full edit-mode test set passing.
 
 The prototype uses a local heuristic practice score, not true phoneme quality scoring.
 Professional pronunciation, stress, and accent scoring should be added through a separate scoring service without changing the UI or presenter boundary.
+The UI is honest about that limitation by separating transcript, practice score, confidence, word match, rhythm, and focus-next feedback.
 
 ## Case Study
 
 For a portfolio explanation, start with `CASE_STUDY_BRIEF.md`.
-It gives a one-minute story, the core architecture, the limitations, and the next steps for a reviewer.
+It gives a one-minute story, the current architecture, the limitations, and the next steps for a reviewer.
 For a live walkthrough, open `PORTFOLIO_DEMO_SCRIPT.md`.
+For the higher-level system map, read `MB_ARCHITECTURE.md`.
