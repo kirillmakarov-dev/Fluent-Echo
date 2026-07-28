@@ -870,9 +870,17 @@ namespace FluentEcho.Presentation
 
             lines.Add(string.Empty);
             lines.Add(FluentEchoCopy.ResultNextStepHeader);
-            lines.Add(FluentEchoCopy.NextMissionPrompt);
+            lines.Add(BuildResultNextStepPrompt());
 
             return string.Join("\n", lines);
+        }
+
+        private string BuildResultNextStepPrompt()
+        {
+            if (HasNextExercise())
+                return FluentEchoCopy.NextMissionPrompt;
+
+            return FluentEchoCopy.FinalLessonPrompt;
         }
 
         private string BuildCategoryProgressSummary(int categoryIndex)
@@ -1056,6 +1064,12 @@ namespace FluentEcho.Presentation
 
             int categoryCount = exerciseCatalog.GetCategoryExerciseCount(currentCategoryIndex);
             return categoryCount > 0 ? categoryCount : exerciseCatalog.Count;
+        }
+
+        private bool HasNextExercise()
+        {
+            int exerciseCount = GetCurrentExerciseCount();
+            return exerciseCount > 0 && currentExerciseIndex < exerciseCount - 1;
         }
     }
 }

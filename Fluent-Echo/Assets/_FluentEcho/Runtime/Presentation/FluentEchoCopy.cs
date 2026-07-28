@@ -46,6 +46,7 @@ namespace FluentEcho.Presentation
         public const string ResultLessonRecapHeader = "Lesson recap:";
         public const string ResultNextStepHeader = "Next step:";
         public const string NextMissionPrompt = "Choose NEXT MISSION to continue, CLOSE to dismiss this result, or TRY AGAIN to improve the score.";
+        public const string FinalLessonPrompt = "Choose CLOSE to dismiss this result, or TRY AGAIN to improve the score.";
 
         public static string BuildProgressSummary(int totalWords)
         {
