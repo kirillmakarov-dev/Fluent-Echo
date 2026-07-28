@@ -46,6 +46,7 @@ namespace FluentEcho.Tests
             Assert.That(request.TargetWords, Is.Empty);
             Assert.That(request.AcceptedPhrases, Is.Empty);
             Assert.That(request.HasTranscript, Is.False);
+            Assert.That(request.HasMatchResult, Is.True);
         }
 
         [Test]
@@ -191,6 +192,21 @@ namespace FluentEcho.Tests
             Assert.That(result.HasRenderablePreview, Is.False);
             Assert.That(result.AlignmentScore, Is.EqualTo(0));
             Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
+        }
+
+        [Test]
+        public void DefaultRequest_MarksMatchResultAsMissing()
+        {
+            PhonemeAlignmentRequest request = new(
+                (SpeechExerciseSO) null,
+                "apple",
+                default(SpeechMatchResult),
+                1f,
+                new[] { "apple" },
+                new[] { "apple" });
+
+            Assert.That(request.HasMatchResult, Is.False);
+            Assert.That(request.HasTranscript, Is.True);
         }
 
         [Test]
