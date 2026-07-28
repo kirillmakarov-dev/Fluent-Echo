@@ -228,8 +228,6 @@ namespace FluentEcho.Bootstrap
                 {
                     bool shouldOpen = !settingsPanel.gameObject.activeSelf;
                     settingsPanel.gameObject.SetActive(shouldOpen);
-                    if (shouldOpen)
-                        settingsPanel.SetAsLastSibling();
                 });
             }
 
@@ -768,8 +766,6 @@ namespace FluentEcho.Bootstrap
             EnsurePanelAccent(existing, "Settings Accent", SettingsAccent);
             ApplyPanelFrame(existing, SettingsBorder);
             existing.gameObject.SetActive(false);
-
-            existing.SetAsLastSibling();
             return existing;
         }
 
@@ -791,13 +787,8 @@ namespace FluentEcho.Bootstrap
             }
 
             RectTransform existingRect = existing.GetComponent<RectTransform>();
-            if (existingRect != null)
-            {
-                existingRect.anchorMin = new Vector2(0.06f, 0.02f);
-                existingRect.anchorMax = new Vector2(0.94f, 0.38f);
-                existingRect.offsetMin = Vector2.zero;
-                existingRect.offsetMax = Vector2.zero;
-            }
+            if (existingRect == null)
+                return existing;
 
             Image image = existing.GetComponent<Image>();
             if (image != null)
@@ -808,7 +799,6 @@ namespace FluentEcho.Bootstrap
             existing.gameObject.SetActive(false);
 
             existing.name = "Result Panel";
-            existing.SetAsLastSibling();
             return existing;
         }
 
@@ -1024,8 +1014,6 @@ namespace FluentEcho.Bootstrap
 
                 bool shouldOpen = !settingsPanel.gameObject.activeSelf;
                 settingsPanel.gameObject.SetActive(shouldOpen);
-                if (shouldOpen)
-                    settingsPanel.SetAsLastSibling();
             });
         }
 

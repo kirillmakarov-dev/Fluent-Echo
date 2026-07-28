@@ -100,7 +100,6 @@ namespace FluentEcho.Views
         private void Awake()
         {
             EnsureCategoriesButton();
-            NormalizeTopNavigationLayout();
             micButton.onClick.AddListener(() => MicPressed?.Invoke());
             demoButton.onClick.AddListener(() => DemoPressed?.Invoke());
             retryButton.onClick.AddListener(() => RetryPressed?.Invoke());
@@ -201,15 +200,6 @@ namespace FluentEcho.Views
             if (button == null)
                 return;
 
-            RectTransform rect = button.GetComponent<RectTransform>();
-            if (rect != null)
-            {
-                rect.anchorMin = new Vector2(0.06f, 0.86f);
-                rect.anchorMax = new Vector2(0.24f, 0.93f);
-                rect.offsetMin = Vector2.zero;
-                rect.offsetMax = Vector2.zero;
-            }
-
             TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
             if (label != null)
             {
@@ -217,29 +207,6 @@ namespace FluentEcho.Views
                 label.fontSize = 14;
                 label.alignment = TextAlignmentOptions.Center;
             }
-        }
-
-        private void NormalizeTopNavigationLayout()
-        {
-            SetAnchors(categoriesButton != null ? categoriesButton.GetComponent<RectTransform>() : null,
-                new Vector2(0.06f, 0.86f), new Vector2(0.24f, 0.93f));
-            SetAnchors(previousButton != null ? previousButton.GetComponent<RectTransform>() : null,
-                new Vector2(0.25f, 0.86f), new Vector2(0.34f, 0.93f));
-            SetAnchors(lessonDropdown != null ? lessonDropdown.GetComponent<RectTransform>() : null,
-                new Vector2(0.35f, 0.86f), new Vector2(0.78f, 0.93f));
-            SetAnchors(nextButton != null ? nextButton.GetComponent<RectTransform>() : null,
-                new Vector2(0.80f, 0.86f), new Vector2(0.94f, 0.93f));
-        }
-
-        private static void SetAnchors(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax)
-        {
-            if (rect == null)
-                return;
-
-            rect.anchorMin = anchorMin;
-            rect.anchorMax = anchorMax;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
         }
 
         public void Build(string prompt, string[] targetWords)
@@ -331,8 +298,6 @@ namespace FluentEcho.Views
                 return;
 
             settingsPanel.gameObject.SetActive(visible);
-            if (visible)
-                settingsPanel.SetAsLastSibling();
         }
 
         public void ShowNotice(string title, string body, string primaryActionLabel)
@@ -357,10 +322,6 @@ namespace FluentEcho.Views
                 noticePanelGroup.interactable = true;
                 noticePanelGroup.blocksRaycasts = true;
             }
-
-            RectTransform rect = noticePanel.GetComponent<RectTransform>();
-            if (rect != null)
-                rect.SetAsLastSibling();
         }
 
         public void HideNotice()
