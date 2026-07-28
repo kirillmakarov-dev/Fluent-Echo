@@ -91,6 +91,7 @@ Infrastructure and scoring:
 - `IPronunciationScoringService` and `HeuristicPronunciationScoringService` compute the current local pronunciation estimate.
 - `IPhonemeAlignmentService` and `PhonemeAlignmentResult` define the future phoneme-aware scoring boundary without changing the current heuristic path.
 - `NoOpPhonemeAlignmentService` is the explicit default so the app keeps a stable fallback path even when phoneme-aware scoring is not wired.
+- `InspectorPhonemeAlignmentService` can be enabled from the bootstrap inspector to preview alignment-style feedback without claiming real phoneme scoring.
 
 Important note:
 
@@ -100,6 +101,7 @@ Important note:
 - the future phoneme-aware path is now modeled as a separate additive contract instead of a rewrite of Whisper.
 - the current build still uses a no-op alignment default until a real phoneme-aware scorer is introduced.
 - the phoneme roadmap note stays in the initial empty-state copy, while post-attempt result details only show actual alignment evidence.
+- the inspector can toggle a preview alignment mode for demos, but the preview remains clearly separate from real phoneme assessment.
 
 ### `Runtime/Presentation`
 

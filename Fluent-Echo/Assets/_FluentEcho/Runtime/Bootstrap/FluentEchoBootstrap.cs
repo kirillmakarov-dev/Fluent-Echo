@@ -43,6 +43,7 @@ namespace FluentEcho.Bootstrap
         [SerializeField] private string selectedExercisePrefsKey = "FluentEcho.SelectedExerciseIndex";
         [SerializeField] private bool repairSceneUiOnStart;
         [SerializeField] private bool useMockByDefault;
+        [SerializeField] private bool enablePhonemeAlignmentPreview;
         [SerializeField] private AudioSource audioSource;
 
         private FluentEchoPresenter presenter;
@@ -100,7 +101,7 @@ namespace FluentEcho.Bootstrap
                 mockService,
                 useMockByDefault,
                 PlayReference,
-                NoOpPhonemeAlignmentService.Instance,
+                PhonemeAlignmentServiceFactory.Create(enablePhonemeAlignmentPreview),
                 ResolveSelectedCategoryIndex(),
                 ResolveSelectedExerciseIndex(),
                 PersistPracticeSelection);

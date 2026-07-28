@@ -23,6 +23,67 @@ namespace FluentEcho.Services
         public PhonemeAlignmentResult Align(PhonemeAlignmentRequest request) => PhonemeAlignmentResult.Unavailable;
     }
 
+    public static class PhonemeAlignmentServiceFactory
+    {
+        public static IPhonemeAlignmentService Create(bool enablePreview)
+        {
+            return enablePreview
+                ? new InspectorPhonemeAlignmentService()
+                : NoOpPhonemeAlignmentService.Instance;
+        }
+    }
+
+    public sealed class InspectorPhonemeAlignmentService : IPhonemeAlignmentService
+    {
+        public PhonemeAlignmentResult Align(PhonemeAlignmentRequest request)
+        {
+            if (request == null || !request.HasTranscript || request.TargetWords.Count == 0)
+                return PhonemeAlignmentResult.Unavailable;
+
+            int expectedCount = request.TargetWords.Count;
+            int matchedCount = request.MatchResult.MatchedWords != null
+                ? CountMatchedWords(request.MatchResult.MatchedWords)
+                : 0;
+            int missingCount = Mathf.Max(0, expectedCount - matchedCount);
+            int previewScore = Mathf.Clamp(Mathf.RoundToInt((matchedCount / (float) expectedCount) * 100f), 0, 100);
+            string confidenceBand = previewScore >= 75 ? "high" : previewScore >= 45 ? "medium" : "low";
+            string evidenceText = $"Preview mode: {matchedCount}/{expectedCount} target words matched from the transcript.";
+            string summaryText = $"Phoneme alignment preview | {previewScore}/100 | {confidenceBand.ToUpperInvariant()}";
+            string feedbackText = missingCount > 0
+                ? $"Preview only: focus on the {missingCount} missing target word{PluralSuffix(missingCount)}."
+                : "Preview only: the current transcript is clean enough to inspect alignment flow.";
+
+            return new PhonemeAlignmentResult(
+                true,
+                previewScore,
+                confidenceBand,
+                summaryText,
+                feedbackText,
+                evidenceText,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
+                Array.Empty<string>(),
+                request.RecordingSeconds);
+        }
+
+        private static int CountMatchedWords(bool[] matches)
+        {
+            if (matches == null || matches.Length == 0)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < matches.Length; i++)
+            {
+                if (matches[i])
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static string PluralSuffix(int count) => count == 1 ? string.Empty : "s";
+    }
+
     public sealed class PhonemeAlignmentRequest
     {
         public PhonemeAlignmentRequest(
@@ -101,7 +162,8 @@ namespace FluentEcho.Services
         public float RecordingSeconds { get; }
 
         public bool HasEvidence =>
-            MatchedPhonemes.Count > 0
+            !string.IsNullOrWhiteSpace(EvidenceText)
+            || MatchedPhonemes.Count > 0
             || MissingPhonemes.Count > 0
             || WeakPhonemes.Count > 0;
     }

@@ -64,5 +64,43 @@ namespace FluentEcho.Tests
             Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
             Assert.That(result.HasEvidence, Is.False);
         }
+
+        [Test]
+        public void Factory_ReturnsPreviewServiceWhenEnabled()
+        {
+            IPhonemeAlignmentService service = PhonemeAlignmentServiceFactory.Create(true);
+
+            Assert.That(service, Is.TypeOf<InspectorPhonemeAlignmentService>());
+        }
+
+        [Test]
+        public void Factory_ReturnsNoOpServiceWhenDisabled()
+        {
+            IPhonemeAlignmentService service = PhonemeAlignmentServiceFactory.Create(false);
+
+            Assert.That(service, Is.SameAs(NoOpPhonemeAlignmentService.Instance));
+        }
+
+        [Test]
+        public void PreviewService_ReturnsInspectableAlignmentResult()
+        {
+            var service = new InspectorPhonemeAlignmentService();
+            PhonemeAlignmentRequest request = new(
+                (SpeechExerciseSO) null,
+                "apple",
+                new SpeechMatchResult(true, new[] { true }),
+                2f,
+                new[] { "apple" },
+                new[] { "apple" });
+
+            PhonemeAlignmentResult result = service.Align(request);
+
+            Assert.That(result.IsAvailable, Is.True);
+            Assert.That(result.AlignmentScore, Is.GreaterThan(0));
+            Assert.That(result.SummaryText, Does.Contain("preview"));
+            Assert.That(result.EvidenceText, Does.Contain("Preview mode"));
+            Assert.That(result.FeedbackText, Does.Contain("Preview only"));
+            Assert.That(result.HasEvidence, Is.True);
+        }
     }
 }
