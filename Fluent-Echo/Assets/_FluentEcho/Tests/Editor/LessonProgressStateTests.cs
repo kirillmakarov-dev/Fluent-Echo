@@ -89,8 +89,11 @@ namespace FluentEcho.Tests
                 LessonProgressRepository.Save(state);
                 LessonProgressState reloaded = LessonProgressRepository.Load(key, 4);
 
+                Assert.That(reloaded.GetSummaryText(), Does.Contain("Match quality: 2 exact | 2 approximate | 0 missed"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Match quality: 2 exact | 2 approximate | 0 missed"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Approximate matches"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Best Match quality: 2 exact | 2 approximate | 0 missed"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("Last Match quality: 2 exact | 2 approximate | 0 missed"));
                 Assert.That(reloaded.AttemptHistory, Has.Count.EqualTo(1));
                 Assert.That(reloaded.AttemptHistory[0].ExactMatchedWords, Is.EqualTo(2));
                 Assert.That(reloaded.AttemptHistory[0].ApproximateMatchedWords, Is.EqualTo(2));

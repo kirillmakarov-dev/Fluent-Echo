@@ -172,6 +172,9 @@ namespace FluentEcho.Domain
         [SerializeField] private string bestPronunciationConfidenceBand = string.Empty;
         [SerializeField] private int bestPronunciationConfidenceScore;
         [SerializeField] private string bestPronunciationConfidenceReason = string.Empty;
+        [SerializeField] private int bestExactMatchedWords;
+        [SerializeField] private int bestApproximateMatchedWords;
+        [SerializeField] private int bestMissedWords;
         [SerializeField] private string lastTranscript = string.Empty;
         [SerializeField] private int lastPronunciationScore;
         [SerializeField] private string lastPronunciationBand = string.Empty;
@@ -179,6 +182,9 @@ namespace FluentEcho.Domain
         [SerializeField] private string lastPronunciationConfidenceBand = string.Empty;
         [SerializeField] private int lastPronunciationConfidenceScore;
         [SerializeField] private string lastPronunciationConfidenceReason = string.Empty;
+        [SerializeField] private int lastExactMatchedWords;
+        [SerializeField] private int lastApproximateMatchedWords;
+        [SerializeField] private int lastMissedWords;
         [SerializeField] private string lastUpdatedUtc = string.Empty;
         [SerializeField] private List<LessonAttemptRecord> attemptHistory = new();
 
@@ -194,6 +200,7 @@ namespace FluentEcho.Domain
         public string BestPronunciationConfidenceBand => bestPronunciationConfidenceBand;
         public int BestPronunciationConfidenceScore => bestPronunciationConfidenceScore;
         public string BestPronunciationConfidenceReason => bestPronunciationConfidenceReason;
+        public string BestMatchQualitySummary => BuildMatchQualitySummary(bestExactMatchedWords, bestApproximateMatchedWords, bestMissedWords);
         public string LastTranscript => lastTranscript;
         public int LastPronunciationScore => lastPronunciationScore;
         public string LastPronunciationBand => lastPronunciationBand;
@@ -201,6 +208,7 @@ namespace FluentEcho.Domain
         public string LastPronunciationConfidenceBand => lastPronunciationConfidenceBand;
         public int LastPronunciationConfidenceScore => lastPronunciationConfidenceScore;
         public string LastPronunciationConfidenceReason => lastPronunciationConfidenceReason;
+        public string LastMatchQualitySummary => BuildMatchQualitySummary(lastExactMatchedWords, lastApproximateMatchedWords, lastMissedWords);
         public string LastUpdatedUtc => lastUpdatedUtc;
         public IReadOnlyList<LessonAttemptRecord> AttemptHistory => attemptHistory;
 
@@ -248,6 +256,9 @@ namespace FluentEcho.Domain
                 bestPronunciationConfidenceBand = lastPronunciationConfidenceBand;
                 bestPronunciationConfidenceScore = lastPronunciationConfidenceScore;
                 bestPronunciationConfidenceReason = lastPronunciationConfidenceReason;
+                bestExactMatchedWords = exactMatchedWordCount;
+                bestApproximateMatchedWords = approximateMatchedWordCount;
+                bestMissedWords = missedWordCount;
             }
 
             if (result.IsComplete)
@@ -263,7 +274,13 @@ namespace FluentEcho.Domain
                 pronunciationSummary,
                 confidenceBand,
                 confidenceScore,
-                confidenceReason);
+                confidenceReason,
+                exactMatchedWordCount,
+                approximateMatchedWordCount,
+                missedWordCount);
+            lastExactMatchedWords = exactMatchedWordCount;
+            lastApproximateMatchedWords = approximateMatchedWordCount;
+            lastMissedWords = missedWordCount;
             lastUpdatedUtc = DateTime.UtcNow.ToString("O");
         }
 
@@ -285,9 +302,12 @@ namespace FluentEcho.Domain
             string confidence = !string.IsNullOrWhiteSpace(bestPronunciationConfidenceBand)
                 ? $" | confidence {bestPronunciationConfidenceBand}"
                 : string.Empty;
+            string quality = !string.IsNullOrWhiteSpace(BestMatchQualitySummary)
+                ? $" | {BestMatchQualitySummary}"
+                : string.Empty;
             string attemptsText = $"{attempts} attempts";
             string successText = successfulAttempts > 0 ? $" | cleared {successfulAttempts}" : string.Empty;
-            return $"Progress: best {completion}{score}{confidence} | {attemptsText}{successText}";
+            return $"Progress: best {completion}{score}{confidence}{quality} | {attemptsText}{successText}";
         }
 
         public string GetHistoryText(int maxEntries = 3)
@@ -439,6 +459,8 @@ namespace FluentEcho.Domain
 
             if (!string.IsNullOrWhiteSpace(bestPronunciationConfidenceReason))
                 parts.Add($"Best reason: {bestPronunciationConfidenceReason}");
+            if (!string.IsNullOrWhiteSpace(BestMatchQualitySummary))
+                parts.Add($"Best {BestMatchQualitySummary}");
 
             string lastText = !string.IsNullOrWhiteSpace(lastPronunciationSummary)
                 ? $"Last attempt: {lastPronunciationSummary}"
@@ -452,8 +474,18 @@ namespace FluentEcho.Domain
 
             if (!string.IsNullOrWhiteSpace(lastPronunciationConfidenceReason))
                 parts.Add($"Last reason: {lastPronunciationConfidenceReason}");
+            if (!string.IsNullOrWhiteSpace(LastMatchQualitySummary))
+                parts.Add($"Last {LastMatchQualitySummary}");
 
             return string.Join(" | ", parts);
+        }
+
+        private static string BuildMatchQualitySummary(int exactMatchedWords, int approximateMatchedWords, int missedWords)
+        {
+            if (exactMatchedWords <= 0 && approximateMatchedWords <= 0 && missedWords <= 0)
+                return string.Empty;
+
+            return $"Match quality: {exactMatchedWords} exact | {approximateMatchedWords} approximate | {missedWords} missed";
         }
     }
 }
