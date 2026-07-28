@@ -4,7 +4,7 @@ namespace FluentEcho.Presentation
     {
         public const string FirstProgressSummary = "Progress: ready for first recording";
         public const string FirstLocalEstimateText = "Your first practice score will appear here.";
-        public const string FirstCoachingTipText = "Your first coaching tip will appear here.";
+        public const string FirstCoachingTipText = "Your first focus next step will appear here.";
         public const string FirstPronunciationSummary = "PRACTICE SCORE | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstConfidenceSummary = "CONFIDENCE | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstWordMatchSummary = "WORD MATCH | READY FOR YOUR FIRST ATTEMPT";

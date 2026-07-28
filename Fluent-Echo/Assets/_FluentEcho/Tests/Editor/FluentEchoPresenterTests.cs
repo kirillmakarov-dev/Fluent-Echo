@@ -564,7 +564,7 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastProgressDetails, Does.Contain("Lesson progress:"));
                     Assert.That(view.LastProgressDetails, Does.Contain(saved.GetSummaryText()));
                     Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.NextMissionPrompt));
-                    Assert.That(view.LastProgressDetails, Does.Contain("Coach tip:"));
+                    Assert.That(view.LastProgressDetails, Does.Contain("Focus next:"));
                     Assert.That(view.LastPronunciationSummary, Does.Contain("Pronunciation estimate"));
                     Assert.That(view.LastPronunciationConfidence, Does.Contain("High").Or.Contain("Medium").Or.Contain("Low"));
                     Assert.That(view.LastPronunciationWordMatch, Does.Contain("WORD MATCH"));

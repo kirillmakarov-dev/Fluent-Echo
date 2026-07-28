@@ -790,7 +790,7 @@ namespace FluentEcho.Presentation
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
                 {
                     lines.Add(string.Empty);
-                    lines.Add("Coach tip:");
+                    lines.Add("Focus next:");
                     lines.Add(lastPronunciationScore.FeedbackText);
                 }
             }
@@ -879,7 +879,7 @@ namespace FluentEcho.Presentation
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
                 lines.Add(wordBreakdown);
 
-            lines.Add("Coach tip:");
+            lines.Add("Focus next:");
             lines.Add(focus);
             if (!string.IsNullOrWhiteSpace(score.FeedbackText))
                 lines.Add(score.FeedbackText);

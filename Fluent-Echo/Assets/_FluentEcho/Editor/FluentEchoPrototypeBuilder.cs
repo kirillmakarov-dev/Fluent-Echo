@@ -397,7 +397,7 @@ namespace FluentEcho.Editor
             TextMeshProUGUI pronunciationFeedback = EnsureText(
                 resultPanel,
                 "Pronunciation Feedback",
-                "Your coach tip will appear here.",
+                "Your focus next step will appear here.",
                 18,
                 FontStyles.Italic,
                 Ink,
@@ -772,7 +772,7 @@ namespace FluentEcho.Editor
                 success.rectTransform, "Pronunciation Rhythm", FluentEchoCopy.FirstRhythmSummary, 12, FontStyles.Bold, MintInk,
                 new Vector2(0.50f, 0.26f), new Vector2(0.94f, 0.33f), TextAlignmentOptions.Right);
             TextMeshProUGUI pronunciationFeedback = CreateText(
-                success.rectTransform, "Pronunciation Feedback", "Your coach tip will appear here.", 18, FontStyles.Italic, Ink,
+                success.rectTransform, "Pronunciation Feedback", "Your focus next step will appear here.", 18, FontStyles.Italic, Ink,
                 new Vector2(0.06f, 0.19f), new Vector2(0.94f, 0.33f), TextAlignmentOptions.Left);
             Button resultTryAgainButton = CreateButton(
                 success.rectTransform, "Result Try Again Button", "TRY AGAIN",
