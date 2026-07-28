@@ -487,125 +487,60 @@ namespace FluentEcho.Views
 
             if (noticePanel == null)
             {
-                GameObject panelObject = new("Notice Panel", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
-                panelObject.transform.SetParent(transform.root, false);
-                RectTransform panelRect = panelObject.GetComponent<RectTransform>();
-                panelRect.anchorMin = Vector2.zero;
-                panelRect.anchorMax = Vector2.one;
-                panelRect.offsetMin = Vector2.zero;
-                panelRect.offsetMax = Vector2.zero;
-
-                Image backdrop = panelObject.GetComponent<Image>();
-                backdrop.color = new Color(0.02f, 0.05f, 0.06f, 0.72f);
-
-                noticePanel = panelObject;
+                Debug.LogWarning("[FluentEchoView] Notice Panel is not assigned in the scene.", this);
+                return;
             }
 
             noticePanelGroup = noticePanel.GetComponent<CanvasGroup>();
             if (noticePanelGroup == null)
-                noticePanelGroup = noticePanel.AddComponent<CanvasGroup>();
+            {
+                Debug.LogWarning("[FluentEchoView] Notice Panel is missing a CanvasGroup.", this);
+                return;
+            }
 
             Transform card = noticePanel.transform.Find("Notice Card");
             RectTransform cardRect = card != null ? card.GetComponent<RectTransform>() : null;
             if (cardRect == null)
             {
-                GameObject cardObject = new("Notice Card", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
-                cardObject.transform.SetParent(noticePanel.transform, false);
-                cardRect = cardObject.GetComponent<RectTransform>();
-                cardRect.anchorMin = new Vector2(0.5f, 0.5f);
-                cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-                cardRect.sizeDelta = new Vector2(720f, 300f);
-                cardRect.anchoredPosition = Vector2.zero;
-
-                Image cardImage = cardObject.GetComponent<Image>();
-                cardImage.color = NoticeFill;
-
-                CanvasGroup cardGroup = cardObject.GetComponent<CanvasGroup>();
-                cardGroup.interactable = true;
-                cardGroup.blocksRaycasts = true;
-
-                Outline outline = cardObject.AddComponent<Outline>();
-                outline.effectColor = NoticeBorder;
-                outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-                GameObject accentObject = new("Notice Accent", typeof(RectTransform), typeof(Image));
-                accentObject.transform.SetParent(cardObject.transform, false);
-                RectTransform accentRect = accentObject.GetComponent<RectTransform>();
-                accentRect.anchorMin = new Vector2(0f, 0.92f);
-                accentRect.anchorMax = new Vector2(1f, 1f);
-                accentRect.offsetMin = Vector2.zero;
-                accentRect.offsetMax = Vector2.zero;
-                accentObject.GetComponent<Image>().color = NoticeAccent;
-
-                noticeTitleLabel = CreateNoticeText(
-                    cardObject.transform,
-                    "Notice Title",
-                    "Practice English privately",
-                    24,
-                    FontStyles.Bold,
-                    new Color(0.96f, 0.94f, 0.88f, 1f),
-                    new Vector2(0.08f, 0.62f),
-                    new Vector2(0.92f, 0.84f),
-                    TextAlignmentOptions.Center);
-
-                noticeBodyLabel = CreateNoticeText(
-                    cardObject.transform,
-                    "Notice Body",
-                    "Fluent Echo listens on this device and uses a local speech model.",
-                    17,
-                    FontStyles.Normal,
-                    new Color(0.88f, 0.91f, 0.89f, 1f),
-                    new Vector2(0.10f, 0.32f),
-                    new Vector2(0.90f, 0.62f),
-                    TextAlignmentOptions.Center);
-
-                noticeActionButton = CreateNoticeButton(
-                    cardObject.transform,
-                    "Notice Action Button",
-                    "CONTINUE",
-                    new Vector2(0.34f, 0.10f),
-                    new Vector2(0.66f, 0.26f),
-                    NoticeActionFill,
-                    NoticeActionText);
-
-                noticeActionButton.onClick.RemoveAllListeners();
-                noticeActionButton.onClick.AddListener(() => NoticeConfirmed?.Invoke());
-                noticeActionLabel = noticeActionButton.GetComponentInChildren<TextMeshProUGUI>(true);
+                Debug.LogWarning("[FluentEchoView] Notice Card is not assigned in the scene.", this);
+                return;
             }
-            else
+
+            Image image = cardRect.GetComponent<Image>();
+            if (image != null)
+                image.color = NoticeFill;
+
+            Outline outline = cardRect.GetComponent<Outline>();
+            if (outline != null)
             {
-                Image image = cardRect.GetComponent<Image>();
-                if (image != null)
-                    image.color = NoticeFill;
-
-                Outline outline = cardRect.GetComponent<Outline>();
-                if (outline == null)
-                    outline = cardRect.gameObject.AddComponent<Outline>();
-
                 outline.effectColor = NoticeBorder;
                 outline.effectDistance = new Vector2(1.5f, -1.5f);
-                CanvasGroup cardGroup = cardRect.GetComponent<CanvasGroup>();
-                if (cardGroup == null)
-                    cardGroup = cardRect.gameObject.AddComponent<CanvasGroup>();
+            }
 
+            CanvasGroup cardGroup = cardRect.GetComponent<CanvasGroup>();
+            if (cardGroup != null)
+            {
                 cardGroup.interactable = true;
                 cardGroup.blocksRaycasts = true;
-
-                Transform accent = cardRect.Find("Notice Accent");
-                if (accent != null && accent.TryGetComponent(out Image accentImage))
-                    accentImage.color = NoticeAccent;
-
-                noticeTitleLabel = noticeTitleLabel != null ? noticeTitleLabel : cardRect.Find("Notice Title")?.GetComponent<TextMeshProUGUI>();
-                noticeBodyLabel = noticeBodyLabel != null ? noticeBodyLabel : cardRect.Find("Notice Body")?.GetComponent<TextMeshProUGUI>();
-                noticeActionButton = noticeActionButton != null ? noticeActionButton : cardRect.Find("Notice Action Button")?.GetComponent<Button>();
-                noticeActionLabel = noticeActionLabel != null ? noticeActionLabel : noticeActionButton?.GetComponentInChildren<TextMeshProUGUI>(true);
-
-                if (noticeActionButton != null)
-                {
-                    noticeActionButton.onClick.RemoveAllListeners();
-                    noticeActionButton.onClick.AddListener(() => NoticeConfirmed?.Invoke());
-                }
             }
+
+            Transform accent = cardRect.Find("Notice Accent");
+            if (accent != null && accent.TryGetComponent(out Image accentImage))
+                accentImage.color = NoticeAccent;
+
+            noticeTitleLabel = noticeTitleLabel != null ? noticeTitleLabel : cardRect.Find("Notice Title")?.GetComponent<TextMeshProUGUI>();
+            noticeBodyLabel = noticeBodyLabel != null ? noticeBodyLabel : cardRect.Find("Notice Body")?.GetComponent<TextMeshProUGUI>();
+            noticeActionButton = noticeActionButton != null ? noticeActionButton : cardRect.Find("Notice Action Button")?.GetComponent<Button>();
+            noticeActionLabel = noticeActionLabel != null ? noticeActionLabel : noticeActionButton?.GetComponentInChildren<TextMeshProUGUI>(true);
+
+            if (noticeTitleLabel == null || noticeBodyLabel == null || noticeActionButton == null || noticeActionLabel == null)
+            {
+                Debug.LogWarning("[FluentEchoView] Notice Panel is missing one or more child UI objects.", this);
+                return;
+            }
+
+            noticeActionButton.onClick.RemoveAllListeners();
+            noticeActionButton.onClick.AddListener(() => NoticeConfirmed?.Invoke());
 
             HideNotice();
         }
