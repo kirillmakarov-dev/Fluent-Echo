@@ -418,6 +418,67 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void BoundaryNavigation_StaysOnFirstAndLastLessons()
+        {
+            SpeechExerciseSO first = CreateExercise("word_01", "Say the first word.", "lesson_test_word_boundary_01");
+            SpeechExerciseSO second = CreateExercise("word_02", "Say the second word.", "lesson_test_word_boundary_02");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { first, second });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            int persistedCategory = -1;
+            int persistedExercise = -1;
+            var presenter = new FluentEchoPresenter(
+                first,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                0,
+                0,
+                (categoryIndex, exerciseIndex) =>
+                {
+                    persistedCategory = categoryIndex;
+                    persistedExercise = exerciseIndex;
+                });
+
+            try
+            {
+                presenter.Initialize();
+                string firstPrompt = view.LastPrompt;
+
+                view.RaisePreviousPressed();
+
+                Assert.That(view.LastPrompt, Is.EqualTo(firstPrompt));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(1));
+                Assert.That(persistedCategory, Is.EqualTo(-1));
+                Assert.That(persistedExercise, Is.EqualTo(-1));
+
+                view.RaiseNextPressed();
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the second word."));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(2));
+                Assert.That(persistedCategory, Is.EqualTo(0));
+                Assert.That(persistedExercise, Is.EqualTo(1));
+
+                string secondPrompt = view.LastPrompt;
+                view.RaiseNextPressed();
+
+                Assert.That(view.LastPrompt, Is.EqualTo(secondPrompt));
+                Assert.That(service.ConfigureCalls, Is.EqualTo(2));
+                Assert.That(persistedCategory, Is.EqualTo(0));
+                Assert.That(persistedExercise, Is.EqualTo(1));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(first);
+                UnityEngine.Object.DestroyImmediate(second);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void CategorySelection_SwitchesCategoryAndResetsExerciseIndex()
         {
             SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_word_06");
