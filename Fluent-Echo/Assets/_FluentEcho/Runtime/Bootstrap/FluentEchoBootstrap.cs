@@ -28,6 +28,17 @@ namespace FluentEcho.Bootstrap
         [SerializeField] private MockSpeechRecognitionService mockService;
         [SerializeField] private Dropdown exerciseDropdown;
         [SerializeField] private Dropdown whisperProfileDropdown;
+        [SerializeField] private GameObject settingsPanelObject;
+        [SerializeField] private Button settingsToggleButton;
+        [SerializeField] private Button settingsCloseButton;
+        [SerializeField] private GameObject resultPanelObject;
+        [SerializeField] private Button resultCloseButton;
+        [SerializeField] private TextMeshProUGUI microphoneValueLabel;
+        [SerializeField] private TextMeshProUGUI whisperProfileValueLabel;
+        [SerializeField] private TextMeshProUGUI progressLabel;
+        [SerializeField] private TextMeshProUGUI progressDetailsLabel;
+        [SerializeField] private TextMeshProUGUI pronunciationSummaryLabel;
+        [SerializeField] private TextMeshProUGUI pronunciationFeedbackLabel;
         [SerializeField] private string selectedCategoryPrefsKey = "FluentEcho.SelectedCategoryIndex";
         [SerializeField] private string selectedExercisePrefsKey = "FluentEcho.SelectedExerciseIndex";
         [SerializeField] private bool repairSceneUiOnStart;
@@ -130,9 +141,6 @@ namespace FluentEcho.Bootstrap
 
             Dropdown dropdown = microphone.microphoneDropdown;
             if (dropdown == null)
-                dropdown = FindDeepTransform(view.transform.root, "Microphone Dropdown")?.GetComponent<Dropdown>();
-
-            if (dropdown == null)
             {
                 Debug.LogWarning(
                     "[FluentEchoBootstrap] Scene-owned Microphone Dropdown is not assigned.",
@@ -141,10 +149,8 @@ namespace FluentEcho.Bootstrap
             }
 
             microphone.microphoneDropdown = dropdown;
-            TextMeshProUGUI valueLabel = FindDeepTransform(view.transform.root, "Microphone Value")
-                ?.GetComponent<TextMeshProUGUI>();
-            PopulateDropdown(microphone, dropdown, valueLabel);
-            UpdateMicrophoneValueLabel(microphone, valueLabel);
+            PopulateDropdown(microphone, dropdown, microphoneValueLabel);
+            UpdateMicrophoneValueLabel(microphone, microphoneValueLabel);
         }
 
         private void BindSceneWhisperProfileDropdown()
@@ -153,9 +159,6 @@ namespace FluentEcho.Bootstrap
                 return;
 
             Dropdown dropdown = whisperProfileDropdown;
-            if (dropdown == null)
-                dropdown = FindDeepTransform(view.transform.root, "Whisper Profile Dropdown")?.GetComponent<Dropdown>();
-
             if (dropdown == null)
             {
                 Debug.LogWarning(
@@ -166,8 +169,6 @@ namespace FluentEcho.Bootstrap
 
             whisperProfileDropdown = dropdown;
             WhisperQualityProfile currentProfile = whisperService.CurrentQualityProfile;
-            TextMeshProUGUI valueLabel = FindDeepTransform(view.transform.root, "Whisper Profile Value")
-                ?.GetComponent<TextMeshProUGUI>();
 
             var options = new List<Dropdown.OptionData>();
             foreach (string name in Enum.GetNames(typeof(WhisperQualityProfile)))
@@ -185,8 +186,8 @@ namespace FluentEcho.Bootstrap
                 };
 
                 whisperService.SetQualityProfile(profile);
-                if (valueLabel != null)
-                    valueLabel.text = profile.ToString().ToUpperInvariant();
+                if (whisperProfileValueLabel != null)
+                    whisperProfileValueLabel.text = profile.ToString().ToUpperInvariant();
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             });
 
@@ -194,8 +195,8 @@ namespace FluentEcho.Bootstrap
             if (dropdown.captionText != null)
                 dropdown.captionText.text = currentProfile.ToString().ToUpperInvariant();
 
-            if (valueLabel != null)
-                valueLabel.text = currentProfile.ToString().ToUpperInvariant();
+            if (whisperProfileValueLabel != null)
+                whisperProfileValueLabel.text = currentProfile.ToString().ToUpperInvariant();
         }
 
         private void WireExistingSettingsPanel()
@@ -203,28 +204,23 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
-            Button toggleButton = FindDeepTransform(view.transform.root, "Settings Toggle Button")
-                ?.GetComponent<Button>();
-            Button closeButton = settingsPanel != null
-                ? settingsPanel.Find("Settings Close Button")?.GetComponent<Button>()
-                : null;
-
-            if (toggleButton != null && settingsPanel != null)
+            if (settingsPanelObject == null || settingsToggleButton == null || settingsCloseButton == null)
             {
-                toggleButton.onClick.RemoveAllListeners();
-                toggleButton.onClick.AddListener(() =>
-                {
-                    bool shouldOpen = !settingsPanel.gameObject.activeSelf;
-                    settingsPanel.gameObject.SetActive(shouldOpen);
-                });
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Settings panel, toggle button, or close button is not assigned.",
+                    this);
+                return;
             }
 
-            if (closeButton != null && settingsPanel != null)
+            settingsToggleButton.onClick.RemoveAllListeners();
+            settingsToggleButton.onClick.AddListener(() =>
             {
-                closeButton.onClick.RemoveAllListeners();
-                closeButton.onClick.AddListener(() => settingsPanel.gameObject.SetActive(false));
-            }
+                bool shouldOpen = !settingsPanelObject.activeSelf;
+                settingsPanelObject.SetActive(shouldOpen);
+            });
+
+            settingsCloseButton.onClick.RemoveAllListeners();
+            settingsCloseButton.onClick.AddListener(() => settingsPanelObject.SetActive(false));
         }
 
         private void WireExistingResultPanel()
@@ -232,15 +228,16 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform resultPanel = FindDeepTransform(view.transform.root, "Result Panel");
-            Button closeButton = resultPanel != null
-                ? resultPanel.Find("Result Close Button")?.GetComponent<Button>()
-                : null;
-            if (closeButton == null || resultPanel == null)
+            if (resultPanelObject == null || resultCloseButton == null)
+            {
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Result panel or close button is not assigned.",
+                    this);
                 return;
+            }
 
-            closeButton.onClick.RemoveAllListeners();
-            closeButton.onClick.AddListener(() => resultPanel.gameObject.SetActive(false));
+            resultCloseButton.onClick.RemoveAllListeners();
+            resultCloseButton.onClick.AddListener(() => resultPanelObject.SetActive(false));
         }
 
         private void EnsureMicrophoneDropdown()
@@ -249,18 +246,7 @@ namespace FluentEcho.Bootstrap
                 return;
 
             MicrophoneRecord microphone = whisperService.GetComponent<MicrophoneRecord>();
-            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
-            if (settingsPanel == null)
-            {
-                Debug.LogWarning(
-                    "[FluentEchoBootstrap] Scene-owned Settings Panel is not assigned.",
-                    this);
-                return;
-            }
-
             Dropdown dropdown = microphone?.microphoneDropdown;
-            if (dropdown == null)
-                dropdown = FindDeepTransform(view.transform.root, "Microphone Dropdown")?.GetComponent<Dropdown>();
 
             if (dropdown == null)
             {
@@ -274,7 +260,7 @@ namespace FluentEcho.Bootstrap
                 microphone.microphoneDropdown = dropdown;
 
             StyleDropdown(dropdown, SettingsFill);
-            PopulateDropdown(microphone, dropdown, null);
+            PopulateDropdown(microphone, dropdown, microphoneValueLabel);
         }
 
         private void EnsureExerciseDropdown()
@@ -285,17 +271,10 @@ namespace FluentEcho.Bootstrap
             Dropdown dropdown = exerciseDropdown;
             if (dropdown == null)
             {
-                Transform lessonDropdown = FindDeepTransform(view.transform.root, "Lesson Dropdown");
-                dropdown = lessonDropdown != null ? lessonDropdown.GetComponent<Dropdown>() : null;
-                if (dropdown == null)
-                {
-                    Debug.LogWarning(
-                        "[FluentEchoBootstrap] Scene-owned Lesson Dropdown is not assigned.",
-                        this);
-                    return;
-                }
-
-                exerciseDropdown = dropdown;
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Scene-owned Lesson Dropdown is not assigned.",
+                    this);
+                return;
             }
 
             string[] names = exerciseCatalog.GetDisplayNames();
@@ -315,18 +294,7 @@ namespace FluentEcho.Bootstrap
             if (whisperService == null)
                 return;
 
-            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
-            if (settingsPanel == null)
-            {
-                Debug.LogWarning(
-                    "[FluentEchoBootstrap] Scene-owned Settings Panel is not assigned.",
-                    this);
-                return;
-            }
-
             Dropdown dropdown = whisperProfileDropdown;
-            if (dropdown == null)
-                dropdown = FindDeepTransform(view.transform.root, "Whisper Profile Dropdown")?.GetComponent<Dropdown>();
 
             if (dropdown == null)
             {
@@ -339,8 +307,7 @@ namespace FluentEcho.Bootstrap
             whisperProfileDropdown = dropdown;
 
             WhisperQualityProfile currentProfile = whisperService.CurrentQualityProfile;
-            TextMeshProUGUI currentProfileLabel = FindDeepTransform(view.transform.root, "Whisper Profile Value")
-                ?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI currentProfileLabel = whisperProfileValueLabel;
 
             var options = new List<Dropdown.OptionData>();
             foreach (string name in Enum.GetNames(typeof(WhisperQualityProfile)))
@@ -372,15 +339,15 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform existing = view.transform.Find("Progress");
-            TextMeshProUGUI label = existing != null ? existing.GetComponent<TextMeshProUGUI>() : null;
-            if (label == null)
+            if (progressLabel == null)
             {
                 Debug.LogWarning("[FluentEchoBootstrap] Progress label is not assigned in the scene.", this);
                 return;
             }
 
-            view.ConfigureProgressLabel(label);
+            progressLabel.color = new Color(0.18f, 0.18f, 0.18f, 1f);
+            progressLabel.fontStyle = FontStyles.Normal;
+            view.ConfigureProgressLabel(progressLabel);
         }
 
         private void EnsureProgressDetailsLabel()
@@ -388,23 +355,15 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform resultPanel = FindDeepTransform(view.transform.root, "Result Panel");
-            if (resultPanel == null)
-            {
-                Debug.LogWarning("[FluentEchoBootstrap] Result Panel is not assigned in the scene.", this);
-                return;
-            }
-
-            TextMeshProUGUI label = resultPanel.Find("Progress Details")?.GetComponent<TextMeshProUGUI>();
-            if (label == null)
+            if (progressDetailsLabel == null)
             {
                 Debug.LogWarning("[FluentEchoBootstrap] Progress Details label is not assigned in the scene.", this);
                 return;
             }
 
-            label.color = new Color(0.18f, 0.18f, 0.18f, 1f);
-            label.fontStyle = FontStyles.Normal;
-            view.ConfigureProgressDetailsLabel(label);
+            progressDetailsLabel.color = new Color(0.18f, 0.18f, 0.18f, 1f);
+            progressDetailsLabel.fontStyle = FontStyles.Normal;
+            view.ConfigureProgressDetailsLabel(progressDetailsLabel);
         }
 
         private void EnsurePronunciationLabels()
@@ -412,23 +371,15 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform resultPanel = FindDeepTransform(view.transform.root, "Result Panel");
-            if (resultPanel == null)
-            {
-                Debug.LogWarning("[FluentEchoBootstrap] Result Panel is not assigned in the scene.", this);
-                return;
-            }
-
-            TextMeshProUGUI summaryLabel = resultPanel.Find("Pronunciation Summary")?.GetComponent<TextMeshProUGUI>();
-            TextMeshProUGUI feedbackLabel = resultPanel.Find("Pronunciation Feedback")?.GetComponent<TextMeshProUGUI>();
-            if (summaryLabel == null || feedbackLabel == null)
+            if (pronunciationSummaryLabel == null || pronunciationFeedbackLabel == null)
             {
                 Debug.LogWarning("[FluentEchoBootstrap] Pronunciation summary or feedback labels are not assigned in the scene.", this);
                 return;
             }
 
-            feedbackLabel.color = new Color(0.21f, 0.21f, 0.21f, 1f);
-            view.ConfigurePronunciationLabels(summaryLabel, feedbackLabel);
+            pronunciationSummaryLabel.color = new Color(0.89f, 0.37f, 0.30f, 1f);
+            pronunciationFeedbackLabel.color = new Color(0.21f, 0.21f, 0.21f, 1f);
+            view.ConfigurePronunciationLabels(pronunciationSummaryLabel, pronunciationFeedbackLabel);
         }
 
         private SpeechExerciseSO ResolveSelectedExercise()
@@ -602,68 +553,18 @@ namespace FluentEcho.Bootstrap
 
         private Transform GetOrCreateSettingsPanel()
         {
-            if (view == null)
+            if (settingsPanelObject == null)
                 return null;
 
-            Transform mentorCard = view.transform.parent != null ? view.transform.parent.Find("Teacher Card") : null;
-            if (mentorCard == null)
-                return null;
-
-            Transform existing = FindDeepTransform(view.transform.root, "Settings Panel");
-            if (existing == null)
-            {
-                RectTransform rect = CreatePanel(
-                    view.transform.root,
-                    "Settings Panel",
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0.5f, 0.5f),
-                    new Color(0.11f, 0.24f, 0.28f, 1f));
-                rect.anchoredPosition = Vector2.zero;
-                rect.sizeDelta = new Vector2(860f, 440f);
-                return rect;
-            }
-
-            Image image = existing.GetComponent<Image>();
-            if (image != null)
-                image.color = SettingsFill;
-
-            EnsurePanelAccent(existing, "Settings Accent", SettingsAccent);
-            ApplyPanelFrame(existing, SettingsBorder);
-            existing.gameObject.SetActive(false);
-            return existing;
+            return settingsPanelObject.transform;
         }
 
         private Transform GetOrCreateResultPanel()
         {
-            if (view == null)
+            if (resultPanelObject == null)
                 return null;
 
-            Transform existing = view.transform.Find("Result Panel") ?? view.transform.Find("Success Badge");
-            if (existing == null)
-            {
-                RectTransform rect = CreatePanel(
-                    view.transform,
-                    "Result Panel",
-                    new Vector2(0.06f, 0.02f),
-                    new Vector2(0.94f, 0.24f),
-                    new Color(0.90f, 0.86f, 0.78f, 1f));
-                return rect;
-            }
-
-            RectTransform existingRect = existing.GetComponent<RectTransform>();
-            if (existingRect == null)
-                return existing;
-
-            Image image = existing.GetComponent<Image>();
-            if (image != null)
-                image.color = ResultFill;
-
-            EnsurePanelAccent(existing, "Result Accent", ResultAccent);
-            ApplyPanelFrame(existing, ResultBorder);
-            existing.gameObject.SetActive(false);
-
-            existing.name = "Result Panel";
-            return existing;
+            return resultPanelObject.transform;
         }
 
         private static TextMeshProUGUI MoveOrCreateText(
@@ -857,27 +758,19 @@ namespace FluentEcho.Bootstrap
             if (uiRoot == null)
                 return;
 
-            Button button = GetOrCreateButton(
-                uiRoot,
-                "Settings Toggle Button",
-                "SETTINGS",
-                new Vector2(0.83f, 0.90f),
-                new Vector2(0.965f, 0.96f),
-                new Color(0.11f, 0.24f, 0.28f, 1f),
-                new Color(0.96f, 0.94f, 0.88f, 1f));
+            Button button = settingsToggleButton;
 
             if (button == null)
                 return;
 
-            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
-                if (settingsPanel == null)
+                if (settingsPanelObject == null)
                     return;
 
-                bool shouldOpen = !settingsPanel.gameObject.activeSelf;
-                settingsPanel.gameObject.SetActive(shouldOpen);
+                bool shouldOpen = !settingsPanelObject.activeSelf;
+                settingsPanelObject.SetActive(shouldOpen);
             });
         }
 

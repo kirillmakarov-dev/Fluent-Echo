@@ -8374,6 +8374,13 @@ MonoBehaviour:
   mockService: {fileID: 906631083}
   exerciseDropdown: {fileID: 153645704}
   whisperProfileDropdown: {fileID: 1693842726}
+  settingsPanelObject: {fileID: 76370613}
+  settingsToggleButton: {fileID: 1833243721}
+  settingsCloseButton: {fileID: 2025640855}
+  resultPanelObject: {fileID: 590223882}
+  resultCloseButton: {fileID: 1530958021}
+  microphoneValueLabel: {fileID: 650950379}
+  whisperProfileValueLabel: {fileID: 2115264130}
   selectedCategoryPrefsKey: FluentEcho.SelectedCategoryIndex
   selectedExercisePrefsKey: FluentEcho.SelectedExerciseIndex
   repairSceneUiOnStart: 0
