@@ -72,7 +72,14 @@ namespace FluentEcho.Tests
 
                 Assert.That(view.CategoryScreenVisible, Is.False);
                 Assert.That(view.NoticeVisible, Is.True);
-                Assert.That(view.NoticeTitle, Is.EqualTo("Practice English privately"));
+                Assert.That(view.NoticeTitle, Is.EqualTo(FluentEchoCopy.OnboardingWelcomeTitle));
+                Assert.That(view.NoticeBody, Does.Contain("local speech model"));
+
+                view.RaiseNoticeConfirmed();
+
+                Assert.That(view.NoticeVisible, Is.True);
+                Assert.That(view.NoticeTitle, Is.EqualTo(FluentEchoCopy.OnboardingPracticePathsTitle));
+                Assert.That(view.NoticeBody, Does.Contain("Words build clarity"));
 
                 view.RaiseNoticeConfirmed();
 

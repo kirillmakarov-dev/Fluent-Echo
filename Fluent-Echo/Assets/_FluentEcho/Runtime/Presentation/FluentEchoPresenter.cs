@@ -13,6 +13,7 @@ namespace FluentEcho.Presentation
         private enum NoticeAction
         {
             None,
+            AdvanceOnboarding,
             CompleteOnboarding,
             OpenSettings,
             RetryAttempt
@@ -88,7 +89,7 @@ namespace FluentEcho.Presentation
             if (onboardingRequired)
             {
                 view.SetCategoryScreenVisible(false);
-                ShowOnboarding();
+                ShowOnboardingWelcome();
             }
             else
             {
@@ -529,6 +530,9 @@ namespace FluentEcho.Presentation
                         ? FluentEchoCopy.DemoModeReadyStatus
                         : FluentEchoCopy.ReadyToPracticeStatus);
                     break;
+                case NoticeAction.AdvanceOnboarding:
+                    ShowOnboardingPracticePaths();
+                    break;
                 case NoticeAction.OpenSettings:
                     view.HideNotice();
                     view.SetSettingsPanelVisible(true);
@@ -542,13 +546,22 @@ namespace FluentEcho.Presentation
             pendingNoticeAction = NoticeAction.None;
         }
 
-        private void ShowOnboarding()
+        private void ShowOnboardingWelcome()
+        {
+            pendingNoticeAction = NoticeAction.AdvanceOnboarding;
+            view.ShowNotice(
+                FluentEchoCopy.OnboardingWelcomeTitle,
+                FluentEchoCopy.OnboardingWelcomeBody,
+                "CONTINUE");
+        }
+
+        private void ShowOnboardingPracticePaths()
         {
             pendingNoticeAction = NoticeAction.CompleteOnboarding;
             view.ShowNotice(
-                "Practice English privately",
-                "Fluent Echo listens on this device and uses a local speech model. Choose Words, Short Sentences, or Challenge Sentences, then record your voice with audio kept local.",
-                "CONTINUE");
+                FluentEchoCopy.OnboardingPracticePathsTitle,
+                FluentEchoCopy.OnboardingPracticePathsBody,
+                "CHOOSE PATH");
         }
 
         private void ShowUserFacingFailure(string message)
