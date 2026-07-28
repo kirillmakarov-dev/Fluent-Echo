@@ -33,6 +33,11 @@ namespace FluentEcho.Services
         private float lastPrepareSeconds;
         private float lastWarmupSeconds;
         private int prepareGeneration;
+        private int listeningGeneration;
+        private int activeListeningGeneration;
+        private OnStreamResultUpdatedDelegate transcriptUpdatedHandler;
+        private OnStreamFinishedDelegate streamFinishedHandler;
+        private OnRecordStopDelegate recordStopHandler;
 
         public event Action<string> TranscriptUpdated;
         public event Action AnalysisStarted;
@@ -118,17 +123,14 @@ namespace FluentEcho.Services
                     return;
                 }
 
+                SubscribeCurrentSessionCallbacks();
                 suppressStopEvent = false;
                 finishRequested = false;
-                stream.OnResultUpdated -= HandleTranscript;
-                stream.OnResultUpdated += HandleTranscript;
-                stream.OnStreamFinished -= HandleStreamFinished;
-                stream.OnStreamFinished += HandleStreamFinished;
 
                 IsListening = true;
                 stream.StartStream();
-                microphone.OnRecordStop -= HandleRecordStop;
-                microphone.OnRecordStop += HandleRecordStop;
+                if (microphone != null)
+                    microphone.OnRecordStop += recordStopHandler;
                 if (!microphone.StartRecord())
                 {
                     RaiseError("The microphone could not start. Check operating-system permission.");
@@ -421,20 +423,25 @@ namespace FluentEcho.Services
             field.SetValue(manager, value);
         }
 
-        private void HandleTranscript(string transcript)
+        private void HandleTranscript(int generation, string transcript)
         {
+            if (!IsCurrentListeningGeneration(generation))
+                return;
+
             string sanitizedTranscript = SanitizeTranscript(transcript);
             if (!string.IsNullOrWhiteSpace(sanitizedTranscript))
                 TranscriptUpdated?.Invoke(sanitizedTranscript);
         }
 
-        private void HandleRecordStop(AudioChunk chunk)
+        private void HandleRecordStop(int generation, AudioChunk chunk)
         {
+            if (!IsCurrentListeningGeneration(generation))
+                return;
+
             if (!IsListening)
                 return;
 
             AnalysisStarted?.Invoke();
-            EnsureStreamFinishedSubscription();
             finishRequested = true;
             StartStopWatchdog();
         }
@@ -458,8 +465,11 @@ namespace FluentEcho.Services
                 StopStreamSafely();
         }
 
-        private void HandleStreamFinished(string finalTranscript)
+        private void HandleStreamFinished(int generation, string finalTranscript)
         {
+            if (!IsCurrentListeningGeneration(generation))
+                return;
+
             string sanitizedTranscript = SanitizeTranscript(finalTranscript);
             if (!string.IsNullOrWhiteSpace(sanitizedTranscript))
                 TranscriptUpdated?.Invoke(sanitizedTranscript);
@@ -476,6 +486,7 @@ namespace FluentEcho.Services
             Unsubscribe();
             IsListening = false;
             finishRequested = false;
+            activeListeningGeneration = 0;
 
             if (suppressStopEvent)
             {
@@ -496,11 +507,11 @@ namespace FluentEcho.Services
 
         private void EnsureStreamFinishedSubscription()
         {
-            if (stream == null)
+            if (stream == null || streamFinishedHandler == null)
                 return;
 
-            stream.OnStreamFinished -= HandleStreamFinished;
-            stream.OnStreamFinished += HandleStreamFinished;
+            stream.OnStreamFinished -= streamFinishedHandler;
+            stream.OnStreamFinished += streamFinishedHandler;
         }
 
         private void StopStreamSafely()
@@ -567,13 +578,39 @@ namespace FluentEcho.Services
         {
             if (stream != null)
             {
-                stream.OnResultUpdated -= HandleTranscript;
-                stream.OnStreamFinished -= HandleStreamFinished;
+                if (transcriptUpdatedHandler != null)
+                    stream.OnResultUpdated -= transcriptUpdatedHandler;
+
+                if (streamFinishedHandler != null)
+                    stream.OnStreamFinished -= streamFinishedHandler;
             }
 
-            if (microphone != null)
-                microphone.OnRecordStop -= HandleRecordStop;
+            if (microphone != null && recordStopHandler != null)
+                microphone.OnRecordStop -= recordStopHandler;
+
+            transcriptUpdatedHandler = null;
+            streamFinishedHandler = null;
+            recordStopHandler = null;
         }
+
+        private void SubscribeCurrentSessionCallbacks()
+        {
+            if (stream == null)
+                return;
+
+            int generation = ++listeningGeneration;
+            activeListeningGeneration = generation;
+
+            transcriptUpdatedHandler = transcript => HandleTranscript(generation, transcript);
+            streamFinishedHandler = finalTranscript => HandleStreamFinished(generation, finalTranscript);
+            recordStopHandler = chunk => HandleRecordStop(generation, chunk);
+
+            stream.OnResultUpdated += transcriptUpdatedHandler;
+            stream.OnStreamFinished += streamFinishedHandler;
+        }
+
+        private bool IsCurrentListeningGeneration(int generation) =>
+            generation != 0 && generation == activeListeningGeneration;
 
         private void OnDestroy()
         {
