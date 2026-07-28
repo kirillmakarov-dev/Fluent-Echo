@@ -179,5 +179,9 @@ namespace FluentEcho.Services
             || WeakPhonemes.Count > 0;
 
         public bool IsPreview => Source == PhonemeAlignmentSource.Preview;
+
+        public string DisplayTitle => Source == PhonemeAlignmentSource.Preview
+            ? "Alignment preview (demo only):"
+            : "Alignment unavailable:";
     }
 }
