@@ -176,7 +176,12 @@ namespace FluentEcho.Services
             }
 
             if (extraCount > 0)
-                return $"Good coverage, but there are {extraCount} extra word{PluralSuffix(extraCount)}.";
+            {
+                if (extraCount == 1)
+                    return "Good coverage. Drop the extra word once, then try the line again.";
+
+                return $"Good coverage. Trim the {extraCount} extra word{PluralSuffix(extraCount)} and keep the line cleaner.";
+            }
 
             float expectedSeconds = Mathf.Max(1.5f, expectedWords.Length * 0.7f);
             if (recordingSeconds > expectedSeconds * 1.4f)

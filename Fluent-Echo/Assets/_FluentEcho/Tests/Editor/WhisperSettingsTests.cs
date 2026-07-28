@@ -353,7 +353,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.ExtraWordCount, Is.GreaterThan(0));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
                 Assert.That(score.ConfidenceReason, Does.Contain("Extra words"));
-                Assert.That(score.FeedbackText, Does.Contain("extra word"));
+                Assert.That(score.FeedbackText, Is.EqualTo("Good coverage. Trim the 3 extra words and keep the line cleaner."));
             }
             finally
             {
