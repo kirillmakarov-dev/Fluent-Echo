@@ -631,7 +631,9 @@ namespace FluentEcho.Presentation
                 currentExercise.GetDisplayWords().Length,
                 lastPronunciationScore.OverallScore,
                 lastPronunciationScore.BandLabel,
-                lastPronunciationScore.SummaryText);
+                lastPronunciationScore.SummaryText,
+                lastPronunciationScore.ConfidenceBand,
+                lastPronunciationScore.ConfidenceScore);
             LessonProgressRepository.Save(progress);
             view.SetProgress(progress.GetSummaryText());
             view.SetProgressDetails(BuildProgressDetailsText());

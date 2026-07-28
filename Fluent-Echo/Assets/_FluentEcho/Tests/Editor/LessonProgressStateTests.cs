@@ -38,7 +38,9 @@ namespace FluentEcho.Tests
                         4,
                         60 + i,
                         i >= 5 ? "high" : "medium",
-                        $"PRACTICE SCORE | {60 + i}/100 | {(i >= 5 ? "HIGH" : "MEDIUM")}");
+                        $"PRACTICE SCORE | {60 + i}/100 | {(i >= 5 ? "HIGH" : "MEDIUM")}",
+                        i >= 5 ? "high" : "medium",
+                        70 + i);
                 }
 
                 Assert.That(state.AttemptHistory, Has.Count.EqualTo(5));

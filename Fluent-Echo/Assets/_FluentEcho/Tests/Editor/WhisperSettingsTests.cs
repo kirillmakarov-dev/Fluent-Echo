@@ -68,7 +68,9 @@ namespace FluentEcho.Tests
                 4,
                 67,
                 "steady",
-                "PRACTICE SCORE | 67/100 | HIGH");
+                "PRACTICE SCORE | 67/100 | HIGH",
+                "high",
+                81);
             LessonProgressRepository.Save(state);
 
             LessonProgressState reloaded = LessonProgressRepository.Load(key, 4);
@@ -80,12 +82,16 @@ namespace FluentEcho.Tests
                 Assert.That(reloaded.BestPronunciationScore, Is.EqualTo(67));
                 Assert.That(reloaded.BestPronunciationBand, Is.EqualTo("steady"));
                 Assert.That(reloaded.BestPronunciationSummary, Does.Contain("67/100"));
+                Assert.That(reloaded.BestPronunciationConfidenceBand, Is.EqualTo("high"));
+                Assert.That(reloaded.BestPronunciationConfidenceScore, Is.EqualTo(81));
                 Assert.That(reloaded.BestTranscript, Is.EqualTo("the dog is"));
                 Assert.That(reloaded.GetSummaryText(), Does.Contain("score 67/100"));
+                Assert.That(reloaded.GetSummaryText(), Does.Contain("confidence high"));
                 Assert.That(reloaded.TotalWords, Is.EqualTo(4));
                 Assert.That(reloaded.GetSummaryText(), Does.Contain("best 3/4"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("67/100"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Best transcript: the dog is"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("confidence high"));
             }
             finally
             {
@@ -106,12 +112,15 @@ namespace FluentEcho.Tests
                 4,
                 94,
                 "strong",
-                "PRACTICE SCORE | 94/100 | HIGH");
+                "PRACTICE SCORE | 94/100 | HIGH",
+                "high",
+                92);
 
                 Assert.That(state.SuccessfulAttempts, Is.EqualTo(1));
                 Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
                 Assert.That(state.GetHistoryText(), Does.Contain("cleared"));
                 Assert.That(state.GetHistoryText(), Does.Contain("Best transcript: the dog is big"));
+                Assert.That(state.GetHistoryText(), Does.Contain("confidence high"));
                 Assert.That(state.LastPronunciationSummary, Does.Contain("94/100"));
 
             LessonProgressRepository.Clear(key);
