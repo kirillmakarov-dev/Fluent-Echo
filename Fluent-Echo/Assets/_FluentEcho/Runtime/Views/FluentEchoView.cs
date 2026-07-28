@@ -343,7 +343,7 @@ namespace FluentEcho.Views
         {
             if (progressDetailsLabel != null)
                 progressDetailsLabel.text = string.IsNullOrWhiteSpace(details)
-                    ? "Your first recording will appear here."
+                    ? "Your first local estimate will appear here."
                     : details;
         }
 

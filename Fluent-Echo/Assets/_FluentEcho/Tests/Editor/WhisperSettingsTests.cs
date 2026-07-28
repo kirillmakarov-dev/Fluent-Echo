@@ -125,7 +125,7 @@ namespace FluentEcho.Tests
             {
                 Assert.That(state.GetSummaryText(), Does.Contain("ready for first recording"));
                 Assert.That(state.GetSummaryText(), Does.Contain("0/4 matched"));
-                Assert.That(state.GetHistoryText(), Does.Contain("Your first recording will appear here."));
+                Assert.That(state.GetHistoryText(), Does.Contain("Your first local estimate will appear here."));
             }
             finally
             {

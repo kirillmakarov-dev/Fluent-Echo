@@ -749,7 +749,7 @@ namespace FluentEcho.Presentation
             }
 
             return lines.Count == 0
-                ? "Your first recording will appear here."
+                ? "Your first local estimate will appear here."
                 : string.Join("\n", lines);
         }
 

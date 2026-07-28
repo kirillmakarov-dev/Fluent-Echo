@@ -240,8 +240,8 @@ namespace FluentEcho.Domain
             {
                 string emptyHeader = BuildHistoryHeader();
                 return string.IsNullOrWhiteSpace(emptyHeader)
-                    ? "Your first recording will appear here."
-                    : $"{emptyHeader}\nYour first recording will appear here.";
+                    ? "Your first local estimate will appear here."
+                    : $"{emptyHeader}\nYour first local estimate will appear here.";
             }
 
             int limit = Math.Max(1, maxEntries);
