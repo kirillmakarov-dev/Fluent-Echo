@@ -378,6 +378,65 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void SavedSelection_RestoresCategoryAndExerciseOnInitialize()
+        {
+            SpeechExerciseSO wordsOne = CreateExercise("word_01", "Say the first word.", "lesson_test_saved_selection_01");
+            SpeechExerciseSO wordsTwo = CreateExercise("word_02", "Say the second word.", "lesson_test_saved_selection_02");
+            SpeechExerciseSO sentencesOne = CreateExercise("sentence_01", "Say the sentence.", "lesson_test_saved_selection_03");
+            SpeechExerciseCatalogSO catalog = CreateCategorizedCatalog(
+                new[]
+                {
+                    ("Words", "Practice one word at a time.", new[] { wordsOne, wordsTwo }),
+                    ("Sentences", "Practice short sentence lines.", new[] { sentencesOne })
+                });
+
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = new FluentEchoPresenter(
+                null,
+                catalog,
+                view,
+                service,
+                mockService,
+                false,
+                null,
+                1,
+                0,
+                null);
+
+            try
+            {
+                presenter.Initialize();
+
+                Assert.That(view.LastPrompt, Is.EqualTo("Say the sentence."));
+                Assert.That(view.LastTargetWords, Is.EqualTo(new[] { "sentence_01" }));
+                Assert.That(view.LessonOptions, Is.EqualTo(new[] { "sentence_01" }));
+                Assert.That(view.CategoryScreenVisible, Is.True);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(wordsOne);
+                UnityEngine.Object.DestroyImmediate(wordsTwo);
+                UnityEngine.Object.DestroyImmediate(sentencesOne);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void GuidedCatalog_ContainsThreeCategoriesWithExpectedLessonCounts()
+        {
+            SpeechExerciseCatalogSO catalog = AssetDatabase.LoadAssetAtPath<SpeechExerciseCatalogSO>("Assets/_FluentEcho/Demo/Data/ExerciseCatalog.asset");
+
+            Assert.That(catalog, Is.Not.Null);
+            Assert.That(catalog.CategoryCount, Is.EqualTo(3));
+            Assert.That(catalog.GetCategoryDisplayNames(), Is.EqualTo(new[] { "Words", "Short Sentences", "Challenge Sentences" }));
+            Assert.That(catalog.GetCategoryExerciseCount(0), Is.EqualTo(10));
+            Assert.That(catalog.GetCategoryExerciseCount(1), Is.EqualTo(10));
+            Assert.That(catalog.GetCategoryExerciseCount(2), Is.EqualTo(8));
+        }
+
+        [Test]
         public void CompleteTranscript_SavesProgressAndShowsSuccess()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_complete");
