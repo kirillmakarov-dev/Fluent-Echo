@@ -543,12 +543,26 @@ namespace FluentEcho.Tests
                     90);
                 LessonProgressRepository.Save(savedProgress);
 
+                LessonProgressState retryProgress = LessonProgressRepository.Load(wordsTwo.ProgressKey, 1);
+                retryProgress.RecordAttempt(
+                    "word",
+                    new SpeechMatchResult(false, new[] { false }),
+                    1,
+                    41,
+                    "developing",
+                    "PRACTICE SCORE | 41/100 | MEDIUM",
+                    "medium",
+                    48);
+                LessonProgressRepository.Save(retryProgress);
+
                 presenter.Initialize();
 
                 Assert.That(view.LastCategoryName, Is.EqualTo("Words"));
                 Assert.That(view.LastCategoryDescription, Is.EqualTo("Practice one word at a time."));
                 Assert.That(view.LastCategoryProgress, Does.Contain("Progress: 1/2 lessons cleared"));
                 Assert.That(view.LastCategoryProgress, Does.Contain("best score 92/100"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("confidence high"));
+                Assert.That(view.LastCategoryProgress, Does.Contain("2 attempts"));
             }
             finally
             {

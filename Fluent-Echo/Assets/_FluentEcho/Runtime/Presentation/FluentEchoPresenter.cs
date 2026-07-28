@@ -829,6 +829,8 @@ namespace FluentEcho.Presentation
 
             int clearedLessons = 0;
             int bestScore = 0;
+            int totalAttempts = 0;
+            string bestConfidenceBand = string.Empty;
 
             for (int i = 0; i < exerciseCount; i++)
             {
@@ -840,16 +842,24 @@ namespace FluentEcho.Presentation
                     exercise.ProgressKey,
                     exercise.GetDisplayWords().Length);
 
+                totalAttempts += lessonProgress.Attempts;
                 if (lessonProgress.SuccessfulAttempts > 0)
                     clearedLessons++;
 
                 if (lessonProgress.BestPronunciationScore > bestScore)
+                {
                     bestScore = lessonProgress.BestPronunciationScore;
+                    bestConfidenceBand = lessonProgress.BestPronunciationConfidenceBand;
+                }
             }
 
             string summary = $"Progress: {clearedLessons}/{exerciseCount} lessons cleared";
             if (bestScore > 0)
                 summary += $" | best score {bestScore}/100";
+            if (!string.IsNullOrWhiteSpace(bestConfidenceBand))
+                summary += $" | confidence {bestConfidenceBand}";
+            if (totalAttempts > 0)
+                summary += $" | {totalAttempts} attempts";
 
             return summary;
         }
