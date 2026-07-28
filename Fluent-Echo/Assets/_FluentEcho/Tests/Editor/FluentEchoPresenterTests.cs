@@ -104,8 +104,8 @@ namespace FluentEcho.Tests
                 Assert.That(view.NoticeVisible, Is.False);
                 Assert.That(view.CategoryScreenVisible, Is.True);
                 Assert.That(view.LastStatus, Does.Contain("Ready").Or.Contain("Preparing"));
-                Assert.That(view.LastPronunciationSummary, Does.Contain("READY FOR YOUR FIRST ATTEMPT"));
-                Assert.That(view.LastPronunciationFeedback, Does.Contain("Phoneme roadmap"));
+                Assert.That(view.LastPronunciationSummary, Does.Contain(FluentEchoCopy.FirstPronunciationSummary));
+                Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
             }
             finally
             {
@@ -466,9 +466,9 @@ namespace FluentEcho.Tests
                     Assert.That(view.LastStatus, Does.Contain("Excellent"));
                     Assert.That(view.LastSuccessState, Is.True);
                     Assert.That(view.LastListeningState, Is.False);
-                    Assert.That(view.LastProgressDetails, Does.Contain("Phoneme roadmap"));
+                    Assert.That(view.LastProgressDetails, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(view.LastPronunciationSummary, Does.Contain("Practice score"));
-                    Assert.That(view.LastPronunciationFeedback, Does.Contain("Phoneme roadmap"));
+                    Assert.That(view.LastPronunciationFeedback, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
                     Assert.That(saved.Attempts, Is.EqualTo(1));
                     Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
                     Assert.That(saved.BestPronunciationScore, Is.GreaterThan(0));

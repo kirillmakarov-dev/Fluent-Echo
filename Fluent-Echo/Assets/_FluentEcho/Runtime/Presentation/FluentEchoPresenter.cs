@@ -501,8 +501,8 @@ namespace FluentEcho.Presentation
             view.SetProgress(progress?.GetSummaryText() ?? string.Empty);
             view.SetProgressDetails(BuildProgressDetailsText());
             view.SetPronunciation(
-                PronunciationScoreResult.Unavailable.SummaryText,
-                BuildUnavailablePronunciationDetails());
+                FluentEchoCopy.FirstPronunciationSummary,
+                FluentEchoCopy.BuildUnavailablePronunciationDetails());
             view.SetListening(false);
             view.SetSuccess(false);
             if (useMock)
@@ -678,8 +678,8 @@ namespace FluentEcho.Presentation
             if (!lastPronunciationScore.IsAvailable)
             {
                 view.SetPronunciation(
-                    PronunciationScoreResult.Unavailable.SummaryText,
-                    BuildUnavailablePronunciationDetails());
+                    FluentEchoCopy.FirstPronunciationSummary,
+                    FluentEchoCopy.BuildUnavailablePronunciationDetails());
                 return;
             }
 
@@ -717,7 +717,7 @@ namespace FluentEcho.Presentation
                     $"Transcript match: coverage {lastPronunciationScore.CoverageScore}% | precision {lastPronunciationScore.PrecisionScore}%");
                 lines.Add(
                     $"Rhythm: {lastPronunciationScore.TempoScore}% | word focus {lastPronunciationScore.WordQualityScore}%");
-                lines.Add("Phoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.");
+                lines.Add(FluentEchoCopy.PhonemeRoadmapText);
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -749,7 +749,7 @@ namespace FluentEcho.Presentation
             }
 
             return lines.Count == 0
-                ? "Your first local estimate will appear here."
+                ? FluentEchoCopy.FirstLocalEstimateText
                 : string.Join("\n", lines);
         }
 
@@ -771,7 +771,7 @@ namespace FluentEcho.Presentation
                 $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
                 $"Transcript match: coverage {score.CoverageScore}% | precision {score.PrecisionScore}%",
                 $"Rhythm: {score.TempoScore}% | word focus: {score.WordQualityScore}%",
-                "Phoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next."
+                FluentEchoCopy.PhonemeRoadmapText
             };
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -783,9 +783,6 @@ namespace FluentEcho.Presentation
 
             return string.Join("\n", lines);
         }
-
-        private static string BuildUnavailablePronunciationDetails() =>
-            "Speak once to generate the first local estimate.\nYour first coaching tip will appear here.\nPhoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.";
 
         private static string Capitalize(string value)
         {

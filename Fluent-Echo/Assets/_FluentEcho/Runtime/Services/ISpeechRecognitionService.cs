@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using FluentEcho.Data;
 using FluentEcho.Domain;
+using FluentEcho.Presentation;
 using UnityEngine;
 
 namespace FluentEcho.Services
@@ -64,8 +65,8 @@ namespace FluentEcho.Services
             0,
             "UNAVAILABLE",
             "UNAVAILABLE",
-            "PRACTICE SCORE | READY FOR YOUR FIRST ATTEMPT",
-            "Speak once to generate the first local estimate.",
+            FluentEchoCopy.FirstPronunciationSummary,
+            FluentEchoCopy.FirstEstimatePrompt,
             0,
             0,
             0,

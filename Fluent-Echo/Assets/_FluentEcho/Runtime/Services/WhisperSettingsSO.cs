@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentEcho.Presentation;
 using UnityEngine;
 
 namespace FluentEcho.Services
@@ -219,13 +220,13 @@ namespace FluentEcho.Domain
             if (totalWords <= 0)
             {
                 if (attempts <= 0)
-                    return "Progress: ready for first recording";
+                    return FluentEchoCopy.FirstProgressSummary;
 
                 return $"Progress: {attempts} attempts";
             }
 
             if (attempts <= 0 && bestPronunciationScore <= 0)
-                return $"Progress: ready for first recording | 0/{totalWords} matched";
+                return FluentEchoCopy.BuildProgressSummary(totalWords);
 
             string completion = $"{Math.Min(bestMatchedWords, totalWords)}/{totalWords}";
             string score = bestPronunciationScore > 0 ? $" | estimate {bestPronunciationScore}/100" : string.Empty;
@@ -240,8 +241,8 @@ namespace FluentEcho.Domain
             {
                 string emptyHeader = BuildHistoryHeader();
                 return string.IsNullOrWhiteSpace(emptyHeader)
-                    ? "Your first local estimate will appear here."
-                    : $"{emptyHeader}\nYour first local estimate will appear here.";
+                    ? FluentEchoCopy.FirstLocalEstimateText
+                    : $"{emptyHeader}\n{FluentEchoCopy.FirstLocalEstimateText}";
             }
 
             int limit = Math.Max(1, maxEntries);

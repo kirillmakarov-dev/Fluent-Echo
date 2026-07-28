@@ -1,6 +1,7 @@
 using System;
 using FluentEcho.Data;
 using FluentEcho.Domain;
+using FluentEcho.Presentation;
 using FluentEcho.Services;
 using NUnit.Framework;
 using UnityEditor;
@@ -125,7 +126,7 @@ namespace FluentEcho.Tests
             {
                 Assert.That(state.GetSummaryText(), Does.Contain("ready for first recording"));
                 Assert.That(state.GetSummaryText(), Does.Contain("0/4 matched"));
-                Assert.That(state.GetHistoryText(), Does.Contain("Your first local estimate will appear here."));
+                Assert.That(state.GetHistoryText(), Does.Contain(FluentEchoCopy.FirstLocalEstimateText));
             }
             finally
             {
@@ -313,8 +314,8 @@ namespace FluentEcho.Tests
         public void UnavailableScore_UsesFriendlyCopy()
         {
             Assert.That(PronunciationScoreResult.Unavailable.IsAvailable, Is.False);
-            Assert.That(PronunciationScoreResult.Unavailable.SummaryText, Does.Contain("READY FOR YOUR FIRST ATTEMPT"));
-            Assert.That(PronunciationScoreResult.Unavailable.FeedbackText, Does.Contain("Speak once"));
+            Assert.That(PronunciationScoreResult.Unavailable.SummaryText, Does.Contain(FluentEchoCopy.FirstPronunciationSummary));
+            Assert.That(PronunciationScoreResult.Unavailable.FeedbackText, Does.Contain(FluentEchoCopy.FirstEstimatePrompt));
         }
 
         private static SpeechExerciseSO CreateExercise(string secondWord = "dog")

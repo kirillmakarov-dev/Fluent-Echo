@@ -1,4 +1,5 @@
 using FluentEcho.Domain;
+using FluentEcho.Presentation;
 using FluentEcho.Services;
 using NUnit.Framework;
 
@@ -14,7 +15,7 @@ namespace FluentEcho.Tests
             try
             {
                 Assert.That(state.GetSummaryText(), Does.Contain("ready for first recording"));
-                Assert.That(state.GetHistoryText(), Does.Contain("Your first local estimate will appear here."));
+                Assert.That(state.GetHistoryText(), Does.Contain(FluentEchoCopy.FirstLocalEstimateText));
             }
             finally
             {

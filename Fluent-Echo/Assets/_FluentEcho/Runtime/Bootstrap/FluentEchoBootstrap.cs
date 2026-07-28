@@ -487,7 +487,7 @@ namespace FluentEcho.Bootstrap
                 label = CreateText(
                     view.transform,
                     "Progress",
-                    "Progress: ready for first recording",
+                    FluentEchoCopy.FirstProgressSummary,
                     14,
                     FontStyles.Bold,
                     new Color(0.89f, 0.37f, 0.3f, 1f),
@@ -511,7 +511,7 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI label = MoveOrCreateText(
                 resultPanel,
                 "Progress Details",
-                "Your first local estimate will appear here.",
+                FluentEchoCopy.FirstLocalEstimateText,
                 11,
                 FontStyles.Normal,
                 new Color(0.20f, 0.20f, 0.20f, 1f),
@@ -552,7 +552,7 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI feedbackLabel = MoveOrCreateText(
                 resultPanel,
                 "Coach Tip",
-                "Your first coaching tip will appear here.",
+                FluentEchoCopy.FirstCoachingTipText,
                 12,
                 FontStyles.Italic,
                 new Color(0.21f, 0.21f, 0.21f, 1f),
