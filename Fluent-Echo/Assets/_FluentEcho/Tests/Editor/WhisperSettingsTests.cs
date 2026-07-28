@@ -265,6 +265,30 @@ namespace FluentEcho.Tests
             }
         }
 
+        [Test]
+        public void ExtraWords_ProduceMediumConfidence()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult score = scorer.Score(
+                    exercise,
+                    "The dog is big with extra words",
+                    new SpeechMatchResult(false, new[] { true, true, true, true }),
+                    4.4f);
+
+                Assert.That(score.IsAvailable, Is.True);
+                Assert.That(score.ExtraWordCount, Is.GreaterThan(0));
+                Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
+                Assert.That(score.FeedbackText, Does.Contain("extra word"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
         private static SpeechExerciseSO CreateExercise(string secondWord = "dog")
         {
             SpeechExerciseSO exercise = ScriptableObject.CreateInstance<SpeechExerciseSO>();

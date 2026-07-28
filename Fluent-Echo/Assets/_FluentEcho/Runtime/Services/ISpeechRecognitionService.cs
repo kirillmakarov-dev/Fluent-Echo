@@ -321,7 +321,15 @@ namespace FluentEcho.Services
                 - (extraPenalty * 0.18f)
                 - (missingPenalty * 0.10f);
 
-            return Mathf.RoundToInt(Mathf.Clamp01(score) * 100f);
+            int confidenceScore = Mathf.RoundToInt(Mathf.Clamp01(score) * 100f);
+
+            if (missingCount > 0 || extraCount > 0)
+                confidenceScore = Mathf.Min(confidenceScore, 74);
+
+            if (extraCount >= Mathf.Max(2, expectedCount / 2))
+                confidenceScore = Mathf.Min(confidenceScore, 44);
+
+            return confidenceScore;
         }
 
         private static string GetConfidenceBand(int score)
