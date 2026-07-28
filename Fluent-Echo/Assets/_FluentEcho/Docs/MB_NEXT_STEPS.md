@@ -41,6 +41,7 @@ For the current sprint, keep the focus on the phoneme-aware transition story:
 
 - keep the heuristic scorer described as the current, honest default;
 - keep the phoneme-aware path described as additive, optional, and local-first;
+- keep the phoneme preview render contract explicit by documenting `DisplayTitle` and `HasRenderablePreview`;
 - keep `MB_ARCHITECTURE.md` aligned with the current onboarding, settings, and result panels;
 - keep `PHONEME_AWARE_SCORING_ROADMAP.md` as the concrete handoff for the next scoring layer;
 - keep `CASE_STUDY_BRIEF.md` short, credible, and reviewer-friendly;
@@ -54,6 +55,7 @@ For the next implementation pass, keep the order simple:
 1. Keep the current heuristic scoring and preview boundaries honest.
 2. Preserve the stable result and settings flow.
 3. Improve the local scoring pipeline only after the presentation layer is fully clear.
+4. Keep the preview contract documented as a render step, not hidden view logic.
 4. Use the roadmap docs to explain what the next scorer must receive and return.
 
 ### 1. Keep the interaction loop stable
