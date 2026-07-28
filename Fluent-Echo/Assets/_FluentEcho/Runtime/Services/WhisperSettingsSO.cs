@@ -158,12 +158,14 @@ namespace FluentEcho.Domain
         [SerializeField] private string bestPronunciationSummary = string.Empty;
         [SerializeField] private string bestPronunciationConfidenceBand = string.Empty;
         [SerializeField] private int bestPronunciationConfidenceScore;
+        [SerializeField] private string bestPronunciationConfidenceReason = string.Empty;
         [SerializeField] private string lastTranscript = string.Empty;
         [SerializeField] private int lastPronunciationScore;
         [SerializeField] private string lastPronunciationBand = string.Empty;
         [SerializeField] private string lastPronunciationSummary = string.Empty;
         [SerializeField] private string lastPronunciationConfidenceBand = string.Empty;
         [SerializeField] private int lastPronunciationConfidenceScore;
+        [SerializeField] private string lastPronunciationConfidenceReason = string.Empty;
         [SerializeField] private string lastUpdatedUtc = string.Empty;
         [SerializeField] private List<LessonAttemptRecord> attemptHistory = new();
 
@@ -178,12 +180,14 @@ namespace FluentEcho.Domain
         public string BestPronunciationSummary => bestPronunciationSummary;
         public string BestPronunciationConfidenceBand => bestPronunciationConfidenceBand;
         public int BestPronunciationConfidenceScore => bestPronunciationConfidenceScore;
+        public string BestPronunciationConfidenceReason => bestPronunciationConfidenceReason;
         public string LastTranscript => lastTranscript;
         public int LastPronunciationScore => lastPronunciationScore;
         public string LastPronunciationBand => lastPronunciationBand;
         public string LastPronunciationSummary => lastPronunciationSummary;
         public string LastPronunciationConfidenceBand => lastPronunciationConfidenceBand;
         public int LastPronunciationConfidenceScore => lastPronunciationConfidenceScore;
+        public string LastPronunciationConfidenceReason => lastPronunciationConfidenceReason;
         public string LastUpdatedUtc => lastUpdatedUtc;
         public IReadOnlyList<LessonAttemptRecord> AttemptHistory => attemptHistory;
 
@@ -215,6 +219,7 @@ namespace FluentEcho.Domain
             lastPronunciationSummary = pronunciationSummary ?? string.Empty;
             lastPronunciationConfidenceBand = confidenceBand ?? string.Empty;
             lastPronunciationConfidenceScore = Mathf.Clamp(confidenceScore, 0, 100);
+            lastPronunciationConfidenceReason = confidenceReason ?? string.Empty;
 
             if (matchedWords > bestMatchedWords
                 || (matchedWords == bestMatchedWords && lastPronunciationScore >= bestPronunciationScore))
@@ -226,6 +231,7 @@ namespace FluentEcho.Domain
                 bestPronunciationSummary = lastPronunciationSummary;
                 bestPronunciationConfidenceBand = lastPronunciationConfidenceBand;
                 bestPronunciationConfidenceScore = lastPronunciationConfidenceScore;
+                bestPronunciationConfidenceReason = lastPronunciationConfidenceReason;
             }
 
             if (result.IsComplete)
@@ -384,6 +390,9 @@ namespace FluentEcho.Domain
             if (!string.IsNullOrWhiteSpace(bestPronunciationConfidenceBand))
                 parts.Add($"Best confidence: {bestPronunciationConfidenceBand}");
 
+            if (!string.IsNullOrWhiteSpace(bestPronunciationConfidenceReason))
+                parts.Add($"Best reason: {bestPronunciationConfidenceReason}");
+
             string lastText = !string.IsNullOrWhiteSpace(lastPronunciationSummary)
                 ? $"Last attempt: {lastPronunciationSummary}"
                 : lastPronunciationScore > 0
@@ -393,6 +402,9 @@ namespace FluentEcho.Domain
 
             if (!string.IsNullOrWhiteSpace(lastPronunciationConfidenceBand))
                 parts.Add($"Last confidence: {lastPronunciationConfidenceBand}");
+
+            if (!string.IsNullOrWhiteSpace(lastPronunciationConfidenceReason))
+                parts.Add($"Last reason: {lastPronunciationConfidenceReason}");
 
             return string.Join(" | ", parts);
         }
