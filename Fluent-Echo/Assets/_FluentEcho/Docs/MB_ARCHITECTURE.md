@@ -24,8 +24,8 @@ The key promise is privacy:
 - three lesson categories with multiple exercises;
 - progress persistence per lesson;
 - onboarding and user-friendly failure states;
-- a heuristic pronunciation estimate that is explicitly presented as an estimate, not true phoneme scoring;
-- an explicit phoneme roadmap line in the estimate flow so the limitation is visible in the UI;
+- a heuristic pronunciation estimate that is explicitly presented as a practice score, not true phoneme scoring;
+- a clear separation between the main result flow and the future phoneme-scoring roadmap;
 - a result flow that supports retry, close, and next mission actions;
 - inspector-friendly scene-owned UI wiring.
 
@@ -91,7 +91,7 @@ Infrastructure and scoring:
 Important note:
 
 - the scoring service is heuristic;
-- it combines transcript match, rhythm, word quality, and confidence into a transparent estimate;
+- it combines transcript match, rhythm, word quality, and confidence into a transparent practice score;
 - it does not claim to measure phonemes directly.
 
 ### `Runtime/Presentation`
@@ -167,10 +167,9 @@ This separation is important because it lets the visual layout be adjusted in th
 
 The app now uses language that is intentionally careful:
 
-- `Pronunciation estimate` instead of a claim of full phoneme scoring;
+- `Practice Score` and `Pronunciation estimate` language instead of a claim of full phoneme scoring;
 - `Recognition confidence` instead of pretending the model knows accent quality;
 - `Transcript match`, `Rhythm`, and `Word focus` as visible sub-signals;
-- an explicit note that true phoneme scoring is planned next, not implied today;
 - a clear path for future phoneme-level scoring without pretending it exists today.
 
 The current scorer is useful for MVP feedback and portfolio demonstration, but it should be treated as an estimate pipeline.

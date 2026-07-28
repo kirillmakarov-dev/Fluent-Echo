@@ -14,7 +14,7 @@ The project is intentionally built as a 2D interface inside a 3D URP project so 
 - Local speech recognition through Whisper without sending audio to the cloud
 - Automatic pause detection and recognized-text output
 - Word coverage checking, accepted alternatives like `big|large`, and small recognition errors
-- Correct word highlighting, result flow, and retry support
+- Correct word highlighting, practice-score result flow, and retry support
 - Deterministic Demo Mode for UI verification without a microphone
 - ScriptableObject lesson configuration
 - Editor tests for the core matching logic
@@ -43,7 +43,7 @@ The Whisper model is stored in:
 3. Open `FluentEchoPrototype` and press Play.
 4. Press `RUN DEMO ANSWER`.
 5. After a short pause, `the dog is big` should appear, the word chips should turn green, and the status should read `ANSWER ACCEPTED`.
-6. Press `NEW ATTEMPT` to reset the exercise.
+6. Press `TRY AGAIN` to reset the exercise.
 7. Turn off `Use deterministic demo engine`.
 8. Press `START SPEAKING`, say `The dog is big`, and pause.
 9. Whisper should output text, highlight words, and complete the exercise.
@@ -56,7 +56,7 @@ The expected result is the full edit-mode test set passing.
 
 ## Current Limitation
 
-The prototype checks transcript quality, not phoneme quality.
+The prototype uses a local heuristic practice score, not true phoneme quality scoring.
 Professional pronunciation, stress, and accent scoring should be added through a separate scoring service without changing the UI or presenter boundary.
 
 ## Case Study

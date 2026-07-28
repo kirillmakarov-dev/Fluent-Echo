@@ -60,11 +60,11 @@ Let the result panel appear.
 
 Highlight:
 
-- pronunciation estimate;
+- practice score;
 - confidence;
 - matched words;
+- rhythm and word focus;
 - coach tip;
-- the phoneme-roadmap note;
 - `TRY AGAIN`, `NEXT MISSION`, and `CLOSE`.
 
 Say:
