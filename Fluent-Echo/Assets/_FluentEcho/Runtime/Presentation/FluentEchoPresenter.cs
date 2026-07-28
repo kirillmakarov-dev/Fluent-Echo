@@ -906,6 +906,7 @@ namespace FluentEcho.Presentation
             int attemptedLessons = 0;
             int totalBestScore = 0;
             string bestConfidenceBand = string.Empty;
+            string bestLessonLabel = string.Empty;
 
             for (int i = 0; i < exerciseCount; i++)
             {
@@ -931,6 +932,7 @@ namespace FluentEcho.Presentation
                 {
                     bestScore = lessonProgress.BestPronunciationScore;
                     bestConfidenceBand = lessonProgress.BestPronunciationConfidenceBand;
+                    bestLessonLabel = BuildCategoryLessonLabel(exercise);
                 }
             }
 
@@ -939,6 +941,8 @@ namespace FluentEcho.Presentation
                 summary += $" | {attemptedLessons}/{exerciseCount} attempted";
             if (bestScore > 0)
                 summary += $" | best score {bestScore}/100";
+            if (!string.IsNullOrWhiteSpace(bestLessonLabel))
+                summary += $" | top lesson {bestLessonLabel}";
             if (!string.IsNullOrWhiteSpace(bestConfidenceBand))
                 summary += $" | confidence {bestConfidenceBand}";
             if (attemptedLessons > 0)
@@ -1048,6 +1052,27 @@ namespace FluentEcho.Presentation
             }
 
             return $"Word focus: {string.Join(" | ", parts)}";
+        }
+
+        private static string BuildCategoryLessonLabel(SpeechExerciseSO exercise)
+        {
+            if (exercise == null)
+                return string.Empty;
+
+            string raw = !string.IsNullOrWhiteSpace(exercise.Prompt)
+                ? exercise.Prompt.Trim()
+                : !string.IsNullOrWhiteSpace(exercise.name)
+                    ? exercise.name.Trim()
+                    : string.Empty;
+
+            if (string.IsNullOrWhiteSpace(raw))
+                return string.Empty;
+
+            const int maxLength = 28;
+            if (raw.Length <= maxLength)
+                return raw;
+
+            return raw.Substring(0, maxLength - 3).TrimEnd() + "...";
         }
 
         private SpeechExerciseSO ResolveExercise(SpeechExerciseSO selectedExercise)
