@@ -43,7 +43,7 @@ namespace FluentEcho.Services
     {
         public PhonemeAlignmentResult Align(PhonemeAlignmentRequest request)
         {
-            if (request == null || !request.HasTranscript || request.TargetWords.Count == 0)
+            if (request == null || request.MatchResult.MatchedWords == null || !request.HasTranscript || request.TargetWords.Count == 0)
                 return PhonemeAlignmentResult.Unavailable;
 
             int expectedCount = request.TargetWords.Count;

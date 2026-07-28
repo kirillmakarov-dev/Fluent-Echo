@@ -172,6 +172,28 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void PreviewService_ReturnsUnavailableWhenMatchResultIsMissing()
+        {
+            var service = new InspectorPhonemeAlignmentService();
+            PhonemeAlignmentRequest request = new(
+                (SpeechExerciseSO) null,
+                "apple",
+                default(SpeechMatchResult),
+                2f,
+                new[] { "apple" },
+                new[] { "apple" });
+
+            PhonemeAlignmentResult result = service.Align(request);
+
+            Assert.That(result.IsAvailable, Is.False);
+            Assert.That(result.Source, Is.EqualTo(PhonemeAlignmentSource.Unavailable));
+            Assert.That(result.DisplayTitle, Is.EqualTo("Alignment unavailable:"));
+            Assert.That(result.HasRenderablePreview, Is.False);
+            Assert.That(result.AlignmentScore, Is.EqualTo(0));
+            Assert.That(result.FeedbackText, Does.Contain("roadmap item"));
+        }
+
+        [Test]
         public void PreviewFormatter_ReturnsCompactInspectableBlock()
         {
             PhonemeAlignmentResult alignment = new(
