@@ -3,11 +3,11 @@ namespace FluentEcho.Presentation
     public static class FluentEchoCopy
     {
         public const string FirstProgressSummary = "Progress: ready for first recording";
-        public const string FirstLocalEstimateText = "Your first local estimate will appear here.";
+        public const string FirstLocalEstimateText = "Your first practice score will appear here.";
         public const string FirstCoachingTipText = "Your first coaching tip will appear here.";
-        public const string FirstPronunciationSummary = "PRONUNCIATION ESTIMATE | READY FOR YOUR FIRST ATTEMPT";
-        public const string FirstEstimatePrompt = "Speak once to generate the first local estimate.";
-        public const string PhonemeRoadmapText = "Phoneme roadmap: local heuristic estimate only, with true phoneme scoring planned next.";
+        public const string FirstPronunciationSummary = "PRACTICE SCORE | READY FOR YOUR FIRST ATTEMPT";
+        public const string FirstEstimatePrompt = "Speak once to generate the first practice score.";
+        public const string PhonemeRoadmapText = "True phoneme scoring is planned for a future sprint.";
         public const string ReadyToPracticeStatus = "Ready to practice.";
         public const string DemoModeReadyStatus = "Demo mode is ready. Press Start Speaking to preview a correct answer.";
         public const string PreparingSpeechModelStatus = "Preparing speech model...";
@@ -28,7 +28,7 @@ namespace FluentEcho.Presentation
         public const string MicrophonePermissionNeededTitle = "Microphone permission needed";
         public const string SpeechModelMissingStatus = "Speech model missing.";
         public const string SpeechModelMissingTitle = "Speech model missing";
-        public const string NextMissionPrompt = "Choose Next Mission to continue, or Try Again to improve this estimate.";
+        public const string NextMissionPrompt = "Choose NEXT MISSION to continue, or TRY AGAIN to improve the score.";
 
         public static string BuildProgressSummary(int totalWords)
         {

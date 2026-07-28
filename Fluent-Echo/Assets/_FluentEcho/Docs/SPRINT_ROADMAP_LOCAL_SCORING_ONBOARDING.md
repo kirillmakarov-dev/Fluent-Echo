@@ -21,13 +21,14 @@ The app should stay honest about what local Whisper can do. It can produce trans
 
 ## Sprint Status
 
-- Sprint 0 is in progress.
+- Sprint 0 is complete.
 - Scene-owned binding is now the default path in bootstrap.
 - Runtime fallback creation has been removed for lesson, microphone, and Whisper profile controls.
 - Notice overlay is now scene-owned instead of being created from code.
 - Settings panel and notice UI are now assigned through the scene instead of being reconstructed at runtime.
 - Progress, Whisper profile, and pronunciation labels are now also bound directly from scene-owned references.
-- Next pass should finish the remaining manual UI wiring and verify the edited scene layout directly in Play mode.
+- Sprint 2 text cleanup is now the active focus: result flow uses practice-score language, confidence, rhythm, and focus-next wording.
+- Next pass should continue tightening result/onboarding copy and then move into the lesson catalog expansion sprint.
 
 ## Sprint 0 - Scene-Owned UI and Layout Lock-Down
 

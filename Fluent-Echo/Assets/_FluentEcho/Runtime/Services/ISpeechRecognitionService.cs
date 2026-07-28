@@ -253,9 +253,9 @@ namespace FluentEcho.Services
         private static string BuildSummary(int score, string band, string confidenceBand)
         {
             if (score <= 0)
-                return $"PRONUNCIATION ESTIMATE | 0/100 | {confidenceBand.ToUpperInvariant()}";
+                return $"PRACTICE SCORE | 0/100 | {confidenceBand.ToUpperInvariant()}";
 
-            return $"PRONUNCIATION ESTIMATE | {score:0}/100 | {confidenceBand.ToUpperInvariant()}";
+            return $"PRACTICE SCORE | {score:0}/100 | {confidenceBand.ToUpperInvariant()}";
         }
 
         private static string BuildFeedback(

@@ -710,17 +710,12 @@ namespace FluentEcho.Presentation
             if (lastPronunciationScore.IsAvailable)
             {
                 lines.Add("Current attempt:");
-                lines.Add(
-                    $"Pronunciation estimate: {lastPronunciationScore.OverallScore}/100 - {lastPronunciationScore.BandLabel}");
-                lines.Add(
-                    $"Recognition confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
-                lines.Add(
-                    $"Matched words: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
-                lines.Add(
-                    $"Transcript match: coverage {lastPronunciationScore.CoverageScore}% | precision {lastPronunciationScore.PrecisionScore}%");
-                lines.Add(
-                    $"Rhythm: {lastPronunciationScore.TempoScore}% | word focus {lastPronunciationScore.WordQualityScore}%");
-                lines.Add(FluentEchoCopy.PhonemeRoadmapText);
+                lines.Add($"Practice score: {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel}");
+                lines.Add($"Confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
+                lines.Add($"Word match: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
+                lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
+                lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
+                lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -739,7 +734,7 @@ namespace FluentEcho.Presentation
                         ? "Best attempt so far: this attempt is the new best."
                         : "Best attempt so far:");
 
-                    string bestAttempt = $"Estimate {progress.BestPronunciationScore}/100";
+                    string bestAttempt = $"Practice score {progress.BestPronunciationScore}/100";
                     if (!string.IsNullOrWhiteSpace(progress.BestPronunciationConfidenceBand))
                         bestAttempt += $" | confidence {Capitalize(progress.BestPronunciationConfidenceBand)}";
 
@@ -800,12 +795,12 @@ namespace FluentEcho.Presentation
             var lines = new System.Collections.Generic.List<string>
             {
                 "Current attempt:",
-                $"Pronunciation estimate: {score.OverallScore}/100 | {score.BandLabel}",
-                $"Recognition confidence: {Capitalize(score.ConfidenceBand)}",
-                $"Matched words: {score.MatchedWordCount}/{score.ExpectedWordCount}",
-                $"Transcript match: coverage {score.CoverageScore}% | precision {score.PrecisionScore}%",
-                $"Rhythm: {score.TempoScore}% | word focus: {score.WordQualityScore}%",
-                FluentEchoCopy.PhonemeRoadmapText
+                $"Practice score: {score.OverallScore}/100 | {score.BandLabel}",
+                $"Confidence: {Capitalize(score.ConfidenceBand)}",
+                $"Word match: {score.MatchedWordCount}/{score.ExpectedWordCount}",
+                $"Recognition precision: {score.PrecisionScore}%",
+                $"Rhythm: {score.TempoScore}%",
+                $"Word focus: {score.WordQualityScore}%"
             };
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
