@@ -181,7 +181,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.BandLabel, Is.EqualTo("strong"));
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
-                Assert.That(score.FeedbackText, Does.Contain("Strong delivery"));
+                Assert.That(score.FeedbackText, Does.Contain("pronunciation estimate"));
                 Assert.That(score.WordScores, Has.Length.EqualTo(4));
                 Assert.That(score.WordScores[0].Score, Is.GreaterThanOrEqualTo(90));
                 Assert.That(score.WordQualityScore, Is.GreaterThanOrEqualTo(90));
@@ -290,6 +290,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.SummaryText, Does.Contain("LOW"));
                 Assert.That(score.FeedbackText, Does.Contain("pause"));
+                Assert.That(score.FeedbackText, Does.Contain("pronunciation estimate"));
             }
             finally
             {

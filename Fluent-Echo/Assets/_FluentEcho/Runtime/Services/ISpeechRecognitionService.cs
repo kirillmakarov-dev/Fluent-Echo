@@ -177,7 +177,7 @@ namespace FluentEcho.Services
                     "needs work",
                     emptyConfidence,
                     emptySummary,
-                    "Say the sentence once, then pause so the score can be calculated.",
+                    "Say the sentence once, then pause so the pronunciation estimate can be calculated.",
                     matchedWords,
                     expectedCount,
                     missingCount,
@@ -289,7 +289,7 @@ namespace FluentEcho.Services
                 return "Good word match. Slow down a little so each word lands cleanly.";
 
             if (score >= 85)
-                return $"Strong transcript match. {band.ToUpperInvariant()} practice score.";
+                return $"Strong transcript match. {band.ToUpperInvariant()} pronunciation estimate.";
 
             return $"Good transcript match. Keep the rhythm steady and natural for the next attempt.";
         }
