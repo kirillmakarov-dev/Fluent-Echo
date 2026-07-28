@@ -158,41 +158,9 @@ namespace FluentEcho.Views
                     return;
                 }
             }
-
-            GameObject buttonObject = new("Category Back Button", typeof(RectTransform), typeof(Image), typeof(Button));
-            buttonObject.transform.SetParent(transform, false);
-            RectTransform rect = buttonObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.06f, 0.86f);
-            rect.anchorMax = new Vector2(0.24f, 0.93f);
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-
-            Image background = buttonObject.GetComponent<Image>();
-            background.color = new Color(0.95f, 0.93f, 0.87f, 1f);
-
-            categoriesButton = buttonObject.GetComponent<Button>();
-            ColorBlock colors = categoriesButton.colors;
-            colors.highlightedColor = Color.Lerp(background.color, Color.white, 0.16f);
-            colors.pressedColor = Color.Lerp(background.color, Color.black, 0.16f);
-            colors.selectedColor = colors.highlightedColor;
-            categoriesButton.colors = colors;
-
-            GameObject labelObject = new("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-            labelObject.transform.SetParent(buttonObject.transform, false);
-            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
-            labelRect.anchorMin = new Vector2(0.08f, 0.05f);
-            labelRect.anchorMax = new Vector2(0.94f, 0.95f);
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-
-            TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
-            label.text = "CATEGORIES";
-            label.fontSize = 14;
-            label.fontStyle = FontStyles.Bold;
-            label.color = new Color(0.06f, 0.13f, 0.15f, 1f);
-            label.alignment = TextAlignmentOptions.Center;
-            label.raycastTarget = false;
-            ConfigureCategoriesButton(categoriesButton);
+            Debug.LogWarning(
+                "[FluentEchoView] Category Back Button is not assigned in the scene.",
+                this);
         }
 
         private static void ConfigureCategoriesButton(Button button)

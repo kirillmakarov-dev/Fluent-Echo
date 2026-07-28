@@ -79,18 +79,7 @@ namespace FluentEcho.Bootstrap
             }
 
             EnsureExerciseDropdown();
-            if (repairSceneUiOnStart)
-            {
-                EnsureMicrophoneDropdown();
-                EnsureQualityDropdown();
-                EnsureProgressLabel();
-                EnsureProgressDetailsLabel();
-                EnsurePronunciationLabels();
-            }
-            else
-            {
-                WireSceneOwnedUi();
-            }
+            WireSceneOwnedUi();
 
             presenter = new FluentEchoPresenter(
                 exercise,
@@ -260,50 +249,14 @@ namespace FluentEcho.Bootstrap
                 return;
 
             MicrophoneRecord microphone = whisperService.GetComponent<MicrophoneRecord>();
-            Transform settingsPanel = GetOrCreateSettingsPanel();
+            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
             if (settingsPanel == null)
+            {
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Scene-owned Settings Panel is not assigned.",
+                    this);
                 return;
-
-            EnsureSettingsButton(settingsPanel.parent);
-            EnsurePanelCloseButton(settingsPanel, "Settings Close Button", "CLOSE");
-
-            TextMeshProUGUI title = MoveOrCreateText(
-                settingsPanel,
-                "Settings Title",
-                "SPEECH SETTINGS",
-                11,
-                FontStyles.Bold,
-                new Color(0.20f, 0.90f, 0.68f, 1f),
-                new Vector2(0.05f, 0.72f),
-                new Vector2(0.95f, 0.94f),
-                TextAlignmentOptions.Left,
-                Array.Empty<string>());
-            if (title != null)
-                title.transform.SetAsFirstSibling();
-
-            TextMeshProUGUI label = MoveOrCreateText(
-                settingsPanel,
-                "Microphone Label",
-                "MICROPHONE",
-                11,
-                FontStyles.Bold,
-                new Color(0.89f, 0.37f, 0.3f, 1f),
-                new Vector2(0.05f, 0.58f),
-                new Vector2(0.46f, 0.74f),
-                TextAlignmentOptions.Left,
-                new[] { "Mic Label" });
-
-            TextMeshProUGUI selectedDeviceLabel = MoveOrCreateText(
-                settingsPanel,
-                "Microphone Value",
-                string.Empty,
-                14,
-                FontStyles.Bold,
-                new Color(0.96f, 0.94f, 0.88f, 1f),
-                new Vector2(0.05f, 0.44f),
-                new Vector2(0.46f, 0.56f),
-                TextAlignmentOptions.Left,
-                Array.Empty<string>());
+            }
 
             Dropdown dropdown = microphone?.microphoneDropdown;
             if (dropdown == null)
@@ -311,33 +264,17 @@ namespace FluentEcho.Bootstrap
 
             if (dropdown == null)
             {
-                dropdown = CreateDropdown(
-                    settingsPanel,
-                    "Microphone Dropdown",
-                    "Default microphone",
-                    new Vector2(0.05f, 0.12f),
-                    new Vector2(0.46f, 0.40f));
-                if (microphone == null)
-                    return;
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Scene-owned Microphone Dropdown is not assigned.",
+                    this);
+                return;
             }
 
             if (microphone != null)
                 microphone.microphoneDropdown = dropdown;
 
-            dropdown.transform.SetParent(settingsPanel, false);
-            RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.05f, 0.12f);
-            rect.anchorMax = new Vector2(0.46f, 0.40f);
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-
-            if (label != null)
-                label.transform.SetAsLastSibling();
-
             StyleDropdown(dropdown, SettingsFill);
-            EnsureSettingsDivider(settingsPanel);
-            PopulateDropdown(microphone, dropdown, selectedDeviceLabel);
-            UpdateMicrophoneValueLabel(microphone, selectedDeviceLabel);
+            PopulateDropdown(microphone, dropdown, null);
         }
 
         private void EnsureExerciseDropdown()
@@ -346,24 +283,19 @@ namespace FluentEcho.Bootstrap
                 return;
 
             Dropdown dropdown = exerciseDropdown;
-            bool createdDropdown = false;
             if (dropdown == null)
             {
-                dropdown = CreateDropdown(
-                    view.transform,
-                    "Lesson Dropdown",
-                    exerciseCatalog.GetDisplayNames()[0],
-                    new Vector2(0.17f, 0.86f),
-                    new Vector2(0.78f, 0.93f));
-                exerciseDropdown = dropdown;
-                createdDropdown = true;
-            }
+                Transform lessonDropdown = FindDeepTransform(view.transform.root, "Lesson Dropdown");
+                dropdown = lessonDropdown != null ? lessonDropdown.GetComponent<Dropdown>() : null;
+                if (dropdown == null)
+                {
+                    Debug.LogWarning(
+                        "[FluentEchoBootstrap] Scene-owned Lesson Dropdown is not assigned.",
+                        this);
+                    return;
+                }
 
-            if (createdDropdown)
-            {
-                RectTransform rect = dropdown.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.17f, 0.86f);
-                rect.anchorMax = new Vector2(0.78f, 0.93f);
+                exerciseDropdown = dropdown;
             }
 
             string[] names = exerciseCatalog.GetDisplayNames();
@@ -376,17 +308,6 @@ namespace FluentEcho.Bootstrap
 
             dropdown.SetValueWithoutNotify(ResolveSelectedExerciseIndex());
             dropdown.gameObject.SetActive(true);
-            HideLegacyExerciseTitle();
-        }
-
-        private void HideLegacyExerciseTitle()
-        {
-            if (view == null)
-                return;
-
-            Transform existing = view.transform.Find("Lesson Title Panel");
-            if (existing != null)
-                existing.gameObject.SetActive(false);
         }
 
         private void EnsureQualityDropdown()
@@ -394,12 +315,14 @@ namespace FluentEcho.Bootstrap
             if (whisperService == null)
                 return;
 
-            Transform settingsPanel = GetOrCreateSettingsPanel();
+            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
             if (settingsPanel == null)
+            {
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Scene-owned Settings Panel is not assigned.",
+                    this);
                 return;
-
-            EnsureSettingsButton(settingsPanel.parent);
-            EnsurePanelCloseButton(settingsPanel, "Settings Close Button", "CLOSE");
+            }
 
             Dropdown dropdown = whisperProfileDropdown;
             if (dropdown == null)
@@ -407,47 +330,17 @@ namespace FluentEcho.Bootstrap
 
             if (dropdown == null)
             {
-                dropdown = CreateDropdown(
-                    settingsPanel,
-                    "Whisper Profile Dropdown",
-                    "FAST",
-                    new Vector2(0.54f, 0.10f),
-                    new Vector2(0.95f, 0.42f));
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Scene-owned Whisper Profile Dropdown is not assigned.",
+                    this);
+                return;
             }
 
             whisperProfileDropdown = dropdown;
 
             WhisperQualityProfile currentProfile = whisperService.CurrentQualityProfile;
-            MoveOrCreateText(
-                settingsPanel,
-                "Whisper Profile Label",
-                "WHISPER PROFILE",
-                11,
-                FontStyles.Bold,
-                new Color(0.89f, 0.37f, 0.3f, 1f),
-                new Vector2(0.54f, 0.58f),
-                new Vector2(0.95f, 0.74f),
-                TextAlignmentOptions.Left,
-                new[] { "Whisper Profile Label" });
-
-            TextMeshProUGUI currentProfileLabel = MoveOrCreateText(
-                settingsPanel,
-                "Whisper Profile Value",
-                currentProfile.ToString().ToUpperInvariant(),
-                14,
-                FontStyles.Bold,
-                new Color(0.96f, 0.94f, 0.88f, 1f),
-                new Vector2(0.54f, 0.44f),
-                new Vector2(0.95f, 0.56f),
-                TextAlignmentOptions.Left,
-                Array.Empty<string>());
-
-            dropdown.transform.SetParent(settingsPanel, false);
-            RectTransform rect = dropdown.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.54f, 0.12f);
-            rect.anchorMax = new Vector2(0.95f, 0.40f);
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
+            TextMeshProUGUI currentProfileLabel = FindDeepTransform(view.transform.root, "Whisper Profile Value")
+                ?.GetComponent<TextMeshProUGUI>();
 
             var options = new List<Dropdown.OptionData>();
             foreach (string name in Enum.GetNames(typeof(WhisperQualityProfile)))
@@ -472,7 +365,6 @@ namespace FluentEcho.Bootstrap
 
             dropdown.SetValueWithoutNotify((int) currentProfile);
             StyleDropdown(dropdown, SettingsFill);
-            EnsureSettingsDivider(settingsPanel);
         }
 
         private void EnsureProgressLabel()
@@ -484,16 +376,8 @@ namespace FluentEcho.Bootstrap
             TextMeshProUGUI label = existing != null ? existing.GetComponent<TextMeshProUGUI>() : null;
             if (label == null)
             {
-                label = CreateText(
-                    view.transform,
-                    "Progress",
-                    FluentEchoCopy.FirstProgressSummary,
-                    14,
-                    FontStyles.Bold,
-                    new Color(0.89f, 0.37f, 0.3f, 1f),
-                    new Vector2(0.62f, 0.80f),
-                    new Vector2(0.94f, 0.85f),
-                    TextAlignmentOptions.Right);
+                Debug.LogWarning("[FluentEchoBootstrap] Progress label is not assigned in the scene.", this);
+                return;
             }
 
             view.ConfigureProgressLabel(label);
@@ -504,26 +388,22 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform resultPanel = GetOrCreateResultPanel();
+            Transform resultPanel = FindDeepTransform(view.transform.root, "Result Panel");
             if (resultPanel == null)
+            {
+                Debug.LogWarning("[FluentEchoBootstrap] Result Panel is not assigned in the scene.", this);
                 return;
+            }
 
-            TextMeshProUGUI label = MoveOrCreateText(
-                resultPanel,
-                "Progress Details",
-                FluentEchoCopy.FirstLocalEstimateText,
-                11,
-                FontStyles.Normal,
-                new Color(0.20f, 0.20f, 0.20f, 1f),
-                new Vector2(0.04f, 0.50f),
-                new Vector2(0.96f, 0.72f),
-                TextAlignmentOptions.Left,
-                new[] { "Progress Details" });
+            TextMeshProUGUI label = resultPanel.Find("Progress Details")?.GetComponent<TextMeshProUGUI>();
+            if (label == null)
+            {
+                Debug.LogWarning("[FluentEchoBootstrap] Progress Details label is not assigned in the scene.", this);
+                return;
+            }
 
             label.color = new Color(0.18f, 0.18f, 0.18f, 1f);
             label.fontStyle = FontStyles.Normal;
-            EnsureResultHeader(resultPanel);
-            EnsureResultCloseButton(resultPanel);
             view.ConfigureProgressDetailsLabel(label);
         }
 
@@ -532,38 +412,22 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform resultPanel = GetOrCreateResultPanel();
+            Transform resultPanel = FindDeepTransform(view.transform.root, "Result Panel");
             if (resultPanel == null)
+            {
+                Debug.LogWarning("[FluentEchoBootstrap] Result Panel is not assigned in the scene.", this);
                 return;
+            }
 
-            TextMeshProUGUI summaryLabel = MoveOrCreateText(
-                resultPanel,
-                "Pronunciation Estimate",
-                FluentEchoCopy.FirstPronunciationSummary,
-                14,
-                FontStyles.Bold,
-                new Color(0.89f, 0.37f, 0.3f, 1f),
-                new Vector2(0.04f, 0.34f),
-                new Vector2(0.96f, 0.48f),
-                TextAlignmentOptions.Left,
-                new[] { "Pronunciation Summary", "Practice Score", "Pronunciation Estimate" });
-
-            summaryLabel.color = new Color(0.89f, 0.37f, 0.30f, 1f);
-            TextMeshProUGUI feedbackLabel = MoveOrCreateText(
-                resultPanel,
-                "Coach Tip",
-                FluentEchoCopy.FirstCoachingTipText,
-                12,
-                FontStyles.Italic,
-                new Color(0.21f, 0.21f, 0.21f, 1f),
-                new Vector2(0.04f, 0.10f),
-                new Vector2(0.96f, 0.30f),
-                TextAlignmentOptions.Left,
-                new[] { "Pronunciation Feedback", "Coach Tip" });
+            TextMeshProUGUI summaryLabel = resultPanel.Find("Pronunciation Summary")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI feedbackLabel = resultPanel.Find("Pronunciation Feedback")?.GetComponent<TextMeshProUGUI>();
+            if (summaryLabel == null || feedbackLabel == null)
+            {
+                Debug.LogWarning("[FluentEchoBootstrap] Pronunciation summary or feedback labels are not assigned in the scene.", this);
+                return;
+            }
 
             feedbackLabel.color = new Color(0.21f, 0.21f, 0.21f, 1f);
-            EnsureResultHeader(resultPanel);
-            EnsureResultCloseButton(resultPanel);
             view.ConfigurePronunciationLabels(summaryLabel, feedbackLabel);
         }
 
