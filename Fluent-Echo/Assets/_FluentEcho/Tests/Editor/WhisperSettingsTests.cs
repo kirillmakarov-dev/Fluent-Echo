@@ -374,6 +374,37 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void ApproximateMatch_LowersConfidenceScoreComparedToExactMatch()
+        {
+            SpeechExerciseSO exercise = CreateExercise();
+
+            try
+            {
+                PronunciationScoreResult exactScore = scorer.Score(
+                    exercise,
+                    "The dog is big.",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    3f);
+
+                PronunciationScoreResult fuzzyScore = scorer.Score(
+                    exercise,
+                    "The dug is big.",
+                    new SpeechMatchResult(true, new[] { true, true, true, true }),
+                    3f);
+
+                Assert.That(exactScore.IsAvailable, Is.True);
+                Assert.That(fuzzyScore.IsAvailable, Is.True);
+                Assert.That(exactScore.ConfidenceScore, Is.GreaterThan(fuzzyScore.ConfidenceScore));
+                Assert.That(fuzzyScore.ConfidenceReason, Does.Contain("approximately"));
+                Assert.That(fuzzyScore.ConfidenceBand, Is.EqualTo("high"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+            }
+        }
+
+        [Test]
         public void EmptyTranscript_ProducesLowConfidenceEstimate()
         {
             SpeechExerciseSO exercise = CreateExercise();

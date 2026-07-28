@@ -91,6 +91,7 @@ namespace FluentEcho.Services
                 extraCount,
                 tempoScore,
                 wordQualityScore,
+                CountApproximateWordScores(wordScores),
                 matchResult.IsComplete,
                 transcript);
             string confidenceBand = GetConfidenceBand(confidenceScore);
@@ -331,6 +332,7 @@ namespace FluentEcho.Services
             int extraCount,
             int tempoScore,
             int wordQualityScore,
+            int approximateWordCount,
             bool isComplete,
             string transcript)
         {
@@ -344,13 +346,15 @@ namespace FluentEcho.Services
             float missingPenalty = Mathf.Clamp01(missingCount / Mathf.Max(1f, expectedCount));
             float rhythm = Mathf.Clamp01(tempoScore / 100f);
             float clarity = Mathf.Clamp01(wordQualityScore / 100f);
+            float approximatePenalty = Mathf.Clamp01(approximateWordCount / Mathf.Max(1f, expectedCount));
 
             float score = (matchRatio * 0.48f)
                 + (clarity * 0.26f)
                 + (rhythm * 0.16f)
                 + (isComplete ? 0.12f : 0f)
                 - (extraPenalty * 0.18f)
-                - (missingPenalty * 0.10f);
+                - (missingPenalty * 0.10f)
+                - (approximatePenalty * 0.08f);
 
             int confidenceScore = Mathf.RoundToInt(Mathf.Clamp01(score) * 100f);
 
@@ -359,6 +363,9 @@ namespace FluentEcho.Services
 
             if (extraCount >= Mathf.Max(2, expectedCount / 2))
                 confidenceScore = Mathf.Min(confidenceScore, 44);
+
+            if (approximateWordCount > 0)
+                confidenceScore = Mathf.Min(confidenceScore, 94 - Mathf.Min(12, approximateWordCount * 3));
 
             return confidenceScore;
         }
