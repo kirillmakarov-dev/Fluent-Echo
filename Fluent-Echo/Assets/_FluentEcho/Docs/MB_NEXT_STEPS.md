@@ -26,7 +26,9 @@ The active build already covers the core playable loop and the sprint work has m
 - Sprint 1: onboarding and friendly error states is complete.
 - Sprint 2: honest local pronunciation estimate is complete.
 - Sprint 3: lesson catalog, progress, and navigation is complete.
-- Sprint 4: portfolio case-study polish is the current focus.
+- Sprint 4: portfolio case-study polish is complete.
+- Sprint 5: phoneme-aware scoring roadmap is the next active focus.
+- Sprint 6: final portfolio polish and demo packaging will follow.
 
 The next code sprint after docs polish should be a stronger pronunciation-scoring pipeline that stays local and honest.
 
@@ -35,13 +37,14 @@ The next code sprint after docs polish should be a stronger pronunciation-scorin
 ### Sprint 4 checklist
 
 Use `SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md` as the current implementation plan.
-For the current sprint, keep the focus on the portfolio story:
+For the current sprint, keep the focus on the roadmap story:
 
 - align `PROTOTYPE_OVERVIEW.md` with the actual category-based flow;
 - keep `CASE_STUDY_BRIEF.md` short, credible, and reviewer-friendly;
 - keep `MB_ARCHITECTURE.md` aligned with the current onboarding, settings, and result panels;
 - keep `PORTFOLIO_DEMO_SCRIPT.md` ready for a clean live walkthrough;
 - make sure the docs explain the local-only scoring story without overclaiming phoneme assessment.
+- make the phoneme-aware scoring path explicit as the next additive service boundary.
 
 The plan intentionally avoids paid APIs and keeps the scoring pipeline local and transparent.
 
@@ -72,6 +75,7 @@ For the next implementation pass, keep the order simple:
 - Keep the current heuristic scorer as a fallback or debug aid.
 - Replace it with a phoneme-aware or alignment-based scoring path.
 - Return separate feedback for timing, missing sounds, and difficult words.
+- Document the transition so the current UI and architecture stay honest during the change.
 
 ### 4. Add tests around the architecture
 
@@ -84,6 +88,7 @@ For the next implementation pass, keep the order simple:
 - Replace placeholders with a real 3D character or a more polished presentation layer.
 - Add lip sync and facial reaction states.
 - Turn one lesson into a demo-quality showcase scene with strong visual hierarchy.
+- Keep the final demo package aligned with the simplified one-minute portfolio story.
 
 ### 6. Keep the portfolio story readable
 

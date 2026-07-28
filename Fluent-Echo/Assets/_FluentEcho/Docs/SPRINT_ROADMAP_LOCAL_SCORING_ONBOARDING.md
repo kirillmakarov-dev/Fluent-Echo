@@ -29,8 +29,9 @@ The app should stay honest about what local Whisper can do. It can produce trans
 - Progress, Whisper profile, and pronunciation labels are now also bound directly from scene-owned references.
 - First-launch onboarding is now a two-step flow that explains privacy first and practice paths second.
 - Sprint 3 lesson catalog and progress UX is now the active focus: category screens now surface cleared lessons in a separate progress label.
-- Sprint 4 portfolio case-study polish is now the active focus: the docs should mirror the current result breakdown and demo flow.
-- Next pass should keep polishing the portfolio story, then return to any remaining visual polish if no content gaps remain.
+- Sprint 4 portfolio case-study polish is now complete: the docs mirror the current result breakdown and demo flow.
+- Sprint 5 phoneme-aware scoring roadmap and architecture cleanup is now the next active focus.
+- Sprint 6 final portfolio polish and demo packaging will come after the scoring roadmap is fully documented.
 
 ## Sprint 0 - Scene-Owned UI and Layout Lock-Down
 
@@ -390,6 +391,75 @@ This sprint is about presentation, clarity, and proof of engineering decisions.
 - `Fluent-Echo/Assets/_FluentEcho/Docs/PROTOTYPE_OVERVIEW.md`
 - Portfolio README or external case study later.
 
+## Sprint 5 - Phoneme-Aware Scoring Roadmap
+
+### Objective
+
+Define the next scoring stage clearly enough that the project can move from heuristic practice scoring to a more honest phoneme-aware pipeline without changing the current local-only promise.
+
+### Scope
+
+- Describe the difference between heuristic transcript-based scoring and future phoneme-aware scoring.
+- Define the new service boundary for a future `IPhonemeAlignmentService`.
+- Keep Whisper as the transcript engine and do not blend it with pronunciation assessment.
+- Describe the data needed for future alignment: transcript, timing, target words, and per-word match quality.
+- Keep the current heuristic scorer as the MVP fallback until a stronger scorer exists.
+- Document how the UI should keep showing honest labels while the new scorer is being introduced.
+
+### Acceptance Criteria
+
+- The roadmap clearly explains what the current scorer does and does not do.
+- The future phoneme-aware path is documented as an additive service, not a rewrite of Whisper.
+- No paid API is required for the documented next step.
+- The docs give a reviewer a believable technical path from practice estimate to phoneme-aware assessment.
+
+### Suggested Files
+
+- `Fluent-Echo/Assets/_FluentEcho/Docs/MB_ARCHITECTURE.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/MB_NEXT_STEPS.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/CASE_STUDY_BRIEF.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/PORTFOLIO_DEMO_SCRIPT.md`
+
+### Verify After Sprint
+
+- Confirm the docs still describe the current heuristic scorer honestly.
+- Confirm the future scorer is documented as optional and local-first.
+- Confirm the reviewer can understand the next technical step without guessing.
+
+## Sprint 6 - Final Portfolio Polish And Demo Packaging
+
+### Objective
+
+Turn the stable local speech-practice prototype into a clean portfolio package that can be shown with confidence.
+
+### Scope
+
+- Polish the case-study narrative so it fits a one-minute explanation.
+- Prepare a short demo script that shows the full loop without technical detours.
+- Make the visual hierarchy feel production-ready in the main practice, settings, and result panels.
+- Keep the demo repeatable for recording.
+- Leave a clear handoff for a future 3D character or lip-sync layer if the project grows later.
+
+### Acceptance Criteria
+
+- A reviewer can understand the project story quickly.
+- The live demo flow is repeatable and stable.
+- The final package keeps the local-only and no-paid-API promise explicit.
+- The remaining future work is framed as roadmap, not as missing basics.
+
+### Suggested Files
+
+- `Fluent-Echo/Assets/_FluentEcho/Docs/CASE_STUDY_BRIEF.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/PORTFOLIO_DEMO_SCRIPT.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/MB_ARCHITECTURE.md`
+- `Fluent-Echo/Assets/_FluentEcho/Docs/MB_NEXT_STEPS.md`
+
+### Verify After Sprint
+
+- Confirm the case study stays short and credible.
+- Confirm the demo script reads like a clean walkthrough.
+- Confirm the docs still match the implemented local-only architecture.
+
 ## Recommended Implementation Order
 
 1. Sprint 0: scene-owned UI and layout lock-down.
@@ -397,6 +467,8 @@ This sprint is about presentation, clarity, and proof of engineering decisions.
 3. Sprint 2: honest local pronunciation estimate.
 4. Sprint 3: lesson catalog, progress, and navigation.
 5. Sprint 4: portfolio case-study polish.
+6. Sprint 5: phoneme-aware scoring roadmap.
+7. Sprint 6: final portfolio polish and demo packaging.
 
 ## Definition of Done for the Whole Roadmap
 
