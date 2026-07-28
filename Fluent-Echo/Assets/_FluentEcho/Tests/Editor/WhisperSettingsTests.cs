@@ -526,6 +526,7 @@ namespace FluentEcho.Tests
             Assert.That(unavailableDetails, Does.Contain(FluentEchoCopy.FirstEstimatePrompt));
             Assert.That(unavailableDetails, Does.Contain(FluentEchoCopy.FirstCoachingTipText));
             Assert.That(unavailableDetails, Does.Contain(FluentEchoCopy.PhonemeRoadmapText));
+            Assert.That(unavailableDetails, Does.Not.Contain("Alignment preview (demo only):"));
         }
 
         private static SpeechExerciseSO CreateExercise(string secondWord = "dog")
