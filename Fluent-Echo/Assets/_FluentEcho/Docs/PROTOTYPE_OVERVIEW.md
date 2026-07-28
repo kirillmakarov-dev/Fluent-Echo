@@ -63,3 +63,4 @@ Professional pronunciation, stress, and accent scoring should be added through a
 
 For a portfolio explanation, start with `CASE_STUDY_BRIEF.md`.
 It gives a one-minute story, the core architecture, the limitations, and the next steps for a reviewer.
+For a live walkthrough, open `PORTFOLIO_DEMO_SCRIPT.md`.
