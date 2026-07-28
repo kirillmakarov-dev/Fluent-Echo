@@ -1284,6 +1284,7 @@ namespace FluentEcho.Tests
                 service.RaiseListeningStopped();
 
                 Assert.That(view.LastSuccessState, Is.True);
+                Assert.That(view.LastProgressDetails, Does.Contain("Match quality:"));
                 Assert.That(view.LastProgressDetails, Does.Contain("Approximate matches:"));
                 Assert.That(view.LastProgressDetails, Does.Contain("fuzzy").Or.Contain("alt"));
                 Assert.That(view.LastPronunciationFeedback, Does.Contain("approximately").Or.Contain("careful"));

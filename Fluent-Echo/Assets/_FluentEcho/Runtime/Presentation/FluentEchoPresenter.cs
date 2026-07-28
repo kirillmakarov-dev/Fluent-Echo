@@ -758,6 +758,9 @@ namespace FluentEcho.Presentation
                 lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
                 lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
                 lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
+                string matchQuality = BuildMatchQualityText(lastPronunciationScore.WordScores);
+                if (!string.IsNullOrWhiteSpace(matchQuality))
+                    lines.Add(matchQuality);
                 string approximateMatches = BuildApproximateMatchText(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(approximateMatches))
                     lines.Add(approximateMatches);
@@ -845,6 +848,9 @@ namespace FluentEcho.Presentation
             lines.Add($"Precision: {lastPronunciationScore.PrecisionScore}%");
             lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
             lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
+            string matchQuality = BuildMatchQualityText(lastPronunciationScore.WordScores);
+            if (!string.IsNullOrWhiteSpace(matchQuality))
+                lines.Add(matchQuality);
             string approximateMatches = BuildApproximateMatchText(lastPronunciationScore.WordScores);
             if (!string.IsNullOrWhiteSpace(approximateMatches))
                 lines.Add(approximateMatches);
@@ -1094,6 +1100,38 @@ namespace FluentEcho.Presentation
             return approximateCount == 1
                 ? "Approximate matches: 1 word"
                 : $"Approximate matches: {approximateCount} words";
+        }
+
+        private static string BuildMatchQualityText(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
+        {
+            if (wordScores == null || wordScores.Count == 0)
+                return string.Empty;
+
+            int exactCount = 0;
+            int approximateCount = 0;
+            int missingCount = 0;
+
+            for (int i = 0; i < wordScores.Count; i++)
+            {
+                switch (wordScores[i].Kind)
+                {
+                    case PronunciationMatchKind.Exact:
+                        exactCount++;
+                        break;
+                    case PronunciationMatchKind.Alternative:
+                    case PronunciationMatchKind.Fuzzy:
+                        approximateCount++;
+                        break;
+                    default:
+                        missingCount++;
+                        break;
+                }
+            }
+
+            if (exactCount == 0 && approximateCount == 0 && missingCount == 0)
+                return string.Empty;
+
+            return $"Match quality: {exactCount} exact | {approximateCount} approximate | {missingCount} missed";
         }
 
         private static string BuildCategoryLessonLabel(SpeechExerciseSO exercise)
