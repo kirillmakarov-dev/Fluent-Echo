@@ -68,8 +68,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 8f2049ee287e44c99eb23e1be74cc1c2, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -112,6 +112,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: FluentEcho.Runtime::FluentEcho.Views.WordChipView
   background: {fileID: 6715516918969636376}
   label: {fileID: 3004079978270862909}
+  pendingBackground: {r: 0.09, g: 0.22, b: 0.25, a: 1}
+  matchedBackground: {r: 0.27, g: 0.87, b: 0.68, a: 1}
+  pendingText: {r: 0.72, g: 0.78, b: 0.8, a: 1}
+  matchedText: {r: 0.06, g: 0.13, b: 0.15, a: 1}
 --- !u!1 &8255408148926949578
 GameObject:
   m_ObjectHideFlags: 0

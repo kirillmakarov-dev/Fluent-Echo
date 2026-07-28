@@ -210,13 +210,9 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform teacherCard = view.transform.parent != null
-                ? view.transform.parent.Find("Teacher Card")
-                : null;
-            Transform settingsPanel = teacherCard != null ? teacherCard.Find("Settings Panel") : null;
-            Button toggleButton = teacherCard != null
-                ? teacherCard.Find("Settings Toggle Button")?.GetComponent<Button>()
-                : null;
+            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
+            Button toggleButton = FindDeepTransform(view.transform.root, "Settings Toggle Button")
+                ?.GetComponent<Button>();
             Button closeButton = settingsPanel != null
                 ? settingsPanel.Find("Settings Close Button")?.GetComponent<Button>()
                 : null;
@@ -245,7 +241,7 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            Transform resultPanel = view.transform.Find("Result Panel");
+            Transform resultPanel = FindDeepTransform(view.transform.root, "Result Panel");
             Button closeButton = resultPanel != null
                 ? resultPanel.Find("Result Close Button")?.GetComponent<Button>()
                 : null;
@@ -730,25 +726,18 @@ namespace FluentEcho.Bootstrap
             if (mentorCard == null)
                 return null;
 
-            Transform existing = mentorCard.Find("Settings Panel");
+            Transform existing = FindDeepTransform(view.transform.root, "Settings Panel");
             if (existing == null)
             {
                 RectTransform rect = CreatePanel(
-                    mentorCard,
+                    view.transform.root,
                     "Settings Panel",
-                    new Vector2(0.08f, 0.03f),
-                    new Vector2(0.92f, 0.16f),
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
                     new Color(0.11f, 0.24f, 0.28f, 1f));
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = new Vector2(860f, 440f);
                 return rect;
-            }
-
-            RectTransform existingRect = existing.GetComponent<RectTransform>();
-            if (existingRect != null)
-            {
-                existingRect.anchorMin = new Vector2(0.08f, 0.03f);
-                existingRect.anchorMax = new Vector2(0.92f, 0.34f);
-                existingRect.offsetMin = Vector2.zero;
-                existingRect.offsetMax = Vector2.zero;
             }
 
             Image image = existing.GetComponent<Image>();
@@ -988,24 +977,24 @@ namespace FluentEcho.Bootstrap
             button.onClick.AddListener(() => resultPanel.gameObject.SetActive(false));
         }
 
-        private void EnsureSettingsButton(Transform mentorCard)
+        private void EnsureSettingsButton(Transform uiRoot)
         {
-            if (mentorCard == null)
+            if (uiRoot == null)
                 return;
 
             Button button = GetOrCreateButton(
-                mentorCard,
+                uiRoot,
                 "Settings Toggle Button",
                 "SETTINGS",
-                new Vector2(0.08f, 0.05f),
-                new Vector2(0.92f, 0.11f),
+                new Vector2(0.83f, 0.90f),
+                new Vector2(0.965f, 0.96f),
                 new Color(0.11f, 0.24f, 0.28f, 1f),
                 new Color(0.96f, 0.94f, 0.88f, 1f));
 
             if (button == null)
                 return;
 
-            Transform settingsPanel = mentorCard.Find("Settings Panel");
+            Transform settingsPanel = FindDeepTransform(view.transform.root, "Settings Panel");
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
@@ -1054,13 +1043,13 @@ namespace FluentEcho.Bootstrap
             if (dropdown.captionText != null)
             {
                 dropdown.captionText.color = new Color(0.96f, 0.94f, 0.88f, 1f);
-                dropdown.captionText.fontSize = 12;
+                dropdown.captionText.fontSize = 15;
             }
 
             if (dropdown.itemText != null)
             {
                 dropdown.itemText.color = new Color(0.10f, 0.12f, 0.13f, 1f);
-                dropdown.itemText.fontSize = 12;
+                dropdown.itemText.fontSize = 14;
             }
         }
 

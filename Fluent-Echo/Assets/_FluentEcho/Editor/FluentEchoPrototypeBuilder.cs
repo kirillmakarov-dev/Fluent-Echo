@@ -30,20 +30,38 @@ namespace FluentEcho.Editor
         private const string EighthExercisePath = Root + "/Demo/Data/EighthLesson.asset";
         private const string WhisperSettingsPath = Root + "/Demo/Data/WhisperSettings.asset";
         private const string ChipPrefabPath = Root + "/Demo/Prefabs/WordChip.prefab";
-        private static readonly Color Background = Hex("08171D");
-        private static readonly Color Surface = Hex("10272E");
-        private static readonly Color SurfaceRaised = Hex("17353D");
-        private static readonly Color Cream = Hex("F6F0DF");
-        private static readonly Color Muted = Hex("A8BCC0");
-        private static readonly Color Mint = Hex("33D69F");
+        private const string AvaPortraitPath = Root + "/Demo/Visuals/AvaCoachPortrait.png";
+        private const string RoundedSurfacePath = Root + "/Demo/Visuals/RoundedSurface.png";
+        private const string IconRoot = Root + "/Demo/Visuals/Icons";
+        private const string ChevronLeftIconPath = IconRoot + "/ChevronLeft.png";
+        private const string ChevronRightIconPath = IconRoot + "/ChevronRight.png";
+        private const string MicrophoneIconPath = IconRoot + "/Microphone.png";
+        private const string ChatIconPath = IconRoot + "/Chat.png";
+        private const string SpeakerIconPath = IconRoot + "/Speaker.png";
+        private const string WaveformIconPath = IconRoot + "/Waveform.png";
+        private const string ShieldIconPath = IconRoot + "/Shield.png";
+        private const string SettingsIconPath = IconRoot + "/Settings.png";
+        private const string StatusIconPath = IconRoot + "/Status.png";
+        private const string CloseIconPath = IconRoot + "/Close.png";
+        private const string RetryIconPath = IconRoot + "/Retry.png";
+        private const string ArrowRightIconPath = IconRoot + "/ArrowRight.png";
+        private const string ChevronDownIconPath = IconRoot + "/ChevronDown.png";
+        private static readonly Color Background = Hex("07171D");
+        private static readonly Color Surface = Hex("0D252C");
+        private static readonly Color SurfaceRaised = Hex("173740");
+        private static readonly Color Cream = Hex("F8F3E7");
+        private static readonly Color Muted = Hex("A9BDC1");
+        private static readonly Color Mint = Hex("45DFAE");
+        private static readonly Color MintInk = Hex("0F7358");
         private static readonly Color Coral = Hex("FF8066");
-        private static readonly Color Ink = Hex("071416");
-        private static readonly Color SettingsFill = new(0.11f, 0.24f, 0.28f, 1f);
-        private static readonly Color SettingsBorder = new(0.20f, 0.90f, 0.68f, 0.24f);
-        private static readonly Color SettingsAccent = new(0.20f, 0.90f, 0.68f, 0.9f);
-        private static readonly Color ResultFill = new(0.94f, 0.89f, 0.80f, 1f);
-        private static readonly Color ResultBorder = new(0.89f, 0.37f, 0.30f, 0.20f);
-        private static readonly Color ResultAccent = new(0.89f, 0.37f, 0.30f, 0.92f);
+        private static readonly Color CoralInk = Hex("B84938");
+        private static readonly Color Ink = Hex("102226");
+        private static readonly Color SettingsFill = Hex("102C34");
+        private static readonly Color SettingsBorder = new(0.27f, 0.87f, 0.68f, 0.34f);
+        private static readonly Color SettingsAccent = new(0.27f, 0.87f, 0.68f, 0.96f);
+        private static readonly Color ResultFill = Hex("F8F3E7");
+        private static readonly Color ResultBorder = new(0.06f, 0.14f, 0.16f, 0.22f);
+        private static readonly Color ResultAccent = new(0.27f, 0.87f, 0.68f, 0.96f);
 
         [InitializeOnLoadMethod]
         private static void BuildOnFirstImport()
@@ -95,47 +113,51 @@ namespace FluentEcho.Editor
             WhisperSettingsSO settings = AssetDatabase.LoadAssetAtPath<WhisperSettingsSO>(WhisperSettingsPath);
             RectTransform teacherCard = FindSceneRect(scene, "Teacher Card");
             RectTransform lessonCard = FindSceneRect(scene, "Lesson Card");
+            RectTransform canvasRoot = teacherCard != null ? teacherCard.parent as RectTransform : null;
             if (teacherCard == null || lessonCard == null)
             {
                 Debug.LogWarning("[FluentEcho] Scene UI sync skipped because Teacher Card or Lesson Card is missing.");
                 return;
             }
 
+            ApplyRoundedSurface(teacherCard);
+            ApplyRoundedSurface(lessonCard);
+            ConfigureCoachPortrait(scene);
+
             RectTransform settingsPanel = FindSceneRect(scene, "Settings Panel");
-            bool createdSettingsPanel = false;
             if (settingsPanel == null)
             {
-                settingsPanel = CreatePanel(teacherCard, "Settings Panel", new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f), SettingsFill);
-                createdSettingsPanel = true;
+                settingsPanel = CreatePanel(canvasRoot, "Settings Panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), SettingsFill);
+                SetCenteredSize(settingsPanel, new Vector2(860f, 440f));
             }
 
-            if (settingsPanel.parent != teacherCard)
-                settingsPanel.SetParent(teacherCard, false);
-            if (createdSettingsPanel)
-                SetAnchors(settingsPanel, new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f));
             settingsPanel.GetComponent<Image>().color = SettingsFill;
+            ApplyRoundedSurface(settingsPanel);
             ApplyPanelFrame(settingsPanel, SettingsBorder);
-            EnsureChildPanel(settingsPanel, "Settings Accent", new Vector2(0f, 0.92f), Vector2.one, SettingsAccent);
-            EnsureChildPanel(settingsPanel, "Settings Divider", new Vector2(0.50f, 0.20f), new Vector2(0.505f, 0.84f), new Color(1f, 1f, 1f, 0.10f));
-            EnsureText(settingsPanel, "Settings Title", "SPEECH SETTINGS", 11, FontStyles.Bold, Mint, new Vector2(0.05f, 0.72f), new Vector2(0.95f, 0.94f), TextAlignmentOptions.Left);
-            EnsureText(settingsPanel, "Microphone Label", "MICROPHONE", 11, FontStyles.Bold, Coral, new Vector2(0.05f, 0.58f), new Vector2(0.46f, 0.74f), TextAlignmentOptions.Left);
-            EnsureText(settingsPanel, "Microphone Value", "Default microphone", 14, FontStyles.Bold, Cream, new Vector2(0.05f, 0.44f), new Vector2(0.46f, 0.56f), TextAlignmentOptions.Left);
-            EnsureText(settingsPanel, "Whisper Profile Label", "WHISPER PROFILE", 11, FontStyles.Bold, Coral, new Vector2(0.54f, 0.58f), new Vector2(0.95f, 0.74f), TextAlignmentOptions.Left);
-            EnsureText(settingsPanel, "Whisper Profile Value", settings != null ? settings.QualityProfile.ToString().ToUpperInvariant() : "FAST", 14, FontStyles.Bold, Cream, new Vector2(0.54f, 0.44f), new Vector2(0.95f, 0.56f), TextAlignmentOptions.Left);
-            EnsureButton(settingsPanel, "Settings Close Button", "CLOSE", new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink);
+            EnsureChildPanel(settingsPanel, "Settings Accent", new Vector2(0f, 0.975f), Vector2.one, SettingsAccent);
+            EnsureChildPanel(settingsPanel, "Settings Divider", new Vector2(0.50f, 0.18f), new Vector2(0.502f, 0.72f), new Color(1f, 1f, 1f, 0.10f));
+            EnsureText(settingsPanel, "Settings Title", "SPEECH SETTINGS", 28, FontStyles.Bold, Cream, new Vector2(0.06f, 0.78f), new Vector2(0.72f, 0.93f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Microphone Label", "INPUT DEVICE", 12, FontStyles.Bold, Mint, new Vector2(0.06f, 0.58f), new Vector2(0.45f, 0.70f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Microphone Value", "Default microphone", 16, FontStyles.Bold, Cream, new Vector2(0.06f, 0.46f), new Vector2(0.45f, 0.57f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Whisper Profile Label", "RECOGNITION PROFILE", 12, FontStyles.Bold, Mint, new Vector2(0.55f, 0.58f), new Vector2(0.94f, 0.70f), TextAlignmentOptions.Left);
+            EnsureText(settingsPanel, "Whisper Profile Value", settings != null ? settings.QualityProfile.ToString().ToUpperInvariant() : "FAST", 16, FontStyles.Bold, Cream, new Vector2(0.55f, 0.46f), new Vector2(0.94f, 0.57f), TextAlignmentOptions.Left);
+            Button settingsCloseButton = EnsureButton(settingsPanel, "Settings Close Button", "CLOSE", new Vector2(0.81f, 0.80f), new Vector2(0.94f, 0.92f), SurfaceRaised, Cream);
+            EnsureIcon(settingsCloseButton.transform, "Close Icon", CloseIconPath,
+                new Vector2(0.14f, 0.36f), new Vector2(0.26f, 0.64f), Cream);
+            SetButtonLabelInsets(settingsCloseButton, 0.30f, 0.96f);
 
             Dropdown microphoneDropdown = FindSceneDropdown(scene, "Microphone Dropdown");
             bool createdMicrophoneDropdown = false;
             if (microphoneDropdown == null)
             {
-                microphoneDropdown = CreateDropdown(settingsPanel, "Microphone Dropdown", new Vector2(0.05f, 0.10f), new Vector2(0.46f, 0.42f), "Default microphone");
+                microphoneDropdown = CreateDropdown(settingsPanel, "Microphone Dropdown", new Vector2(0.06f, 0.18f), new Vector2(0.45f, 0.42f), "Default microphone");
                 createdMicrophoneDropdown = true;
             }
 
             if (microphoneDropdown.transform.parent != settingsPanel)
                 microphoneDropdown.transform.SetParent(settingsPanel, false);
             if (createdMicrophoneDropdown)
-                SetAnchors(microphoneDropdown.GetComponent<RectTransform>(), new Vector2(0.05f, 0.10f), new Vector2(0.46f, 0.42f));
+                SetAnchors(microphoneDropdown.GetComponent<RectTransform>(), new Vector2(0.06f, 0.18f), new Vector2(0.45f, 0.42f));
             SetDropdownOptions(microphoneDropdown, "Default microphone");
             StyleDropdown(microphoneDropdown, SettingsFill);
 
@@ -143,19 +165,19 @@ namespace FluentEcho.Editor
             bool createdWhisperProfileDropdown = false;
             if (whisperProfileDropdown == null)
             {
-                whisperProfileDropdown = CreateDropdown(settingsPanel, "Whisper Profile Dropdown", new Vector2(0.54f, 0.10f), new Vector2(0.95f, 0.42f), "FAST");
+                whisperProfileDropdown = CreateDropdown(settingsPanel, "Whisper Profile Dropdown", new Vector2(0.55f, 0.18f), new Vector2(0.94f, 0.42f), "FAST");
                 createdWhisperProfileDropdown = true;
             }
 
             if (whisperProfileDropdown.transform.parent != settingsPanel)
                 whisperProfileDropdown.transform.SetParent(settingsPanel, false);
             if (createdWhisperProfileDropdown)
-                SetAnchors(whisperProfileDropdown.GetComponent<RectTransform>(), new Vector2(0.54f, 0.10f), new Vector2(0.95f, 0.42f));
+                SetAnchors(whisperProfileDropdown.GetComponent<RectTransform>(), new Vector2(0.55f, 0.18f), new Vector2(0.94f, 0.42f));
             SetDropdownOptions(whisperProfileDropdown, "FAST", "BALANCED", "ACCURATE");
             StyleDropdown(whisperProfileDropdown, SettingsFill);
             settingsPanel.gameObject.SetActive(false);
 
-            EnsureButton(teacherCard, "Settings Toggle Button", "SETTINGS", new Vector2(0.08f, 0.05f), new Vector2(0.92f, 0.11f), SettingsFill, Cream);
+            EnsureButton(canvasRoot, "Settings Toggle Button", "SETTINGS", new Vector2(0.83f, 0.90f), new Vector2(0.965f, 0.96f), SurfaceRaised, Cream);
 
             Dropdown lessonDropdown = FindSceneDropdown(scene, "Lesson Dropdown");
             bool createdLessonDropdown = false;
@@ -181,77 +203,86 @@ namespace FluentEcho.Editor
             if (micLabel != null)
                 micLabel.gameObject.SetActive(false);
 
+            Transform legacyWhisperLabel = lessonCard.Find("Whisper Profile Label");
+            if (legacyWhisperLabel != null)
+                legacyWhisperLabel.gameObject.SetActive(false);
+
             RectTransform resultPanel = FindSceneRect(scene, "Result Panel");
-            bool createdResultPanel = false;
             if (resultPanel == null)
             {
-                resultPanel = CreatePanel(lessonCard, "Result Panel", new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f), ResultFill);
-                createdResultPanel = true;
+                resultPanel = CreatePanel(canvasRoot, "Result Panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), ResultFill);
+                SetCenteredSize(resultPanel, new Vector2(960f, 680f));
             }
 
-            if (resultPanel.parent != lessonCard)
-                resultPanel.SetParent(lessonCard, false);
-            if (createdResultPanel)
-                SetAnchors(resultPanel, new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f));
             Image resultImage = resultPanel.GetComponent<Image>();
             if (resultImage != null)
                 resultImage.color = ResultFill;
+            ApplyRoundedSurface(resultPanel);
             CanvasGroup resultGroup = resultPanel.GetComponent<CanvasGroup>();
             if (resultGroup == null)
                 resultGroup = resultPanel.gameObject.AddComponent<CanvasGroup>();
 
             ApplyPanelFrame(resultPanel, ResultBorder);
-            EnsureChildPanel(resultPanel, "Result Accent", new Vector2(0f, 0.92f), Vector2.one, ResultAccent);
-            EnsureChildPanel(resultPanel, "Result Divider", new Vector2(0.04f, 0.74f), new Vector2(0.96f, 0.75f), new Color(0.89f, 0.37f, 0.30f, 0.16f));
-            EnsureText(resultPanel, "Result Header", "FINAL FEEDBACK", 10, FontStyles.Bold, Mint, new Vector2(0.04f, 0.79f), new Vector2(0.34f, 0.92f), TextAlignmentOptions.Left);
-            EnsureText(resultPanel, "Result Badge", "CLEARED", 10, FontStyles.Bold, Coral, new Vector2(0.78f, 0.79f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Right);
-            Button resultCloseButton = EnsureButton(resultPanel, "Result Close Button", "CLOSE", new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink);
+            EnsureChildPanel(resultPanel, "Result Accent", new Vector2(0f, 0.975f), Vector2.one, ResultAccent);
+            EnsureChildPanel(resultPanel, "Result Divider", new Vector2(0.06f, 0.72f), new Vector2(0.94f, 0.723f), new Color(0.06f, 0.14f, 0.16f, 0.12f));
+            EnsureText(resultPanel, "Result Header", "MISSION COMPLETE", 28, FontStyles.Bold, Ink, new Vector2(0.06f, 0.80f), new Vector2(0.58f, 0.93f), TextAlignmentOptions.Left);
+            EnsureText(resultPanel, "Result Badge", "CLEARED", 13, FontStyles.Bold, MintInk, new Vector2(0.68f, 0.80f), new Vector2(0.80f, 0.92f), TextAlignmentOptions.Center);
+            Button resultCloseButton = EnsureButton(resultPanel, "Result Close Button", "CLOSE", new Vector2(0.82f, 0.80f), new Vector2(0.94f, 0.92f), SurfaceRaised, Cream);
+            EnsureIcon(resultCloseButton.transform, "Close Icon", CloseIconPath,
+                new Vector2(0.14f, 0.36f), new Vector2(0.26f, 0.64f), Cream);
+            SetButtonLabelInsets(resultCloseButton, 0.30f, 0.96f);
             TextMeshProUGUI progressDetails = EnsureText(
                 resultPanel,
                 "Progress Details",
                 "Recent attempts will appear here.",
-                11,
+                17,
                 FontStyles.Normal,
                 Ink,
-                new Vector2(0.04f, 0.50f),
-                new Vector2(0.96f, 0.72f),
+                new Vector2(0.06f, 0.50f),
+                new Vector2(0.94f, 0.69f),
                 TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationSummary = EnsureText(
                 resultPanel,
                 "Pronunciation Summary",
                 string.Empty,
-                14,
+                30,
                 FontStyles.Bold,
-                Coral,
-                new Vector2(0.04f, 0.34f),
-                new Vector2(0.96f, 0.48f),
+                CoralInk,
+                new Vector2(0.06f, 0.34f),
+                new Vector2(0.94f, 0.49f),
                 TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationFeedback = EnsureText(
                 resultPanel,
                 "Pronunciation Feedback",
                 "Score feedback will appear here.",
-                12,
+                18,
                 FontStyles.Italic,
                 Ink,
-                new Vector2(0.04f, 0.18f),
-                new Vector2(0.96f, 0.32f),
+                new Vector2(0.06f, 0.19f),
+                new Vector2(0.94f, 0.33f),
                 TextAlignmentOptions.Left);
             Button resultTryAgainButton = EnsureButton(
                 resultPanel,
                 "Result Try Again Button",
                 "TRY AGAIN",
-                new Vector2(0.04f, 0.04f),
-                new Vector2(0.31f, 0.15f),
+                new Vector2(0.06f, 0.05f),
+                new Vector2(0.36f, 0.15f),
                 SurfaceRaised,
                 Cream);
+            EnsureIcon(resultTryAgainButton.transform, "Retry Icon", RetryIconPath,
+                new Vector2(0.12f, 0.34f), new Vector2(0.22f, 0.66f), Cream);
+            SetButtonLabelInsets(resultTryAgainButton, 0.25f, 0.96f);
             Button resultNextButton = EnsureButton(
                 resultPanel,
                 "Result Next Mission Button",
                 "NEXT MISSION",
-                new Vector2(0.33f, 0.04f),
-                new Vector2(0.66f, 0.15f),
+                new Vector2(0.38f, 0.05f),
+                new Vector2(0.72f, 0.15f),
                 Mint,
                 Ink);
+            EnsureIcon(resultNextButton.transform, "Next Icon", ArrowRightIconPath,
+                new Vector2(0.80f, 0.36f), new Vector2(0.89f, 0.64f), Ink);
+            SetButtonLabelInsets(resultNextButton, 0.04f, 0.76f);
             resultPanel.gameObject.SetActive(false);
 
             FluentEchoView view = Object.FindFirstObjectByType<FluentEchoView>(FindObjectsInactive.Include);
@@ -355,65 +386,84 @@ namespace FluentEcho.Editor
             CreatePanel(root, "Backdrop", Vector2.zero, Vector2.one, Background);
             CreatePanel(root, "Top Accent", new Vector2(0f, 0.982f), Vector2.one, Mint);
 
-            CreateText(root, "Brand", "FLUENT ECHO", 34, FontStyles.Bold, Cream,
-                new Vector2(0.05f, 0.89f), new Vector2(0.35f, 0.96f), TextAlignmentOptions.Left);
-            CreateText(root, "Subtitle", "OFFLINE SPEECH PRACTICE / UNITY + WHISPER", 15, FontStyles.Bold, Mint,
-                new Vector2(0.05f, 0.85f), new Vector2(0.48f, 0.89f), TextAlignmentOptions.Left);
+            CreateText(root, "Brand", "FLUENT ECHO", 32, FontStyles.Bold, Cream,
+                new Vector2(0.045f, 0.90f), new Vector2(0.35f, 0.96f), TextAlignmentOptions.Left);
+            CreateText(root, "Subtitle", "PRIVATE OFFLINE PRONUNCIATION PRACTICE", 13, FontStyles.Bold, Mint,
+                new Vector2(0.045f, 0.855f), new Vector2(0.48f, 0.895f), TextAlignmentOptions.Left);
 
             RectTransform mentorCard = CreatePanel(
-                root, "Teacher Card", new Vector2(0.05f, 0.13f), new Vector2(0.34f, 0.80f), Surface);
-            CreatePanel(mentorCard, "Portrait Field", new Vector2(0.08f, 0.39f), new Vector2(0.92f, 0.92f), SurfaceRaised);
-            CreateText(mentorCard, "Avatar", "A", 112, FontStyles.Bold, Coral,
-                new Vector2(0.18f, 0.48f), new Vector2(0.82f, 0.86f), TextAlignmentOptions.Center);
-            CreateText(mentorCard, "Teacher Name", "AVA / SPEECH COACH", 18, FontStyles.Bold, Mint,
-                new Vector2(0.08f, 0.29f), new Vector2(0.92f, 0.36f), TextAlignmentOptions.Left);
+                root, "Teacher Card", new Vector2(0.045f, 0.12f), new Vector2(0.31f, 0.82f), Surface);
+            ApplyRoundedSurface(mentorCard);
+            RectTransform portraitField = CreatePanel(
+                mentorCard, "Portrait Field", new Vector2(0.08f, 0.42f), new Vector2(0.92f, 0.92f), SurfaceRaised);
+            ApplyRoundedSurface(portraitField);
+            Image avatar = CreatePanel(
+                mentorCard, "Avatar", new Vector2(0.08f, 0.42f), new Vector2(0.92f, 0.92f), Color.white)
+                .GetComponent<Image>();
+            avatar.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(AvaPortraitPath);
+            avatar.preserveAspect = true;
+            avatar.raycastTarget = false;
+            CreateText(mentorCard, "Teacher Name", "AVA  /  SPEECH COACH", 17, FontStyles.Bold, Mint,
+                new Vector2(0.08f, 0.30f), new Vector2(0.92f, 0.38f), TextAlignmentOptions.Left);
             CreateText(mentorCard, "Teacher Note",
-                "Speak naturally. Your voice stays on this device and is processed by a local Whisper model.",
-                20, FontStyles.Normal, Cream,
-                new Vector2(0.08f, 0.19f), new Vector2(0.92f, 0.29f), TextAlignmentOptions.TopLeft);
+                "Your practice stays private. Voice is processed locally and never leaves this device.",
+                18, FontStyles.Normal, Cream,
+                new Vector2(0.08f, 0.12f), new Vector2(0.92f, 0.29f), TextAlignmentOptions.TopLeft);
+            Button settingsToggleButton = CreateButton(
+                root, "Settings Toggle Button", "SETTINGS",
+                new Vector2(0.83f, 0.90f), new Vector2(0.965f, 0.96f), SurfaceRaised, Cream, out _);
+            CreateIcon(settingsToggleButton.transform, "Settings Icon", SettingsIconPath,
+                new Vector2(0.12f, 0.34f), new Vector2(0.20f, 0.66f), Cream);
+            SetButtonLabelInsets(settingsToggleButton, 0.32f, 0.96f);
 
             RectTransform settingsPanel = CreatePanel(
-                mentorCard, "Settings Panel", new Vector2(0.08f, 0.03f), new Vector2(0.92f, 0.34f), SettingsFill);
+                root, "Settings Panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), SettingsFill);
+            SetCenteredSize(settingsPanel, new Vector2(860f, 440f));
+            ApplyRoundedSurface(settingsPanel);
             ApplyPanelFrame(settingsPanel, SettingsBorder);
-            CreatePanel(settingsPanel, "Settings Accent", new Vector2(0f, 0.92f), new Vector2(1f, 1f), SettingsAccent);
-            CreatePanel(settingsPanel, "Settings Divider", new Vector2(0.50f, 0.20f), new Vector2(0.505f, 0.84f), new Color(1f, 1f, 1f, 0.10f));
-            CreateText(settingsPanel, "Settings Title", "SPEECH SETTINGS", 11, FontStyles.Bold, Mint,
-                new Vector2(0.05f, 0.72f), new Vector2(0.95f, 0.94f), TextAlignmentOptions.Left);
+            CreatePanel(settingsPanel, "Settings Accent", new Vector2(0f, 0.975f), new Vector2(1f, 1f), SettingsAccent);
+            CreatePanel(settingsPanel, "Settings Divider", new Vector2(0.50f, 0.18f), new Vector2(0.502f, 0.72f), new Color(1f, 1f, 1f, 0.10f));
+            CreateText(settingsPanel, "Settings Title", "SPEECH SETTINGS", 28, FontStyles.Bold, Cream,
+                new Vector2(0.06f, 0.78f), new Vector2(0.72f, 0.93f), TextAlignmentOptions.Left);
             Button settingsCloseButton = CreateButton(
                 settingsPanel, "Settings Close Button", "CLOSE",
-                new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink, out _);
-            CreateText(settingsPanel, "Microphone Label", "MICROPHONE", 11, FontStyles.Bold, Coral,
-                new Vector2(0.05f, 0.58f), new Vector2(0.46f, 0.74f), TextAlignmentOptions.Left);
-            CreateText(settingsPanel, "Microphone Value", "Microphone Array", 14, FontStyles.Bold, Cream,
-                new Vector2(0.05f, 0.44f), new Vector2(0.46f, 0.56f), TextAlignmentOptions.Left);
+                new Vector2(0.81f, 0.80f), new Vector2(0.94f, 0.92f), SurfaceRaised, Cream, out _);
+            CreateIcon(settingsCloseButton.transform, "Close Icon", CloseIconPath,
+                new Vector2(0.14f, 0.36f), new Vector2(0.26f, 0.64f), Cream);
+            SetButtonLabelInsets(settingsCloseButton, 0.30f, 0.96f);
+            CreateText(settingsPanel, "Microphone Label", "INPUT DEVICE", 12, FontStyles.Bold, Mint,
+                new Vector2(0.06f, 0.58f), new Vector2(0.45f, 0.70f), TextAlignmentOptions.Left);
+            CreateText(settingsPanel, "Microphone Value", "Microphone Array", 16, FontStyles.Bold, Cream,
+                new Vector2(0.06f, 0.46f), new Vector2(0.45f, 0.57f), TextAlignmentOptions.Left);
             Dropdown microphoneDropdown = CreateDropdown(
                 settingsPanel,
                 "Microphone Dropdown",
-                new Vector2(0.05f, 0.10f),
-                new Vector2(0.46f, 0.42f),
+                new Vector2(0.06f, 0.18f),
+                new Vector2(0.45f, 0.42f),
                 "Default microphone");
             SetDropdownOptions(microphoneDropdown, "Default microphone");
-            CreateText(settingsPanel, "Whisper Profile Label", "WHISPER PROFILE", 11, FontStyles.Bold, Coral,
-                new Vector2(0.54f, 0.58f), new Vector2(0.95f, 0.74f), TextAlignmentOptions.Left);
-            CreateText(settingsPanel, "Whisper Profile Value", "FAST", 14, FontStyles.Bold, Cream,
-                new Vector2(0.54f, 0.44f), new Vector2(0.95f, 0.56f), TextAlignmentOptions.Left);
+            CreateText(settingsPanel, "Whisper Profile Label", "RECOGNITION PROFILE", 12, FontStyles.Bold, Mint,
+                new Vector2(0.55f, 0.58f), new Vector2(0.94f, 0.70f), TextAlignmentOptions.Left);
+            CreateText(settingsPanel, "Whisper Profile Value", "FAST", 16, FontStyles.Bold, Cream,
+                new Vector2(0.55f, 0.46f), new Vector2(0.94f, 0.57f), TextAlignmentOptions.Left);
             Dropdown whisperProfileDropdown = CreateDropdown(
                 settingsPanel,
                 "Whisper Profile Dropdown",
-                new Vector2(0.54f, 0.10f),
-                new Vector2(0.95f, 0.42f),
+                new Vector2(0.55f, 0.18f),
+                new Vector2(0.94f, 0.42f),
                 "FAST");
             SetDropdownOptions(whisperProfileDropdown, "FAST", "BALANCED", "ACCURATE");
             settingsPanel.gameObject.SetActive(false);
 
             RectTransform lessonCard = CreatePanel(
-                root, "Lesson Card", new Vector2(0.37f, 0.10f), new Vector2(0.95f, 0.86f), Cream);
-            CreateText(lessonCard, "Step", "LESSON 01 / DESCRIBE THE DOG", 16, FontStyles.Bold, Coral,
-                new Vector2(0.06f, 0.86f), new Vector2(0.35f, 0.93f), TextAlignmentOptions.Left);
-
+                root, "Lesson Card", new Vector2(0.335f, 0.075f), new Vector2(0.965f, 0.88f), Cream);
+            ApplyRoundedSurface(lessonCard);
             Button lessonPreviousButton = CreateButton(
                 lessonCard, "Lesson Previous Button", "PREV",
-                new Vector2(0.06f, 0.86f), new Vector2(0.15f, 0.93f), SurfaceRaised, Cream, out _);
+                new Vector2(0.06f, 0.86f), new Vector2(0.15f, 0.93f), Hex("F2ECDF"), Ink, out _);
+            CreateIcon(lessonPreviousButton.transform, "Previous Icon", ChevronLeftIconPath,
+                new Vector2(0.12f, 0.38f), new Vector2(0.23f, 0.62f), Ink);
+            SetButtonLabelInsets(lessonPreviousButton, 0.30f, 0.96f);
             lessonDropdown = CreateDropdown(
                 lessonCard,
                 "Lesson Dropdown",
@@ -424,11 +474,19 @@ namespace FluentEcho.Editor
             Button lessonNextButton = CreateButton(
                 lessonCard, "Lesson Next Button", "NEXT",
                 new Vector2(0.80f, 0.86f), new Vector2(0.94f, 0.93f), SurfaceRaised, Cream, out _);
+            CreateIcon(lessonNextButton.transform, "Next Icon", ChevronRightIconPath,
+                new Vector2(0.78f, 0.38f), new Vector2(0.87f, 0.62f), Cream);
+            SetButtonLabelInsets(lessonNextButton, 0.04f, 0.72f);
 
-            TextMeshProUGUI modeLabel = CreateText(lessonCard, "Mode", "LOCAL WHISPER", 14, FontStyles.Bold, Ink,
-                new Vector2(0.71f, 0.80f), new Vector2(0.94f, 0.85f), TextAlignmentOptions.Right);
-            TextMeshProUGUI progressLabel = CreateText(lessonCard, "Progress", "PROGRESS | no attempts yet", 14, FontStyles.Bold, Coral,
-                new Vector2(0.62f, 0.74f), new Vector2(0.94f, 0.79f), TextAlignmentOptions.Right);
+            TextMeshProUGUI progressLabel = CreateText(lessonCard, "Progress", "Lesson 1 / 8", 14, FontStyles.Bold, Ink,
+                new Vector2(0.31f, 0.86f), new Vector2(0.43f, 0.93f), TextAlignmentOptions.Center);
+            RectTransform progressTrack = CreatePanel(
+                lessonCard, "Lesson Progress Track", new Vector2(0.52f, 0.88f), new Vector2(0.68f, 0.91f), Hex("DED7C8"));
+            ApplyRoundedSurface(progressTrack);
+            Image progressFill = CreatePanel(
+                progressTrack, "Lesson Progress Fill", Vector2.zero, new Vector2(0.125f, 1f), Mint)
+                .GetComponent<Image>();
+            ApplyRoundedSurface(progressFill.rectTransform);
             TextMeshProUGUI prompt = CreateText(lessonCard, "Prompt", "Say the sentence in English.", 42, FontStyles.Bold, Ink,
                 new Vector2(0.06f, 0.66f), new Vector2(0.94f, 0.83f), TextAlignmentOptions.BottomLeft);
 
@@ -444,15 +502,32 @@ namespace FluentEcho.Editor
 
             RectTransform transcriptPanel = CreatePanel(
                 lessonCard, "Transcript Panel", new Vector2(0.06f, 0.37f), new Vector2(0.94f, 0.52f), Hex("E7E0CF"));
-            CreateText(transcriptPanel, "Heard Label", "WHISPER HEARD", 13, FontStyles.Bold, Coral,
-                new Vector2(0.04f, 0.64f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Left);
+            ApplyRoundedSurface(transcriptPanel);
+            CreateText(transcriptPanel, "Heard Label", "YOUR TRANSCRIPT", 13, FontStyles.Bold, CoralInk,
+                new Vector2(0.10f, 0.64f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Left);
+            CreateIcon(transcriptPanel, "Transcript Icon", WaveformIconPath,
+                new Vector2(0.04f, 0.72f), new Vector2(0.07f, 0.88f), Coral);
             TextMeshProUGUI transcript = CreateText(
                 transcriptPanel, "Transcript", "Your recognized sentence will appear here.", 24, FontStyles.Italic, Ink,
                 new Vector2(0.04f, 0.12f), new Vector2(0.96f, 0.64f), TextAlignmentOptions.Left);
 
+            RectTransform statusRail = CreatePanel(
+                lessonCard, "Status Rail", new Vector2(0.06f, 0.22f), new Vector2(0.94f, 0.34f), Hex("F2ECDF"));
+            ApplyRoundedSurface(statusRail);
+            CreateIcon(statusRail, "Status Dot", StatusIconPath,
+                new Vector2(0.025f, 0.38f), new Vector2(0.055f, 0.62f), Coral);
+            CreateIcon(statusRail, "Model Icon", WaveformIconPath,
+                new Vector2(0.37f, 0.38f), new Vector2(0.40f, 0.62f), MintInk);
+            CreateIcon(statusRail, "Privacy Icon", ShieldIconPath,
+                new Vector2(0.71f, 0.36f), new Vector2(0.74f, 0.64f), MintInk);
+            CreateText(statusRail, "Privacy Label", "PRIVATE  /  100% LOCAL", 13, FontStyles.Bold, Ink,
+                new Vector2(0.75f, 0.18f), new Vector2(0.98f, 0.82f), TextAlignmentOptions.Left);
+
             TextMeshProUGUI status = CreateText(
-                lessonCard, "Status", "Loading speech engine...", 21, FontStyles.Normal, Ink,
-                new Vector2(0.06f, 0.28f), new Vector2(0.94f, 0.36f), TextAlignmentOptions.Left);
+                lessonCard, "Status", "Preparing local model...", 14, FontStyles.Normal, Ink,
+                new Vector2(0.11f, 0.23f), new Vector2(0.38f, 0.33f), TextAlignmentOptions.Left);
+            TextMeshProUGUI modeLabel = CreateText(lessonCard, "Mode", "LOCAL WHISPER", 14, FontStyles.Bold, Ink,
+                new Vector2(0.47f, 0.23f), new Vector2(0.68f, 0.33f), TextAlignmentOptions.Left);
 
             Image recordingIndicator = CreatePanel(
                 lessonCard, "Recording Indicator", new Vector2(0.06f, 0.155f), new Vector2(0.075f, 0.185f), Coral)
@@ -461,17 +536,26 @@ namespace FluentEcho.Editor
 
             Button micButton = CreateButton(
                 lessonCard, "Mic Button", "START SPEAKING",
-                new Vector2(0.06f, 0.18f), new Vector2(0.48f, 0.30f), Ink, Mint, out TextMeshProUGUI micLabel);
+                new Vector2(0.06f, 0.07f), new Vector2(0.48f, 0.19f), Mint, Ink, out TextMeshProUGUI micLabel);
+            CreateIcon(micButton.transform, "Microphone Icon", MicrophoneIconPath,
+                new Vector2(0.13f, 0.37f), new Vector2(0.17f, 0.63f), Ink);
+            SetButtonLabelInsets(micButton, 0.22f, 0.96f);
             Button demoButton = CreateButton(
-                lessonCard, "Demo Button", "RUN DEMO ANSWER",
-                new Vector2(0.50f, 0.18f), new Vector2(0.72f, 0.30f), SurfaceRaised, Cream, out _);
+                lessonCard, "Demo Button", "DEMO ANSWER",
+                new Vector2(0.50f, 0.07f), new Vector2(0.72f, 0.19f), Hex("F2ECDF"), Ink, out _);
+            CreateIcon(demoButton.transform, "Demo Icon", ChatIconPath,
+                new Vector2(0.13f, 0.39f), new Vector2(0.20f, 0.61f), Ink);
+            SetButtonLabelInsets(demoButton, 0.25f, 0.96f);
             Button listenButton = CreateButton(
                 lessonCard, "Listen Button", "LISTEN",
-                new Vector2(0.74f, 0.18f), new Vector2(0.94f, 0.30f), SurfaceRaised, Cream, out _);
+                new Vector2(0.74f, 0.07f), new Vector2(0.94f, 0.19f), Hex("F2ECDF"), Ink, out _);
+            CreateIcon(listenButton.transform, "Listen Icon", SpeakerIconPath,
+                new Vector2(0.15f, 0.38f), new Vector2(0.23f, 0.62f), Ink);
+            SetButtonLabelInsets(listenButton, 0.28f, 0.96f);
 
             Toggle mockToggle = CreateToggle(
-                lessonCard, "Mock Mode Toggle", "Use deterministic demo engine",
-                new Vector2(0.06f, 0.01f), new Vector2(0.46f, 0.07f));
+                settingsPanel, "Mock Mode Toggle", "Use deterministic demo engine",
+                new Vector2(0.55f, 0.04f), new Vector2(0.94f, 0.13f));
 
             Button retryButton = CreateButton(
                 lessonCard, "Retry Button", "NEW ATTEMPT",
@@ -479,40 +563,53 @@ namespace FluentEcho.Editor
             retryButton.gameObject.SetActive(false);
 
             Image success = CreatePanel(
-                lessonCard, "Result Panel", new Vector2(0.06f, 0.02f), new Vector2(0.94f, 0.38f), ResultFill)
+                root, "Result Panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), ResultFill)
                 .GetComponent<Image>();
+            SetCenteredSize(success.rectTransform, new Vector2(960f, 680f));
+            ApplyRoundedSurface(success.rectTransform);
             CanvasGroup successGroup = success.gameObject.AddComponent<CanvasGroup>();
             ApplyPanelFrame(success.rectTransform, ResultBorder);
-            CreatePanel(success.rectTransform, "Result Accent", new Vector2(0f, 0.92f), new Vector2(1f, 1f), ResultAccent);
-            CreatePanel(success.rectTransform, "Result Divider", new Vector2(0.04f, 0.74f), new Vector2(0.96f, 0.75f), new Color(0.89f, 0.37f, 0.30f, 0.16f));
-            CreateText(success.rectTransform, "Result Header", "FINAL FEEDBACK", 10, FontStyles.Bold, Mint,
-                new Vector2(0.04f, 0.79f), new Vector2(0.34f, 0.92f), TextAlignmentOptions.Left);
-            CreateText(success.rectTransform, "Result Badge", "CLEARED", 10, FontStyles.Bold, Coral,
-                new Vector2(0.78f, 0.79f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Right);
+            CreatePanel(success.rectTransform, "Result Accent", new Vector2(0f, 0.975f), new Vector2(1f, 1f), ResultAccent);
+            CreatePanel(success.rectTransform, "Result Divider", new Vector2(0.06f, 0.72f), new Vector2(0.94f, 0.723f), new Color(0.06f, 0.14f, 0.16f, 0.12f));
+            CreateText(success.rectTransform, "Result Header", "MISSION COMPLETE", 28, FontStyles.Bold, Ink,
+                new Vector2(0.06f, 0.80f), new Vector2(0.58f, 0.93f), TextAlignmentOptions.Left);
+            CreateText(success.rectTransform, "Result Badge", "CLEARED", 13, FontStyles.Bold, MintInk,
+                new Vector2(0.68f, 0.80f), new Vector2(0.80f, 0.92f), TextAlignmentOptions.Center);
             Button resultCloseButton = CreateButton(
                 success.rectTransform, "Result Close Button", "CLOSE",
-                new Vector2(0.84f, 0.83f), new Vector2(0.96f, 0.95f), Coral, Ink, out _);
+                new Vector2(0.82f, 0.80f), new Vector2(0.94f, 0.92f), SurfaceRaised, Cream, out _);
+            CreateIcon(resultCloseButton.transform, "Close Icon", CloseIconPath,
+                new Vector2(0.14f, 0.36f), new Vector2(0.26f, 0.64f), Cream);
+            SetButtonLabelInsets(resultCloseButton, 0.30f, 0.96f);
             TextMeshProUGUI progressDetails = CreateText(
-                success.rectTransform, "Progress Details", "Recent attempts will appear here.", 11, FontStyles.Normal, Ink,
-                new Vector2(0.04f, 0.50f), new Vector2(0.96f, 0.72f), TextAlignmentOptions.Left);
+                success.rectTransform, "Progress Details", "Recent attempts will appear here.", 17, FontStyles.Normal, Ink,
+                new Vector2(0.06f, 0.50f), new Vector2(0.94f, 0.69f), TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationSummary = CreateText(
-                success.rectTransform, "Pronunciation Summary", string.Empty, 14, FontStyles.Bold, Coral,
-                new Vector2(0.04f, 0.34f), new Vector2(0.96f, 0.48f), TextAlignmentOptions.Left);
+                success.rectTransform, "Pronunciation Summary", string.Empty, 30, FontStyles.Bold, CoralInk,
+                new Vector2(0.06f, 0.34f), new Vector2(0.94f, 0.49f), TextAlignmentOptions.Left);
             TextMeshProUGUI pronunciationFeedback = CreateText(
-                success.rectTransform, "Pronunciation Feedback", "Score feedback will appear here.", 12, FontStyles.Italic, Ink,
-                new Vector2(0.04f, 0.18f), new Vector2(0.96f, 0.32f), TextAlignmentOptions.Left);
+                success.rectTransform, "Pronunciation Feedback", "Score feedback will appear here.", 18, FontStyles.Italic, Ink,
+                new Vector2(0.06f, 0.19f), new Vector2(0.94f, 0.33f), TextAlignmentOptions.Left);
             Button resultTryAgainButton = CreateButton(
                 success.rectTransform, "Result Try Again Button", "TRY AGAIN",
-                new Vector2(0.04f, 0.04f), new Vector2(0.31f, 0.15f), SurfaceRaised, Cream, out _);
+                new Vector2(0.06f, 0.05f), new Vector2(0.36f, 0.15f), SurfaceRaised, Cream, out _);
+            CreateIcon(resultTryAgainButton.transform, "Retry Icon", RetryIconPath,
+                new Vector2(0.12f, 0.34f), new Vector2(0.22f, 0.66f), Cream);
+            SetButtonLabelInsets(resultTryAgainButton, 0.25f, 0.96f);
             Button resultNextButton = CreateButton(
                 success.rectTransform, "Result Next Mission Button", "NEXT MISSION",
-                new Vector2(0.33f, 0.04f), new Vector2(0.66f, 0.15f), Mint, Ink, out _);
+                new Vector2(0.38f, 0.05f), new Vector2(0.72f, 0.15f), Mint, Ink, out _);
+            CreateIcon(resultNextButton.transform, "Next Icon", ArrowRightIconPath,
+                new Vector2(0.80f, 0.36f), new Vector2(0.89f, 0.64f), Ink);
+            SetButtonLabelInsets(resultNextButton, 0.04f, 0.76f);
             success.gameObject.SetActive(false);
 
             FluentEchoView view = lessonCard.gameObject.AddComponent<FluentEchoView>();
             SerializedObject serialized = new(view);
             Set(serialized, "promptLabel", prompt);
             Set(serialized, "progressLabel", progressLabel);
+            Set(serialized, "lessonPositionLabel", progressLabel);
+            Set(serialized, "lessonProgressFill", progressFill);
             Set(serialized, "progressDetailsLabel", progressDetails);
             Set(serialized, "pronunciationSummaryLabel", pronunciationSummary);
             Set(serialized, "pronunciationFeedbackLabel", pronunciationFeedback);
@@ -594,8 +691,7 @@ namespace FluentEcho.Editor
             EditorUtility.SetDirty(bootstrap);
 
             SerializedObject microphoneObject = new(microphone);
-            Transform teacherCard = view.transform.parent != null ? view.transform.parent.Find("Teacher Card") : null;
-            Transform settingsPanel = teacherCard != null ? teacherCard.Find("Settings Panel") : null;
+            Transform settingsPanel = FindDeep(view.transform.root, "Settings Panel");
             Dropdown microphoneDropdown = settingsPanel != null
                 ? settingsPanel.Find("Microphone Dropdown")?.GetComponent<Dropdown>()
                 : null;
@@ -946,14 +1042,18 @@ namespace FluentEcho.Editor
 
         private static DefaultControls.Resources CreateUiResources()
         {
-            Sprite sprite = CreateUiSprite();
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(RoundedSurfacePath);
+            Sprite flatSprite = CreateUiSprite();
+            if (sprite == null)
+                sprite = flatSprite;
+
             return new DefaultControls.Resources
             {
                 standard = sprite,
                 background = sprite,
                 inputField = sprite,
-                knob = sprite,
-                checkmark = sprite,
+                knob = flatSprite,
+                checkmark = flatSprite,
                 dropdown = sprite,
                 mask = sprite
             };
@@ -998,6 +1098,60 @@ namespace FluentEcho.Editor
             rect.offsetMax = Vector2.zero;
             panel.GetComponent<Image>().color = color;
             return rect;
+        }
+
+        private static Image CreateIcon(
+            Transform parent,
+            string name,
+            string assetPath,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color color)
+        {
+            Image image = CreatePanel(parent, name, anchorMin, anchorMax, color).GetComponent<Image>();
+            image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            return image;
+        }
+
+        private static Image EnsureIcon(
+            Transform parent,
+            string name,
+            string assetPath,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color color)
+        {
+            Transform existing = parent.Find(name);
+            Image image = existing != null ? existing.GetComponent<Image>() : null;
+            if (image == null)
+                return CreateIcon(parent, name, assetPath, anchorMin, anchorMax, color);
+
+            if (image.transform.parent != parent)
+                image.transform.SetParent(parent, false);
+
+            SetAnchors(image.rectTransform, anchorMin, anchorMax);
+            image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            image.color = color;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            return image;
+        }
+
+        private static void SetButtonLabelInsets(Button button, float left, float right)
+        {
+            TextMeshProUGUI label = button != null
+                ? button.GetComponentInChildren<TextMeshProUGUI>(true)
+                : null;
+            if (label == null)
+                return;
+
+            RectTransform rect = label.rectTransform;
+            rect.anchorMin = new Vector2(left, rect.anchorMin.y);
+            rect.anchorMax = new Vector2(right, rect.anchorMax.y);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
 
         private static RectTransform EnsureChildPanel(
@@ -1072,7 +1226,10 @@ namespace FluentEcho.Editor
                 button.transform.SetParent(parent, false);
             Image image = button.GetComponent<Image>();
             if (image != null)
+            {
                 image.color = background;
+                ApplyRoundedSurface(button.GetComponent<RectTransform>());
+            }
 
             TextMeshProUGUI text = button.GetComponentInChildren<TextMeshProUGUI>(true);
             if (text != null)
@@ -1082,6 +1239,26 @@ namespace FluentEcho.Editor
             }
 
             return button;
+        }
+
+        private static void ConfigureCoachPortrait(Scene scene)
+        {
+            Transform avatarTransform = FindSceneTransform(scene, "Avatar");
+            if (avatarTransform == null)
+                return;
+
+            TextMeshProUGUI placeholder = avatarTransform.GetComponent<TextMeshProUGUI>();
+            if (placeholder != null)
+                Object.DestroyImmediate(placeholder);
+
+            Image avatar = avatarTransform.GetComponent<Image>();
+            if (avatar == null)
+                avatar = avatarTransform.gameObject.AddComponent<Image>();
+
+            avatar.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(AvaPortraitPath);
+            avatar.color = Color.white;
+            avatar.preserveAspect = true;
+            avatar.raycastTarget = false;
         }
 
         private static RectTransform FindSceneRect(Scene scene, string name)
@@ -1141,6 +1318,17 @@ namespace FluentEcho.Editor
             rect.offsetMax = Vector2.zero;
         }
 
+        private static void SetCenteredSize(RectTransform rect, Vector2 size)
+        {
+            if (rect == null)
+                return;
+
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = size;
+        }
+
         private static void ApplyPanelFrame(RectTransform panel, Color borderColor)
         {
             if (panel == null)
@@ -1191,18 +1379,34 @@ namespace FluentEcho.Editor
                 return;
 
             if (dropdown.targetGraphic != null)
+            {
                 dropdown.targetGraphic.color = fillColor;
+                if (dropdown.targetGraphic is Image image)
+                {
+                    image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(RoundedSurfacePath);
+                    image.type = Image.Type.Sliced;
+                }
+            }
 
             if (dropdown.captionText != null)
             {
                 dropdown.captionText.color = new Color(0.96f, 0.94f, 0.88f, 1f);
-                dropdown.captionText.fontSize = 12;
+                dropdown.captionText.fontSize = 15;
             }
 
             if (dropdown.itemText != null)
             {
                 dropdown.itemText.color = new Color(0.10f, 0.12f, 0.13f, 1f);
-                dropdown.itemText.fontSize = 12;
+                dropdown.itemText.fontSize = 14;
+            }
+
+            Transform arrowTransform = dropdown.transform.Find("Arrow");
+            Image arrow = arrowTransform != null ? arrowTransform.GetComponent<Image>() : null;
+            if (arrow != null)
+            {
+                arrow.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(ChevronDownIconPath);
+                arrow.color = Cream;
+                arrow.preserveAspect = true;
             }
         }
 
@@ -1217,14 +1421,32 @@ namespace FluentEcho.Editor
             out TextMeshProUGUI text)
         {
             RectTransform rect = CreatePanel(parent, name, anchorMin, anchorMax, background);
+            ApplyRoundedSurface(rect);
             Button button = rect.gameObject.AddComponent<Button>();
             ColorBlock colors = button.colors;
             colors.highlightedColor = Color.Lerp(background, Color.white, 0.16f);
             colors.pressedColor = Color.Lerp(background, Color.black, 0.16f);
+            colors.selectedColor = colors.highlightedColor;
+            colors.disabledColor = new Color(background.r, background.g, background.b, 0.38f);
+            colors.fadeDuration = 0.18f;
             button.colors = colors;
             text = CreateText(rect, "Label", label, 17, FontStyles.Bold, foreground,
                 new Vector2(0.04f, 0.05f), new Vector2(0.96f, 0.95f), TextAlignmentOptions.Center);
             return button;
+        }
+
+        private static void ApplyRoundedSurface(RectTransform rect)
+        {
+            if (rect == null)
+                return;
+
+            Image image = rect.GetComponent<Image>();
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(RoundedSurfacePath);
+            if (image == null || sprite == null)
+                return;
+
+            image.sprite = sprite;
+            image.type = Image.Type.Sliced;
         }
 
         private static Toggle CreateToggle(

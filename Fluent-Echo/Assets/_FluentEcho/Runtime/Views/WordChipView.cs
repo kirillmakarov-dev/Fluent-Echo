@@ -9,8 +9,11 @@ namespace FluentEcho.Views
         [SerializeField] private Image background;
         [SerializeField] private TextMeshProUGUI label;
 
-        private static readonly Color PendingColor = new(0.12f, 0.18f, 0.22f, 1f);
-        private static readonly Color MatchedColor = new(0.14f, 0.74f, 0.52f, 1f);
+        [Header("Visual States")]
+        [SerializeField] private Color pendingBackground = new(0.09f, 0.22f, 0.25f, 1f);
+        [SerializeField] private Color matchedBackground = new(0.27f, 0.87f, 0.68f, 1f);
+        [SerializeField] private Color pendingText = new(0.72f, 0.78f, 0.80f, 1f);
+        [SerializeField] private Color matchedText = new(0.06f, 0.13f, 0.15f, 1f);
 
         public void Configure(string word)
         {
@@ -20,8 +23,8 @@ namespace FluentEcho.Views
 
         public void SetMatched(bool matched)
         {
-            background.color = matched ? MatchedColor : PendingColor;
-            label.color = matched ? Color.white : new Color(0.72f, 0.78f, 0.8f, 1f);
+            background.color = matched ? matchedBackground : pendingBackground;
+            label.color = matched ? matchedText : pendingText;
         }
     }
 }

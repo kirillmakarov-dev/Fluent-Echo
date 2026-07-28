@@ -10,6 +10,8 @@ namespace FluentEcho.Views
     {
         [SerializeField] private TextMeshProUGUI promptLabel;
         [SerializeField] private TextMeshProUGUI progressLabel;
+        [SerializeField] private TextMeshProUGUI lessonPositionLabel;
+        [SerializeField] private Image lessonProgressFill;
         [SerializeField] private TextMeshProUGUI progressDetailsLabel;
         [SerializeField] private TextMeshProUGUI pronunciationSummaryLabel;
         [SerializeField] private TextMeshProUGUI pronunciationFeedbackLabel;
@@ -33,6 +35,10 @@ namespace FluentEcho.Views
         [SerializeField] private Image successPanel;
         [SerializeField] private CanvasGroup successPanelGroup;
         [SerializeField] private RectTransform successPanelRect;
+
+        [Header("Result Motion")]
+        [SerializeField, Min(0f)] private float resultEnterDuration = 0.22f;
+        [SerializeField, Range(0.8f, 1f)] private float resultEnterScale = 0.965f;
 
         private readonly List<WordChipView> chips = new();
         private Coroutine resultAnimation;
@@ -114,8 +120,25 @@ namespace FluentEcho.Views
 
         public void SetProgress(string progress)
         {
-            if (progressLabel != null)
+            if (progressLabel != null && progressLabel != lessonPositionLabel)
                 progressLabel.text = progress;
+        }
+
+        public void SetLessonPosition(int currentLesson, int totalLessons)
+        {
+            int safeTotal = Mathf.Max(1, totalLessons);
+            int safeCurrent = Mathf.Clamp(currentLesson, 1, safeTotal);
+
+            if (lessonPositionLabel != null)
+                lessonPositionLabel.text = $"Lesson {safeCurrent} / {safeTotal}";
+
+            if (lessonProgressFill != null)
+            {
+                RectTransform fillRect = lessonProgressFill.rectTransform;
+                Vector2 anchorMax = fillRect.anchorMax;
+                anchorMax.x = safeCurrent / (float) safeTotal;
+                fillRect.anchorMax = anchorMax;
+            }
         }
 
         public void SetProgressDetails(string details)
@@ -135,7 +158,29 @@ namespace FluentEcho.Views
                 pronunciationFeedbackLabel.text = feedback ?? string.Empty;
         }
 
-        public void SetStatus(string status) => statusLabel.text = status;
+        public void SetStatus(string status)
+        {
+            if (statusLabel == null)
+                return;
+
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                statusLabel.text = string.Empty;
+                return;
+            }
+
+            if (status.StartsWith("Whisper ready", StringComparison.OrdinalIgnoreCase))
+                statusLabel.text = "Ready when you are.";
+            else if (status.StartsWith("Loading", StringComparison.OrdinalIgnoreCase)
+                     || status.StartsWith("Warming", StringComparison.OrdinalIgnoreCase))
+                statusLabel.text = "Preparing local model...";
+            else if (status.StartsWith("Analyzing", StringComparison.OrdinalIgnoreCase))
+                statusLabel.text = "Analyzing your speech...";
+            else if (status.StartsWith("Excellent", StringComparison.OrdinalIgnoreCase))
+                statusLabel.text = "Answer accepted.";
+            else
+                statusLabel.text = status;
+        }
 
         public void SetTranscript(string transcript)
         {
@@ -206,7 +251,7 @@ namespace FluentEcho.Views
             if (successPanelGroup != null)
                 successPanelGroup.alpha = 0f;
             if (successPanelRect != null)
-                successPanelRect.localScale = new Vector3(0.965f, 0.965f, 1f);
+                successPanelRect.localScale = new Vector3(resultEnterScale, resultEnterScale, 1f);
 
             resultAnimation = StartCoroutine(AnimateResultPanelIn());
         }
@@ -229,7 +274,7 @@ namespace FluentEcho.Views
 
         private System.Collections.IEnumerator AnimateResultPanelIn()
         {
-            const float duration = 0.22f;
+            float duration = Mathf.Max(0.01f, resultEnterDuration);
             float elapsed = 0f;
 
             while (elapsed < duration)
@@ -243,7 +288,7 @@ namespace FluentEcho.Views
 
                 if (successPanelRect != null)
                 {
-                    float scale = Mathf.Lerp(0.965f, 1f, eased);
+                    float scale = Mathf.Lerp(resultEnterScale, 1f, eased);
                     successPanelRect.localScale = new Vector3(scale, scale, 1f);
                 }
 

@@ -243,6 +243,9 @@ namespace FluentEcho.Presentation
             view.SetNavigation(
                 exerciseCatalog != null && currentExerciseIndex > 0,
                 exerciseCatalog != null && currentExerciseIndex < exerciseCatalog.Count - 1);
+            view.SetLessonPosition(
+                currentExerciseIndex + 1,
+                exerciseCatalog != null ? exerciseCatalog.Count : 1);
         }
 
         private void LoadCurrentExercise()
