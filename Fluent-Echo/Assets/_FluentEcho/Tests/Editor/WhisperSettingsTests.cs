@@ -440,6 +440,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.TempoScore, Is.LessThan(70));
                 Assert.That(score.FeedbackText, Does.Contain("quicker"));
+                Assert.That(score.ConfidenceReason, Does.Contain("pacing").Or.Contain("rushed"));
                 Assert.That(score.EstimateBasisText, Does.Contain("not phoneme-level scoring"));
             }
             finally
@@ -464,6 +465,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.TempoScore, Is.LessThan(80));
                 Assert.That(score.FeedbackText, Does.Contain("Slow down"));
+                Assert.That(score.ConfidenceReason, Does.Contain("pacing").Or.Contain("slow"));
             }
             finally
             {

@@ -55,6 +55,7 @@ namespace FluentEcho.Services
                         expectedCount,
                         missingCount,
                         extraCount,
+                        recordingSeconds,
                         emptyConfidence,
                         true,
                         transcriptWasEmpty),
@@ -97,6 +98,7 @@ namespace FluentEcho.Services
                 expectedCount,
                 missingCount,
                 extraCount,
+                recordingSeconds,
                 confidenceBand,
                 matchResult.IsComplete,
                 transcriptWasEmpty);
@@ -201,6 +203,7 @@ namespace FluentEcho.Services
             int expectedCount,
             int missingCount,
             int extraCount,
+            float recordingSeconds,
             string confidenceBand,
             bool isComplete,
             bool transcriptWasEmpty)
@@ -218,12 +221,50 @@ namespace FluentEcho.Services
                 return $"Missing {missingCount} word{PluralSuffix(missingCount)}, so confidence stays cautious.";
 
             if (extraCount > 0)
-                return "Extra words were heard, so confidence stays a little cautious.";
+                return AppendPacingReason(
+                    "Extra words were heard, so confidence stays a little cautious.",
+                    recordingSeconds,
+                    expectedCount);
 
             if (isComplete && confidenceBand == "high")
                 return "All target words matched cleanly, with no extra words.";
 
-            return "The match is useful, but confidence still stays cautious.";
+            return AppendPacingReason(
+                "The match is useful, but confidence still stays cautious.",
+                recordingSeconds,
+                expectedCount);
+        }
+
+        private static string AppendPacingReason(string reason, float recordingSeconds, int expectedCount)
+        {
+            string pacingReason = BuildPacingReason(recordingSeconds, expectedCount);
+            if (string.IsNullOrWhiteSpace(pacingReason))
+                return reason;
+
+            return $"{reason} {pacingReason}";
+        }
+
+        private static string BuildPacingReason(float recordingSeconds, int expectedCount)
+        {
+            if (recordingSeconds <= 0f || expectedCount <= 0)
+                return string.Empty;
+
+            float expectedSeconds = Mathf.Max(1.5f, expectedCount * 0.75f);
+            float ratio = recordingSeconds / expectedSeconds;
+
+            if (ratio <= 0.55f)
+                return "The pacing sounded rushed, so confidence stays cautious.";
+
+            if (ratio >= 1.75f)
+                return "The pacing sounded very slow, so confidence stays cautious.";
+
+            if (ratio <= 0.75f)
+                return "The pacing sounded a little rushed, so confidence stays cautious.";
+
+            if (ratio >= 1.35f)
+                return "The pacing sounded a little slow, so confidence stays cautious.";
+
+            return string.Empty;
         }
 
         private static string BuildEstimateBasisText(bool isComplete)
