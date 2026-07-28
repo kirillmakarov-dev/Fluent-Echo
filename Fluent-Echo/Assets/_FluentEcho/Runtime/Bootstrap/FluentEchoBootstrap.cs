@@ -100,6 +100,7 @@ namespace FluentEcho.Bootstrap
                 mockService,
                 useMockByDefault,
                 PlayReference,
+                null,
                 ResolveSelectedCategoryIndex(),
                 ResolveSelectedExerciseIndex(),
                 PersistPracticeSelection);

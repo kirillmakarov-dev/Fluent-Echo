@@ -126,6 +126,40 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void Scoring_WithPhonemeService_UsesAlignmentEvidence()
+        {
+            SpeechExerciseSO exercise = CreateExercise("apple", "Say the word.", "lesson_test_phoneme_alignment");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var phonemeService = new FakePhonemeAlignmentService();
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService, phonemeService);
+
+            try
+            {
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                service.RaiseTranscript("apple");
+                service.RaiseListeningStopped();
+
+                Assert.That(phonemeService.CallCount, Is.EqualTo(1));
+                Assert.That(phonemeService.LastRequest, Is.Not.Null);
+                Assert.That(phonemeService.LastRequest.Transcript, Is.EqualTo("apple"));
+                Assert.That(view.LastProgressDetails, Does.Contain("Phoneme alignment:"));
+                Assert.That(view.LastProgressDetails, Does.Contain("apple_phoneme"));
+                Assert.That(view.LastPronunciationFeedback, Does.Contain("local speech model").Or.Contain("Phoneme"));
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void LoadingStatus_DisablesMicUntilSpeechModelIsReady()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_loading_status");
@@ -1302,7 +1336,8 @@ namespace FluentEcho.Tests
             SpeechExerciseCatalogSO catalog,
             FakeView view,
             FakeSpeechService service,
-            FakeSpeechService mockService)
+            FakeSpeechService mockService,
+            IPhonemeAlignmentService phonemeAlignmentService = null)
         {
             return new FluentEchoPresenter(
                 exercise,
@@ -1312,6 +1347,7 @@ namespace FluentEcho.Tests
                 mockService,
                 false,
                 null,
+                phonemeAlignmentService,
                 0,
                 0,
                 null);
@@ -1440,6 +1476,29 @@ namespace FluentEcho.Tests
             public void RaiseAnalysisStarted() => AnalysisStarted?.Invoke();
 
             public void RaiseListeningStopped() => ListeningStopped?.Invoke();
+        }
+
+        private sealed class FakePhonemeAlignmentService : IPhonemeAlignmentService
+        {
+            public int CallCount { get; private set; }
+            public PhonemeAlignmentRequest LastRequest { get; private set; }
+
+            public PhonemeAlignmentResult Align(PhonemeAlignmentRequest request)
+            {
+                CallCount++;
+                LastRequest = request;
+                return new PhonemeAlignmentResult(
+                    true,
+                    88,
+                    "high",
+                    "Alignment looks strong.",
+                    "Keep the same mouth shape on the next attempt.",
+                    "Evidence: transcript and timing were aligned.",
+                    new[] { "a", "p" },
+                    Array.Empty<string>(),
+                    Array.Empty<string>(),
+                    request.RecordingSeconds);
+            }
         }
 
         private sealed class FakeView : IFluentEchoView

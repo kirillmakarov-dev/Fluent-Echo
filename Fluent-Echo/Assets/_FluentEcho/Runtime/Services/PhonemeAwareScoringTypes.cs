@@ -38,7 +38,7 @@ namespace FluentEcho.Services
         public IReadOnlyList<string> AcceptedPhrases { get; }
 
         public bool HasTranscript => !string.IsNullOrWhiteSpace(Transcript);
-        public bool HasMatchResult => MatchResult != null;
+        public bool HasMatchResult => MatchResult.MatchedWords != null;
     }
 
     public sealed class PhonemeAlignmentResult

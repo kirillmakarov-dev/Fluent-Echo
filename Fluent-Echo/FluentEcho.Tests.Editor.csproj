@@ -51,6 +51,7 @@
     <Compile Include="Assets\_FluentEcho\Tests\Editor\SpeechSessionTests.cs" />
     <Compile Include="Assets\_FluentEcho\Tests\Editor\WhisperSettingsTests.cs" />
     <Compile Include="Assets\_FluentEcho\Tests\Editor\SpeechAnswerMatcherTests.cs" />
+    <Compile Include="Assets\_FluentEcho\Tests\Editor\PhonemeAwareScoringTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\_FluentEcho\Tests\Editor\FluentEcho.Tests.Editor.asmdef" />

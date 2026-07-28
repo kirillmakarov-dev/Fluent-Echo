@@ -24,6 +24,7 @@ namespace FluentEcho.Presentation
         private readonly ISpeechRecognitionService realService;
         private readonly ISpeechRecognitionService mockService;
         private readonly IPronunciationScoringService scoringService = new HeuristicPronunciationScoringService();
+        private readonly IPhonemeAlignmentService phonemeAlignmentService;
         private readonly SpeechAnswerMatcher matcher = new();
         private readonly SpeechSession session = new();
         private readonly Action<AudioClip> playReference;
@@ -38,6 +39,7 @@ namespace FluentEcho.Presentation
         private bool onboardingRequired;
         private float attemptStartedAt = -1f;
         private PronunciationScoreResult lastPronunciationScore = PronunciationScoreResult.Unavailable;
+        private PhonemeAlignmentResult lastPhonemeAlignment = PhonemeAlignmentResult.Unavailable;
         private NoticeAction pendingNoticeAction = NoticeAction.None;
 
         public FluentEchoPresenter(
@@ -48,6 +50,7 @@ namespace FluentEcho.Presentation
             ISpeechRecognitionService mockService,
             bool useMockByDefault,
             Action<AudioClip> playReference,
+            IPhonemeAlignmentService phonemeAlignmentService = null,
             int selectedCategoryIndex = 0,
             int selectedExerciseIndex = 0,
             Action<int, int> persistSelection = null)
@@ -58,6 +61,7 @@ namespace FluentEcho.Presentation
             this.mockService = mockService;
             useMock = useMockByDefault;
             this.playReference = playReference;
+            this.phonemeAlignmentService = phonemeAlignmentService;
             this.persistSelection = persistSelection;
             currentCategoryIndex = ResolveCategoryIndex(selectedCategoryIndex);
             currentExerciseIndex = Mathf.Max(0, selectedExerciseIndex);
@@ -711,6 +715,7 @@ namespace FluentEcho.Presentation
                 session.Transcript,
                 session.MatchResult,
                 GetAttemptDurationSeconds());
+            lastPhonemeAlignment = UpdatePhonemeAlignmentEvidence();
 
             if (!lastPronunciationScore.IsAvailable)
             {
@@ -736,6 +741,21 @@ namespace FluentEcho.Presentation
                 return 0f;
 
             return Mathf.Max(0f, Time.realtimeSinceStartup - attemptStartedAt);
+        }
+
+        private PhonemeAlignmentResult UpdatePhonemeAlignmentEvidence()
+        {
+            if (phonemeAlignmentService == null || currentExercise == null)
+                return PhonemeAlignmentResult.Unavailable;
+
+            return phonemeAlignmentService.Align(
+                new PhonemeAlignmentRequest(
+                    currentExercise,
+                    session.Transcript,
+                    session.MatchResult,
+                    GetAttemptDurationSeconds(),
+                    currentExercise.GetDisplayWords(),
+                    currentExercise.GetAcceptedPhrases()));
         }
 
         private void ClearAttemptState()
@@ -769,6 +789,10 @@ namespace FluentEcho.Presentation
                     lines.Add(approximateMatches);
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
                     lines.Add(lastPronunciationScore.EstimateBasisText);
+
+                string phonemeAlignment = BuildPhonemeAlignmentText(lastPhonemeAlignment);
+                if (!string.IsNullOrWhiteSpace(phonemeAlignment))
+                    lines.Add(phonemeAlignment);
 
                 string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
                 if (!string.IsNullOrWhiteSpace(wordBreakdown))
@@ -851,6 +875,9 @@ namespace FluentEcho.Presentation
             lines.Add($"Precision: {lastPronunciationScore.PrecisionScore}%");
             lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
             lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
+            string phonemeAlignment = BuildPhonemeAlignmentText(lastPhonemeAlignment);
+            if (!string.IsNullOrWhiteSpace(phonemeAlignment))
+                lines.Add(phonemeAlignment);
             string matchQuality = BuildMatchQualityText(lastPronunciationScore.WordScores);
             if (!string.IsNullOrWhiteSpace(matchQuality))
                 lines.Add(matchQuality);
@@ -984,7 +1011,7 @@ namespace FluentEcho.Presentation
             return summary;
         }
 
-        private static string BuildPronunciationDetails(PronunciationScoreResult score)
+        private string BuildPronunciationDetails(PronunciationScoreResult score)
         {
             if (!score.IsAvailable)
                 return string.Empty;
@@ -1009,6 +1036,10 @@ namespace FluentEcho.Presentation
 
             if (!string.IsNullOrWhiteSpace(score.EstimateBasisText))
                 lines.Add(score.EstimateBasisText);
+
+            string phonemeAlignment = BuildPhonemeAlignmentText(lastPhonemeAlignment);
+            if (!string.IsNullOrWhiteSpace(phonemeAlignment))
+                lines.Add(phonemeAlignment);
 
             if (!string.IsNullOrWhiteSpace(wordBreakdown))
                 lines.Add(wordBreakdown);
@@ -1083,6 +1114,38 @@ namespace FluentEcho.Presentation
             }
 
             return $"Word focus: {string.Join(" | ", parts)}";
+        }
+
+        private static string BuildPhonemeAlignmentText(PhonemeAlignmentResult alignment)
+        {
+            if (alignment == null)
+                return string.Empty;
+
+            if (!alignment.IsAvailable)
+                return FluentEchoCopy.PhonemeRoadmapText;
+
+            var lines = new System.Collections.Generic.List<string>
+            {
+                "Phoneme alignment:",
+                $"Alignment score: {alignment.AlignmentScore}/100 | {Capitalize(alignment.ConfidenceBand)}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(alignment.EvidenceText))
+                lines.Add(alignment.EvidenceText);
+
+            if (alignment.MatchedPhonemes.Count > 0)
+                lines.Add($"Matched phonemes: {string.Join(", ", alignment.MatchedPhonemes)}");
+
+            if (alignment.MissingPhonemes.Count > 0)
+                lines.Add($"Missing phonemes: {string.Join(", ", alignment.MissingPhonemes)}");
+
+            if (alignment.WeakPhonemes.Count > 0)
+                lines.Add($"Weak phonemes: {string.Join(", ", alignment.WeakPhonemes)}");
+
+            if (!string.IsNullOrWhiteSpace(alignment.FeedbackText))
+                lines.Add(alignment.FeedbackText);
+
+            return string.Join("\n", lines);
         }
 
         private static int CountExactWordScores(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)

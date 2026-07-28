@@ -61,6 +61,7 @@
     <Compile Include="Assets\_FluentEcho\Runtime\Bootstrap\FluentEchoBootstrap.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\ISpeechRecognitionService.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\PronunciationScoringTypes.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Services\PhonemeAwareScoringTypes.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\HeuristicPronunciationScoringService.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Domain\SpeechAnswerMatcher.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\WhisperSpeechRecognitionService.cs" />
