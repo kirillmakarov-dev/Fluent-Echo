@@ -67,6 +67,7 @@ namespace FluentEcho.Services
             "UNAVAILABLE",
             FluentEchoCopy.FirstPronunciationSummary,
             FluentEchoCopy.FirstEstimatePrompt,
+            string.Empty,
             0,
             0,
             0,
@@ -86,6 +87,7 @@ namespace FluentEcho.Services
             string confidenceBand,
             string summaryText,
             string feedbackText,
+            string confidenceReason,
             int matchedWordCount,
             int expectedWordCount,
             int missingWordCount,
@@ -104,6 +106,7 @@ namespace FluentEcho.Services
             ConfidenceBand = confidenceBand ?? string.Empty;
             SummaryText = summaryText ?? string.Empty;
             FeedbackText = feedbackText ?? string.Empty;
+            ConfidenceReason = confidenceReason ?? string.Empty;
             MatchedWordCount = Mathf.Max(0, matchedWordCount);
             ExpectedWordCount = Mathf.Max(0, expectedWordCount);
             MissingWordCount = Mathf.Max(0, missingWordCount);
@@ -123,6 +126,7 @@ namespace FluentEcho.Services
         public string ConfidenceBand { get; }
         public string SummaryText { get; }
         public string FeedbackText { get; }
+        public string ConfidenceReason { get; }
         public int MatchedWordCount { get; }
         public int ExpectedWordCount { get; }
         public int MissingWordCount { get; }
@@ -178,6 +182,13 @@ namespace FluentEcho.Services
                     emptyConfidence,
                     emptySummary,
                     "Say the sentence once, then pause so the pronunciation estimate can be calculated.",
+                    BuildConfidenceReason(
+                        matchedWords,
+                        expectedCount,
+                        missingCount,
+                        extraCount,
+                        emptyConfidence,
+                        true),
                     matchedWords,
                     expectedCount,
                     missingCount,
@@ -211,6 +222,13 @@ namespace FluentEcho.Services
                 matchResult.IsComplete,
                 transcript);
             string confidenceBand = GetConfidenceBand(confidenceScore);
+            string confidenceReason = BuildConfidenceReason(
+                matchedWords,
+                expectedCount,
+                missingCount,
+                extraCount,
+                confidenceBand,
+                matchResult.IsComplete);
 
             float raw = (coverage * 0.40f)
                 + (precision * 0.15f)
@@ -237,6 +255,7 @@ namespace FluentEcho.Services
                 confidenceBand,
                 summary,
                 feedback,
+                confidenceReason,
                 matchedWords,
                 expectedCount,
                 missingCount,
@@ -292,6 +311,32 @@ namespace FluentEcho.Services
                 return $"Strong transcript match. {band.ToUpperInvariant()} pronunciation estimate.";
 
             return $"Good transcript match. Keep the rhythm steady and natural for the next attempt.";
+        }
+
+        private static string BuildConfidenceReason(
+            int matchedWords,
+            int expectedCount,
+            int missingCount,
+            int extraCount,
+            string confidenceBand,
+            bool isComplete)
+        {
+            if (expectedCount <= 0)
+                return string.Empty;
+
+            if (matchedWords <= 0)
+                return "No target words matched, so confidence stays low.";
+
+            if (missingCount > 0)
+                return $"Missing {missingCount} word{PluralSuffix(missingCount)}, so confidence stays cautious.";
+
+            if (extraCount > 0)
+                return "Extra words were heard, so confidence stays a little cautious.";
+
+            if (isComplete && confidenceBand == "high")
+                return "All target words matched cleanly, with no extra words.";
+
+            return "The match is useful, but confidence still stays cautious.";
         }
 
         private static int ComputeConfidenceScore(

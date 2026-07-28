@@ -749,9 +749,8 @@ namespace FluentEcho.Presentation
                 lines.Add("Current attempt:");
                 lines.Add($"Practice score: {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel}");
                 lines.Add($"Confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
-                string confidenceNote = BuildConfidenceNote(lastPronunciationScore);
-                if (!string.IsNullOrWhiteSpace(confidenceNote))
-                    lines.Add(confidenceNote);
+                if (!string.IsNullOrWhiteSpace(lastPronunciationScore.ConfidenceReason))
+                    lines.Add($"Confidence reason: {lastPronunciationScore.ConfidenceReason}");
                 lines.Add($"Word match: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
                 lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
                 lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
@@ -893,7 +892,9 @@ namespace FluentEcho.Presentation
                 "Current attempt:",
                 $"Practice score: {score.OverallScore}/100 | {score.BandLabel}",
                 $"Confidence: {Capitalize(score.ConfidenceBand)}",
-                BuildConfidenceNote(score),
+                string.IsNullOrWhiteSpace(score.ConfidenceReason)
+                    ? string.Empty
+                    : $"Confidence reason: {score.ConfidenceReason}",
                 $"Word match: {score.MatchedWordCount}/{score.ExpectedWordCount}",
                 $"Recognition precision: {score.PrecisionScore}%",
                 $"Rhythm: {score.TempoScore}%",
@@ -909,26 +910,6 @@ namespace FluentEcho.Presentation
                 lines.Add(score.FeedbackText);
 
             return string.Join("\n", lines);
-        }
-
-        private static string BuildConfidenceNote(PronunciationScoreResult score)
-        {
-            if (!score.IsAvailable)
-                return string.Empty;
-
-            if (score.MatchedWordCount <= 0)
-                return "Confidence note: no target words were matched, so the estimate stays low.";
-
-            if (score.MissingWordCount > 0)
-                return $"Confidence note: {score.MissingWordCount} word{(score.MissingWordCount == 1 ? string.Empty : "s")} are still missing, so the estimate stays cautious.";
-
-            if (score.ExtraWordCount > 0)
-                return $"Confidence note: extra words were heard, so the estimate stays a little cautious.";
-
-            if (score.ConfidenceBand == "high")
-                return "Confidence note: the target words matched cleanly, so the estimate is more reliable.";
-
-            return "Confidence note: the match is useful, but the estimate still stays cautious.";
         }
 
         private static string Capitalize(string value)

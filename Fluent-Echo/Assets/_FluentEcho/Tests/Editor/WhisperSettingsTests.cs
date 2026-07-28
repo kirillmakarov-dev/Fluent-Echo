@@ -184,6 +184,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.BandLabel, Is.EqualTo("strong"));
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
+                Assert.That(score.ConfidenceReason, Does.Contain("matched cleanly"));
                 Assert.That(score.FeedbackText, Does.Contain("pronunciation estimate"));
                 Assert.That(score.WordScores, Has.Length.EqualTo(4));
                 Assert.That(score.WordScores[0].Score, Is.GreaterThanOrEqualTo(90));
@@ -213,6 +214,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.OverallScore, Is.LessThan(90));
                 Assert.That(score.MissingWordCount, Is.EqualTo(1));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
+                Assert.That(score.ConfidenceReason, Does.Contain("Missing 1 word"));
                 Assert.That(score.FeedbackText, Does.Contain("Missing 1 word"));
                 Assert.That(score.FeedbackText, Does.Contain("Focus on big"));
                 Assert.That(score.WordScores[3].Score, Is.LessThan(score.WordScores[0].Score));
@@ -290,6 +292,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.OverallScore, Is.EqualTo(0));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("low"));
+                Assert.That(score.ConfidenceReason, Does.Contain("No target words matched"));
                 Assert.That(score.SummaryText, Does.Contain("PRONUNCIATION ESTIMATE"));
                 Assert.That(score.SummaryText, Does.Contain("LOW"));
                 Assert.That(score.FeedbackText, Does.Contain("pause"));
@@ -317,6 +320,7 @@ namespace FluentEcho.Tests
                 Assert.That(score.IsAvailable, Is.True);
                 Assert.That(score.ExtraWordCount, Is.GreaterThan(0));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
+                Assert.That(score.ConfidenceReason, Does.Contain("Extra words"));
                 Assert.That(score.FeedbackText, Does.Contain("extra word"));
             }
             finally
