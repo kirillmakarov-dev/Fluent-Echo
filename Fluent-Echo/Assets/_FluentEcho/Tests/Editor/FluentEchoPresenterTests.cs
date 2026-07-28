@@ -258,6 +258,51 @@ namespace FluentEcho.Tests
             }
         }
 
+        [Test]
+        public void CompleteTranscript_SavesProgressAndShowsSuccess()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_complete");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                service.RaiseTranscript("word_01");
+                Assert.That(service.StopListeningCalls, Is.EqualTo(1));
+
+                service.RaiseListeningStopped();
+
+                LessonProgressState saved = LessonProgressRepository.Load(exercise.ProgressKey, 1);
+                try
+                {
+                    Assert.That(view.LastStatus, Does.Contain("Excellent"));
+                    Assert.That(view.LastSuccessState, Is.True);
+                    Assert.That(view.LastListeningState, Is.False);
+                    Assert.That(saved.Attempts, Is.EqualTo(1));
+                    Assert.That(saved.SuccessfulAttempts, Is.EqualTo(1));
+                    Assert.That(saved.BestPronunciationScore, Is.GreaterThan(0));
+                    Assert.That(saved.GetSummaryText(), Does.Contain("cleared 1"));
+                }
+                finally
+                {
+                    LessonProgressRepository.Clear(exercise.ProgressKey);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
         private static FluentEchoPresenter CreatePresenter(
             SpeechExerciseSO exercise,
             SpeechExerciseCatalogSO catalog,
@@ -427,6 +472,8 @@ namespace FluentEcho.Tests
             public bool CategoryScreenVisible { get; private set; }
             public bool SettingsPanelVisible { get; private set; }
             public bool NoticeVisible { get; private set; }
+            public bool LastSuccessState { get; private set; }
+            public bool LastListeningState { get; private set; }
             public string NoticeTitle { get; private set; } = string.Empty;
             public string NoticeBody { get; private set; } = string.Empty;
             public string NoticeActionLabel { get; private set; } = string.Empty;
@@ -464,8 +511,15 @@ namespace FluentEcho.Tests
             }
 
             public void SetWordMatches(bool[] matches) { }
-            public void SetListening(bool listening) { }
-            public void SetSuccess(bool success) { }
+            public void SetListening(bool listening)
+            {
+                LastListeningState = listening;
+            }
+
+            public void SetSuccess(bool success)
+            {
+                LastSuccessState = success;
+            }
             public void SetMode(bool mockMode) { }
 
             public void SetNavigation(bool canGoPrevious, bool canGoNext) { }
