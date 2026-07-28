@@ -40,7 +40,10 @@ namespace FluentEcho.Tests
                         i >= 5 ? "high" : "medium",
                         $"PRONUNCIATION ESTIMATE | {60 + i}/100 | {(i >= 5 ? "HIGH" : "MEDIUM")}",
                         i >= 5 ? "high" : "medium",
-                        70 + i);
+                        70 + i,
+                        i >= 5
+                            ? "All target words matched cleanly, with no extra words."
+                            : "Missing one target word, so confidence stays cautious.");
                 }
 
                 Assert.That(state.AttemptHistory, Has.Count.EqualTo(5));
@@ -49,6 +52,7 @@ namespace FluentEcho.Tests
                 Assert.That(state.GetHistoryText(10), Does.Contain("attempt 5"));
                 Assert.That(state.GetHistoryText(10), Does.Not.Contain("attempt 0"));
                 Assert.That(state.GetHistoryText(10), Does.Contain("Best transcript: attempt 5"));
+                Assert.That(state.GetHistoryText(10), Does.Contain("All target words matched cleanly"));
                 Assert.That(state.GetSummaryText(), Does.Contain("estimate 65/100"));
                 Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
             }

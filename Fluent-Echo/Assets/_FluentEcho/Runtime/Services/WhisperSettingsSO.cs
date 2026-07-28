@@ -101,6 +101,7 @@ namespace FluentEcho.Domain
         [SerializeField] private string pronunciationSummary = string.Empty;
         [SerializeField] private string pronunciationConfidenceBand = string.Empty;
         [SerializeField] private int pronunciationConfidenceScore;
+        [SerializeField] private string pronunciationConfidenceReason = string.Empty;
 
         public string TimestampUtc => timestampUtc;
         public string Transcript => transcript;
@@ -112,6 +113,7 @@ namespace FluentEcho.Domain
         public string PronunciationSummary => pronunciationSummary;
         public string PronunciationConfidenceBand => pronunciationConfidenceBand;
         public int PronunciationConfidenceScore => pronunciationConfidenceScore;
+        public string PronunciationConfidenceReason => pronunciationConfidenceReason;
 
         public void Configure(
             string utcTimestamp,
@@ -123,7 +125,8 @@ namespace FluentEcho.Domain
             string band,
             string summary,
             string confidenceBand = "",
-            int confidenceScore = 0)
+            int confidenceScore = 0,
+            string confidenceReason = "")
         {
             timestampUtc = utcTimestamp ?? string.Empty;
             transcript = transcriptValue ?? string.Empty;
@@ -135,6 +138,7 @@ namespace FluentEcho.Domain
             pronunciationSummary = summary ?? string.Empty;
             pronunciationConfidenceBand = confidenceBand ?? string.Empty;
             pronunciationConfidenceScore = Mathf.Clamp(confidenceScore, 0, 100);
+            pronunciationConfidenceReason = confidenceReason ?? string.Empty;
         }
     }
 
@@ -198,7 +202,8 @@ namespace FluentEcho.Domain
             string pronunciationBand = "",
             string pronunciationSummary = "",
             string confidenceBand = "",
-            int confidenceScore = 0)
+            int confidenceScore = 0,
+            string confidenceReason = "")
         {
             Configure(lessonKey, expectedTotalWords);
 
@@ -235,7 +240,8 @@ namespace FluentEcho.Domain
                 pronunciationBand,
                 pronunciationSummary,
                 confidenceBand,
-                confidenceScore);
+                confidenceScore,
+                confidenceReason);
             lastUpdatedUtc = DateTime.UtcNow.ToString("O");
         }
 
@@ -306,7 +312,8 @@ namespace FluentEcho.Domain
             string pronunciationBand,
             string pronunciationSummary,
             string confidenceBand = "",
-            int confidenceScore = 0)
+            int confidenceScore = 0,
+            string confidenceReason = "")
         {
             if (attemptHistory == null)
                 attemptHistory = new List<LessonAttemptRecord>();
@@ -322,7 +329,8 @@ namespace FluentEcho.Domain
                 pronunciationBand,
                 pronunciationSummary,
                 confidenceBand,
-                confidenceScore);
+                confidenceScore,
+                confidenceReason);
             attemptHistory.Insert(0, record);
 
             while (attemptHistory.Count > HistoryLimit)
@@ -350,9 +358,12 @@ namespace FluentEcho.Domain
             string confidenceText = !string.IsNullOrWhiteSpace(record.PronunciationConfidenceBand)
                 ? $" | confidence {record.PronunciationConfidenceBand}"
                 : string.Empty;
+            string reasonText = !string.IsNullOrWhiteSpace(record.PronunciationConfidenceReason)
+                ? $" | {record.PronunciationConfidenceReason}"
+                : string.Empty;
             string statusText = record.IsComplete ? "cleared" : "needs retry";
             string transcriptPreview = Truncate(record.Transcript, 34);
-            return $"{entryNumber}. {scoreText}{confidenceText} | {statusText} | {transcriptPreview}";
+            return $"{entryNumber}. {scoreText}{confidenceText}{reasonText} | {statusText} | {transcriptPreview}";
         }
 
         private string BuildHistoryHeader()

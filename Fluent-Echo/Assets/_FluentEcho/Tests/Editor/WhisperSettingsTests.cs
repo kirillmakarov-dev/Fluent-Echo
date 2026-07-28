@@ -70,7 +70,8 @@ namespace FluentEcho.Tests
                 "steady",
                 "PRONUNCIATION ESTIMATE | 67/100 | HIGH",
                 "high",
-                81);
+                81,
+                "All target words matched cleanly, with no extra words.");
             LessonProgressRepository.Save(state);
 
             LessonProgressState reloaded = LessonProgressRepository.Load(key, 4);
@@ -92,6 +93,7 @@ namespace FluentEcho.Tests
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("67/100"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Best transcript: the dog is"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("confidence high"));
+                Assert.That(reloaded.GetHistoryText(), Does.Contain("All target words matched cleanly"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("Recent attempts:"));
                 Assert.That(reloaded.GetHistoryText(), Does.Contain("1."));
             }
@@ -116,13 +118,15 @@ namespace FluentEcho.Tests
                 "strong",
                 "PRONUNCIATION ESTIMATE | 94/100 | HIGH",
                 "high",
-                92);
+                92,
+                "All target words matched cleanly, with no extra words.");
 
                 Assert.That(state.SuccessfulAttempts, Is.EqualTo(1));
                 Assert.That(state.GetSummaryText(), Does.Contain("cleared 1"));
                 Assert.That(state.GetHistoryText(), Does.Contain("cleared"));
                 Assert.That(state.GetHistoryText(), Does.Contain("Best transcript: the dog is big"));
                 Assert.That(state.GetHistoryText(), Does.Contain("confidence high"));
+                Assert.That(state.GetHistoryText(), Does.Contain("All target words matched cleanly"));
                 Assert.That(state.GetHistoryText(), Does.Contain("Recent attempts:"));
                 Assert.That(state.LastPronunciationSummary, Does.Contain("94/100"));
 

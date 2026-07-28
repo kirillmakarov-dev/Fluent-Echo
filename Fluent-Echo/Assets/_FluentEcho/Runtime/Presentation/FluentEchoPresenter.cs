@@ -664,7 +664,8 @@ namespace FluentEcho.Presentation
                 lastPronunciationScore.BandLabel,
                 lastPronunciationScore.SummaryText,
                 lastPronunciationScore.ConfidenceBand,
-                lastPronunciationScore.ConfidenceScore);
+                lastPronunciationScore.ConfidenceScore,
+                lastPronunciationScore.ConfidenceReason);
             LessonProgressRepository.Save(progress);
             view.SetProgress(progress.GetSummaryText());
             view.SetProgressDetails(BuildProgressDetailsText());
