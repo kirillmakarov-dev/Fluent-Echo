@@ -53,6 +53,7 @@
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\FluentEchoCopy.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PhonemeAlignmentTextFormatter.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PronunciationScoreNarrativeSnapshot.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PronunciationResultFlowSnapshot.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Views\FluentEchoView.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\WhisperSettingsSO.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\IFluentEchoView.cs" />

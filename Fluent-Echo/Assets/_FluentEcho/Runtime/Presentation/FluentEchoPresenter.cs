@@ -768,96 +768,16 @@ namespace FluentEcho.Presentation
             if (session.Phase == SpeechSessionPhase.Success && lastPronunciationScore.IsAvailable)
                 return BuildAcceptedResultDetailsText();
 
-            var lines = new System.Collections.Generic.List<string>();
-
-            if (lastPronunciationScore.IsAvailable)
-            {
-                PronunciationScoreNarrativeSnapshot snapshot = PronunciationScoreNarrativeSnapshot.Create(
-                    lastPronunciationScore,
-                    string.Empty,
-                    PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment));
-
-                lines.AddRange(snapshot.CurrentAttemptLines);
-
-                if (progress != null && progress.BestPronunciationScore > 0)
-                {
-                    bool isNewBestAttempt =
-                        progress.BestPronunciationScore == lastPronunciationScore.OverallScore
-                        && string.Equals(
-                            progress.BestTranscript?.Trim(),
-                            session.Transcript?.Trim(),
-                            StringComparison.Ordinal);
-
-                    lines.Add(isNewBestAttempt
-                        ? "Best attempt so far: this attempt is the new best."
-                        : "Best attempt so far:");
-
-                    string bestAttempt = $"Practice score {progress.BestPronunciationScore}/100";
-                    if (!string.IsNullOrWhiteSpace(progress.BestPronunciationConfidenceBand))
-                        bestAttempt += $" | confidence {Capitalize(progress.BestPronunciationConfidenceBand)}";
-
-                    if (!string.IsNullOrWhiteSpace(progress.BestTranscript))
-                        bestAttempt += $" | \"{progress.BestTranscript}\"";
-
-                    lines.Add(bestAttempt);
-                }
-
-                if (progress != null)
-                {
-                    lines.Add("Lesson progress:");
-                    lines.Add(progress.GetSummaryText());
-                }
-
-                if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
-                {
-                    lines.Add(string.Empty);
-                    lines.Add("Focus next:");
-                    lines.Add(lastPronunciationScore.FeedbackText);
-                }
-            }
-
-            string history = progress?.GetHistoryText(2);
-            if (!string.IsNullOrWhiteSpace(history))
-            {
-                if (lines.Count > 0)
-                    lines.Add(string.Empty);
-
-                lines.Add(history);
-            }
-
-            return lines.Count == 0
+            PronunciationResultFlowSnapshot flow = BuildResultFlowSnapshot();
+            return flow.CurrentAttemptLines.Count == 0
                 ? FluentEchoCopy.FirstLocalEstimateText
-                : string.Join("\n", lines);
+                : string.Join("\n", flow.CurrentAttemptLines);
         }
 
         private string BuildAcceptedResultDetailsText()
         {
-            PronunciationScoreNarrativeSnapshot snapshot = PronunciationScoreNarrativeSnapshot.Create(
-                lastPronunciationScore,
-                session.Transcript,
-                PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment));
-
-            var lines = new System.Collections.Generic.List<string>(snapshot.AcceptedResultLines);
-
-            if (progress != null)
-            {
-                lines.Add(string.Empty);
-                lines.Add(FluentEchoCopy.ResultLessonRecapHeader);
-                lines.Add(progress.GetSummaryText());
-            }
-
-            string history = progress?.GetHistoryText(2);
-            if (!string.IsNullOrWhiteSpace(history))
-            {
-                lines.Add(string.Empty);
-                lines.Add(history);
-            }
-
-            lines.Add(string.Empty);
-            lines.Add(FluentEchoCopy.ResultNextStepHeader);
-            lines.Add(BuildResultNextStepPrompt());
-
-            return string.Join("\n", lines);
+            PronunciationResultFlowSnapshot flow = BuildResultFlowSnapshot();
+            return string.Join("\n", flow.AcceptedResultLines);
         }
 
         private string BuildResultNextStepPrompt()
@@ -866,6 +786,17 @@ namespace FluentEcho.Presentation
                 return FluentEchoCopy.NextMissionPrompt;
 
             return FluentEchoCopy.FinalLessonPrompt;
+        }
+
+        private PronunciationResultFlowSnapshot BuildResultFlowSnapshot()
+        {
+            return PronunciationResultFlowSnapshot.Create(
+                lastPronunciationScore,
+                session.Transcript,
+                PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment),
+                progress,
+                progress?.GetHistoryText(2),
+                BuildResultNextStepPrompt());
         }
 
         private string BuildCategoryProgressSummary(int categoryIndex)
