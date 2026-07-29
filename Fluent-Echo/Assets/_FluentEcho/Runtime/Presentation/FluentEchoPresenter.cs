@@ -781,10 +781,10 @@ namespace FluentEcho.Presentation
                 lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
                 lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
                 lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
-                string matchQuality = BuildMatchQualityText(lastPronunciationScore);
+                string matchQuality = PronunciationScoreNarrativeFormatter.BuildMatchQualityText(lastPronunciationScore);
                 if (!string.IsNullOrWhiteSpace(matchQuality))
                     lines.Add(matchQuality);
-                string approximateMatches = BuildApproximateMatchText(lastPronunciationScore);
+                string approximateMatches = PronunciationScoreNarrativeFormatter.BuildApproximateMatchText(lastPronunciationScore);
                 if (!string.IsNullOrWhiteSpace(approximateMatches))
                     lines.Add(approximateMatches);
                 if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
@@ -878,10 +878,10 @@ namespace FluentEcho.Presentation
             string phonemeAlignment = PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment);
             if (!string.IsNullOrWhiteSpace(phonemeAlignment))
                 lines.Add(phonemeAlignment);
-            string matchQuality = BuildMatchQualityText(lastPronunciationScore);
+            string matchQuality = PronunciationScoreNarrativeFormatter.BuildMatchQualityText(lastPronunciationScore);
             if (!string.IsNullOrWhiteSpace(matchQuality))
                 lines.Add(matchQuality);
-            string approximateMatches = BuildApproximateMatchText(lastPronunciationScore);
+            string approximateMatches = PronunciationScoreNarrativeFormatter.BuildApproximateMatchText(lastPronunciationScore);
             if (!string.IsNullOrWhiteSpace(approximateMatches))
                 lines.Add(approximateMatches);
 
@@ -896,7 +896,7 @@ namespace FluentEcho.Presentation
                 lines.Add(lastPronunciationScore.FeedbackText);
             }
 
-            string focusNext = BuildFocusNextText(lastPronunciationScore);
+            string focusNext = PronunciationScoreNarrativeFormatter.BuildFocusNextText(lastPronunciationScore);
             if (!string.IsNullOrWhiteSpace(focusNext))
             {
                 lines.Add(string.Empty);
@@ -1016,8 +1016,7 @@ namespace FluentEcho.Presentation
             if (!score.IsAvailable)
                 return string.Empty;
 
-            string focus = BuildFocusNextText(score);
-
+            string focus = PronunciationScoreNarrativeFormatter.BuildFocusNextText(score);
             string wordBreakdown = BuildWordBreakdown(score.WordScores);
 
             var lines = new System.Collections.Generic.List<string>
@@ -1053,39 +1052,6 @@ namespace FluentEcho.Presentation
             return string.Join("\n", lines);
         }
 
-        private static string BuildFocusNextText(PronunciationScoreResult score)
-        {
-            if (!score.IsAvailable)
-                return string.Empty;
-
-            if (score.MissingWordCount > 0)
-            {
-                if (score.MissingWordCount == 1)
-                    return "Focus next: say the missing word slowly once, then repeat the full line.";
-
-                return $"Focus next: say the {score.MissingWordCount} missing words slowly once, then repeat the full line.";
-            }
-
-            if (score.ExtraWordCount > 0)
-            {
-                if (score.ExtraWordCount == 1)
-                    return "Focus next: drop the extra word and keep the line tighter.";
-
-                return $"Focus next: trim the {score.ExtraWordCount} extra words and keep the line cleaner.";
-            }
-
-            if (score.TempoScore <= 45)
-                return "Focus next: slow down a little so each word lands cleanly.";
-
-            if (score.TempoScore >= 90 && score.OverallScore < 100)
-                return "Focus next: keep the pace steady and natural.";
-
-            if (string.Equals(score.ConfidenceBand, "low", StringComparison.OrdinalIgnoreCase))
-                return "Focus next: try a cleaner full-line repeat.";
-
-            return "Focus next: keep the same clear rhythm on the next mission.";
-        }
-
         private static string Capitalize(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -1115,36 +1081,6 @@ namespace FluentEcho.Presentation
             }
 
             return $"Word focus: {string.Join(" | ", parts)}";
-        }
-
-        private static string BuildApproximateMatchText(PronunciationScoreResult score)
-        {
-            if (score == null || !score.IsAvailable)
-                return string.Empty;
-
-            int approximateCount = score.ApproximateWordCount;
-
-            if (approximateCount <= 0)
-                return string.Empty;
-
-            return approximateCount == 1
-                ? "Approximate matches: 1 word"
-                : $"Approximate matches: {approximateCount} words";
-        }
-
-        private static string BuildMatchQualityText(PronunciationScoreResult score)
-        {
-            if (score == null || !score.IsAvailable)
-                return string.Empty;
-
-            int exactCount = score.ExactWordCount;
-            int approximateCount = score.ApproximateWordCount;
-            int missingCount = score.MissedWordCount;
-
-            if (exactCount == 0 && approximateCount == 0 && missingCount == 0)
-                return string.Empty;
-
-            return $"Match quality: {exactCount} exact | {approximateCount} approximate | {missingCount} missed";
         }
 
         private static string BuildCategoryLessonLabel(SpeechExerciseSO exercise)
@@ -1229,6 +1165,75 @@ namespace FluentEcho.Presentation
         {
             int exerciseCount = GetCurrentExerciseCount();
             return exerciseCount > 0 && currentExerciseIndex < exerciseCount - 1;
+        }
+    }
+}
+
+namespace FluentEcho.Presentation
+{
+    public static class PronunciationScoreNarrativeFormatter
+    {
+        public static string BuildFocusNextText(FluentEcho.Services.PronunciationScoreResult score)
+        {
+            if (score == null || !score.IsAvailable)
+                return string.Empty;
+
+            if (score.MissingWordCount > 0)
+            {
+                if (score.MissingWordCount == 1)
+                    return "Focus next: say the missing word slowly once, then repeat the full line.";
+
+                return $"Focus next: say the {score.MissingWordCount} missing words slowly once, then repeat the full line.";
+            }
+
+            if (score.ExtraWordCount > 0)
+            {
+                if (score.ExtraWordCount == 1)
+                    return "Focus next: drop the extra word and keep the line tighter.";
+
+                return $"Focus next: trim the {score.ExtraWordCount} extra words and keep the line cleaner.";
+            }
+
+            if (score.TempoScore <= 45)
+                return "Focus next: slow down a little so each word lands cleanly.";
+
+            if (score.TempoScore >= 90 && score.OverallScore < 100)
+                return "Focus next: keep the pace steady and natural.";
+
+            if (string.Equals(score.ConfidenceBand, "low", StringComparison.OrdinalIgnoreCase))
+                return "Focus next: try a cleaner full-line repeat.";
+
+            return "Focus next: keep the same clear rhythm on the next mission.";
+        }
+
+        public static string BuildApproximateMatchText(FluentEcho.Services.PronunciationScoreResult score)
+        {
+            if (score == null || !score.IsAvailable)
+                return string.Empty;
+
+            int approximateCount = score.ApproximateWordCount;
+
+            if (approximateCount <= 0)
+                return string.Empty;
+
+            return approximateCount == 1
+                ? "Approximate matches: 1 word"
+                : $"Approximate matches: {approximateCount} words";
+        }
+
+        public static string BuildMatchQualityText(FluentEcho.Services.PronunciationScoreResult score)
+        {
+            if (score == null || !score.IsAvailable)
+                return string.Empty;
+
+            int exactCount = score.ExactWordCount;
+            int approximateCount = score.ApproximateWordCount;
+            int missingCount = score.MissedWordCount;
+
+            if (exactCount == 0 && approximateCount == 0 && missingCount == 0)
+                return string.Empty;
+
+            return $"Match quality: {exactCount} exact | {approximateCount} approximate | {missingCount} missed";
         }
     }
 }
