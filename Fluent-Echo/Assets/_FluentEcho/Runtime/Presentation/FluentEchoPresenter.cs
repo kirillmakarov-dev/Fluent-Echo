@@ -772,31 +772,12 @@ namespace FluentEcho.Presentation
 
             if (lastPronunciationScore.IsAvailable)
             {
-                lines.Add("Current attempt:");
-                lines.Add($"Practice score: {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel}");
-                lines.Add($"Confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
-                if (!string.IsNullOrWhiteSpace(lastPronunciationScore.ConfidenceReason))
-                    lines.Add($"Confidence reason: {lastPronunciationScore.ConfidenceReason}");
-                lines.Add($"Word match: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
-                lines.Add($"Recognition precision: {lastPronunciationScore.PrecisionScore}%");
-                lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
-                lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
-                string matchQuality = PronunciationScoreNarrativeFormatter.BuildMatchQualityText(lastPronunciationScore);
-                if (!string.IsNullOrWhiteSpace(matchQuality))
-                    lines.Add(matchQuality);
-                string approximateMatches = PronunciationScoreNarrativeFormatter.BuildApproximateMatchText(lastPronunciationScore);
-                if (!string.IsNullOrWhiteSpace(approximateMatches))
-                    lines.Add(approximateMatches);
-                if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
-                    lines.Add(lastPronunciationScore.EstimateBasisText);
+                PronunciationScoreNarrativeSnapshot snapshot = PronunciationScoreNarrativeSnapshot.Create(
+                    lastPronunciationScore,
+                    string.Empty,
+                    PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment));
 
-                string phonemeAlignment = PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment);
-                if (!string.IsNullOrWhiteSpace(phonemeAlignment))
-                    lines.Add(phonemeAlignment);
-
-                string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
-                if (!string.IsNullOrWhiteSpace(wordBreakdown))
-                    lines.Add(wordBreakdown);
+                lines.AddRange(snapshot.CurrentAttemptLines);
 
                 if (progress != null && progress.BestPronunciationScore > 0)
                 {
@@ -851,58 +832,12 @@ namespace FluentEcho.Presentation
 
         private string BuildAcceptedResultDetailsText()
         {
-            var lines = new System.Collections.Generic.List<string>
-            {
-                FluentEchoCopy.ResultAcceptedHeader,
-                FluentEchoCopy.ResultWhatWeHeardHeader
-            };
+            PronunciationScoreNarrativeSnapshot snapshot = PronunciationScoreNarrativeSnapshot.Create(
+                lastPronunciationScore,
+                session.Transcript,
+                PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment));
 
-            lines.Add(string.IsNullOrWhiteSpace(session.Transcript)
-                ? "Your transcript will appear here."
-                : $"\"{session.Transcript.Trim()}\"");
-
-            lines.Add(string.Empty);
-            lines.Add(FluentEchoCopy.ResultEstimateHeader);
-            lines.Add($"Practice score: {lastPronunciationScore.OverallScore}/100 | {lastPronunciationScore.BandLabel}");
-            lines.Add($"Confidence: {Capitalize(lastPronunciationScore.ConfidenceBand)}");
-            if (!string.IsNullOrWhiteSpace(lastPronunciationScore.ConfidenceReason))
-                lines.Add($"Confidence reason: {lastPronunciationScore.ConfidenceReason}");
-            if (!string.IsNullOrWhiteSpace(lastPronunciationScore.EstimateBasisText))
-                lines.Add(lastPronunciationScore.EstimateBasisText);
-            lines.Add(string.Empty);
-            lines.Add(FluentEchoCopy.ResultSignalBreakdownHeader);
-            lines.Add($"Coverage: {lastPronunciationScore.MatchedWordCount}/{lastPronunciationScore.ExpectedWordCount}");
-            lines.Add($"Precision: {lastPronunciationScore.PrecisionScore}%");
-            lines.Add($"Rhythm: {lastPronunciationScore.TempoScore}%");
-            lines.Add($"Word focus: {lastPronunciationScore.WordQualityScore}%");
-            string phonemeAlignment = PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment);
-            if (!string.IsNullOrWhiteSpace(phonemeAlignment))
-                lines.Add(phonemeAlignment);
-            string matchQuality = PronunciationScoreNarrativeFormatter.BuildMatchQualityText(lastPronunciationScore);
-            if (!string.IsNullOrWhiteSpace(matchQuality))
-                lines.Add(matchQuality);
-            string approximateMatches = PronunciationScoreNarrativeFormatter.BuildApproximateMatchText(lastPronunciationScore);
-            if (!string.IsNullOrWhiteSpace(approximateMatches))
-                lines.Add(approximateMatches);
-
-            string wordBreakdown = BuildWordBreakdown(lastPronunciationScore.WordScores);
-            if (!string.IsNullOrWhiteSpace(wordBreakdown))
-                lines.Add(wordBreakdown);
-
-            if (!string.IsNullOrWhiteSpace(lastPronunciationScore.FeedbackText))
-            {
-                lines.Add(string.Empty);
-                lines.Add(FluentEchoCopy.ResultTakeawayHeader);
-                lines.Add(lastPronunciationScore.FeedbackText);
-            }
-
-            string focusNext = PronunciationScoreNarrativeFormatter.BuildFocusNextText(lastPronunciationScore);
-            if (!string.IsNullOrWhiteSpace(focusNext))
-            {
-                lines.Add(string.Empty);
-                lines.Add("Focus next:");
-                lines.Add(focusNext);
-            }
+            var lines = new System.Collections.Generic.List<string>(snapshot.AcceptedResultLines);
 
             if (progress != null)
             {
@@ -1016,40 +951,12 @@ namespace FluentEcho.Presentation
             if (!score.IsAvailable)
                 return string.Empty;
 
-            string focus = PronunciationScoreNarrativeFormatter.BuildFocusNextText(score);
-            string wordBreakdown = BuildWordBreakdown(score.WordScores);
+            PronunciationScoreNarrativeSnapshot snapshot = PronunciationScoreNarrativeSnapshot.Create(
+                score,
+                string.Empty,
+                PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment));
 
-            var lines = new System.Collections.Generic.List<string>
-            {
-                "Current attempt:",
-                $"Practice score: {score.OverallScore}/100 | {score.BandLabel}",
-                $"Confidence: {Capitalize(score.ConfidenceBand)}",
-                string.IsNullOrWhiteSpace(score.ConfidenceReason)
-                    ? string.Empty
-                    : $"Confidence reason: {score.ConfidenceReason}",
-                $"Word match: {score.MatchedWordCount}/{score.ExpectedWordCount}",
-                $"Recognition precision: {score.PrecisionScore}%",
-                $"Rhythm: {score.TempoScore}%",
-                $"Word focus: {score.WordQualityScore}%",
-                $"Exact words: {score.ExactWordCount} | Approximate words: {score.ApproximateWordCount} | Missed words: {score.MissedWordCount}"
-            };
-
-            if (!string.IsNullOrWhiteSpace(score.EstimateBasisText))
-                lines.Add(score.EstimateBasisText);
-
-            string phonemeAlignment = PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment);
-            if (!string.IsNullOrWhiteSpace(phonemeAlignment))
-                lines.Add(phonemeAlignment);
-
-            if (!string.IsNullOrWhiteSpace(wordBreakdown))
-                lines.Add(wordBreakdown);
-
-            lines.Add("Focus next:");
-            lines.Add(focus);
-            if (!string.IsNullOrWhiteSpace(score.FeedbackText))
-                lines.Add(score.FeedbackText);
-
-            return string.Join("\n", lines);
+            return string.Join("\n", snapshot.CurrentAttemptLines);
         }
 
         private static string Capitalize(string value)
@@ -1058,29 +965,6 @@ namespace FluentEcho.Presentation
                 return "Unknown";
 
             return char.ToUpperInvariant(value[0]) + value.Substring(1).ToLowerInvariant();
-        }
-
-        private static string BuildWordBreakdown(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
-        {
-            if (wordScores == null || wordScores.Count == 0)
-                return string.Empty;
-
-            int limit = Mathf.Min(5, wordScores.Count);
-            var parts = new System.Collections.Generic.List<string>(limit);
-            for (int i = 0; i < limit; i++)
-            {
-                PronunciationWordScore wordScore = wordScores[i];
-                string marker = wordScore.Kind == PronunciationMatchKind.Exact
-                    ? "exact"
-                    : wordScore.Kind == PronunciationMatchKind.Alternative
-                        ? "alt"
-                        : wordScore.Kind == PronunciationMatchKind.Fuzzy
-                            ? "fuzzy"
-                            : "miss";
-                parts.Add($"{wordScore.Word}: {wordScore.Score}% {marker}");
-            }
-
-            return $"Word focus: {string.Join(" | ", parts)}";
         }
 
         private static string BuildCategoryLessonLabel(SpeechExerciseSO exercise)
@@ -1234,6 +1118,153 @@ namespace FluentEcho.Presentation
                 return string.Empty;
 
             return $"Match quality: {exactCount} exact | {approximateCount} approximate | {missingCount} missed";
+        }
+    }
+
+    public sealed class PronunciationScoreNarrativeSnapshot
+    {
+        private PronunciationScoreNarrativeSnapshot(
+            string[] currentAttemptLines,
+            string[] acceptedResultLines)
+        {
+            CurrentAttemptLines = currentAttemptLines ?? Array.Empty<string>();
+            AcceptedResultLines = acceptedResultLines ?? Array.Empty<string>();
+        }
+
+        public System.Collections.Generic.IReadOnlyList<string> CurrentAttemptLines { get; }
+        public System.Collections.Generic.IReadOnlyList<string> AcceptedResultLines { get; }
+
+        public static PronunciationScoreNarrativeSnapshot Create(
+            FluentEcho.Services.PronunciationScoreResult score,
+            string transcript,
+            string phonemeAlignmentText)
+        {
+            if (score == null || !score.IsAvailable)
+                return new PronunciationScoreNarrativeSnapshot(Array.Empty<string>(), Array.Empty<string>());
+
+            string focusNext = PronunciationScoreNarrativeFormatter.BuildFocusNextText(score);
+            string matchQuality = PronunciationScoreNarrativeFormatter.BuildMatchQualityText(score);
+            string approximateMatches = PronunciationScoreNarrativeFormatter.BuildApproximateMatchText(score);
+            string wordBreakdown = BuildWordBreakdown(score.WordScores);
+
+            var currentAttemptLines = new System.Collections.Generic.List<string>
+            {
+                "Current attempt:",
+                $"Practice score: {score.OverallScore}/100 | {score.BandLabel}",
+                $"Confidence: {Capitalize(score.ConfidenceBand)}",
+                string.IsNullOrWhiteSpace(score.ConfidenceReason)
+                    ? string.Empty
+                    : $"Confidence reason: {score.ConfidenceReason}",
+                $"Word match: {score.MatchedWordCount}/{score.ExpectedWordCount}",
+                $"Recognition precision: {score.PrecisionScore}%",
+                $"Rhythm: {score.TempoScore}%",
+                $"Word focus: {score.WordQualityScore}%",
+                $"Exact words: {score.ExactWordCount} | Approximate words: {score.ApproximateWordCount} | Missed words: {score.MissedWordCount}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(score.EstimateBasisText))
+                currentAttemptLines.Add(score.EstimateBasisText);
+
+            if (!string.IsNullOrWhiteSpace(phonemeAlignmentText))
+                currentAttemptLines.Add(phonemeAlignmentText);
+
+            if (!string.IsNullOrWhiteSpace(matchQuality))
+                currentAttemptLines.Add(matchQuality);
+
+            if (!string.IsNullOrWhiteSpace(approximateMatches))
+                currentAttemptLines.Add(approximateMatches);
+
+            if (!string.IsNullOrWhiteSpace(wordBreakdown))
+                currentAttemptLines.Add(wordBreakdown);
+
+            currentAttemptLines.Add("Focus next:");
+            currentAttemptLines.Add(focusNext);
+
+            if (!string.IsNullOrWhiteSpace(score.FeedbackText))
+                currentAttemptLines.Add(score.FeedbackText);
+
+            var acceptedResultLines = new System.Collections.Generic.List<string>
+            {
+                FluentEchoCopy.ResultAcceptedHeader,
+                FluentEchoCopy.ResultWhatWeHeardHeader,
+                string.IsNullOrWhiteSpace(transcript)
+                    ? "Your transcript will appear here."
+                    : $"\"{transcript.Trim()}\"",
+                string.Empty,
+                FluentEchoCopy.ResultEstimateHeader,
+                $"Practice score: {score.OverallScore}/100 | {score.BandLabel}",
+                $"Confidence: {Capitalize(score.ConfidenceBand)}",
+                string.IsNullOrWhiteSpace(score.ConfidenceReason)
+                    ? string.Empty
+                    : $"Confidence reason: {score.ConfidenceReason}",
+                string.IsNullOrWhiteSpace(score.EstimateBasisText)
+                    ? string.Empty
+                    : score.EstimateBasisText,
+                string.Empty,
+                FluentEchoCopy.ResultSignalBreakdownHeader,
+                $"Coverage: {score.MatchedWordCount}/{score.ExpectedWordCount}",
+                $"Precision: {score.PrecisionScore}%",
+                $"Rhythm: {score.TempoScore}%",
+                $"Word focus: {score.WordQualityScore}%"
+            };
+
+            if (!string.IsNullOrWhiteSpace(phonemeAlignmentText))
+                acceptedResultLines.Add(phonemeAlignmentText);
+
+            if (!string.IsNullOrWhiteSpace(matchQuality))
+                acceptedResultLines.Add(matchQuality);
+
+            if (!string.IsNullOrWhiteSpace(approximateMatches))
+                acceptedResultLines.Add(approximateMatches);
+
+            if (!string.IsNullOrWhiteSpace(wordBreakdown))
+                acceptedResultLines.Add(wordBreakdown);
+
+            if (!string.IsNullOrWhiteSpace(score.FeedbackText))
+            {
+                acceptedResultLines.Add(string.Empty);
+                acceptedResultLines.Add(FluentEchoCopy.ResultTakeawayHeader);
+                acceptedResultLines.Add(score.FeedbackText);
+            }
+
+            acceptedResultLines.Add(string.Empty);
+            acceptedResultLines.Add("Focus next:");
+            acceptedResultLines.Add(focusNext);
+
+            return new PronunciationScoreNarrativeSnapshot(
+                currentAttemptLines.ToArray(),
+                acceptedResultLines.ToArray());
+        }
+
+        private static string BuildWordBreakdown(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
+        {
+            if (wordScores == null || wordScores.Count == 0)
+                return string.Empty;
+
+            int limit = Mathf.Min(5, wordScores.Count);
+            var parts = new System.Collections.Generic.List<string>(limit);
+            for (int i = 0; i < limit; i++)
+            {
+                PronunciationWordScore wordScore = wordScores[i];
+                string marker = wordScore.Kind == PronunciationMatchKind.Exact
+                    ? "exact"
+                    : wordScore.Kind == PronunciationMatchKind.Alternative
+                        ? "alt"
+                        : wordScore.Kind == PronunciationMatchKind.Fuzzy
+                            ? "fuzzy"
+                            : "miss";
+                parts.Add($"{wordScore.Word}: {wordScore.Score}% {marker}");
+            }
+
+            return $"Word focus: {string.Join(" | ", parts)}";
+        }
+
+        private static string Capitalize(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "Unknown";
+
+            return char.ToUpperInvariant(value[0]) + value.Substring(1).ToLowerInvariant();
         }
     }
 }
