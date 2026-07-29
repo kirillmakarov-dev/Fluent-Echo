@@ -261,6 +261,9 @@ namespace FluentEcho.Tests
                 Assert.That(score.WordScores, Has.Length.EqualTo(4));
                 Assert.That(score.WordScores[0].Score, Is.GreaterThanOrEqualTo(90));
                 Assert.That(score.WordQualityScore, Is.GreaterThanOrEqualTo(90));
+                Assert.That(score.ExactWordCount, Is.EqualTo(4));
+                Assert.That(score.ApproximateWordCount, Is.EqualTo(0));
+                Assert.That(score.MissedWordCount, Is.EqualTo(0));
                 Assert.That(score.WordScores[0].Kind, Is.EqualTo(PronunciationMatchKind.Exact));
             }
             finally
@@ -288,6 +291,9 @@ namespace FluentEcho.Tests
                 Assert.That(score.ConfidenceBand, Is.EqualTo("medium"));
                 Assert.That(score.ConfidenceReason, Does.Contain("Missing 1 word"));
                 Assert.That(score.FeedbackText, Is.EqualTo("Missing 1 word. Repeat \"big\" once, then say the full line again."));
+                Assert.That(score.ExactWordCount, Is.EqualTo(3));
+                Assert.That(score.ApproximateWordCount, Is.EqualTo(0));
+                Assert.That(score.MissedWordCount, Is.EqualTo(1));
                 Assert.That(score.WordScores[3].Score, Is.LessThan(score.WordScores[0].Score));
                 Assert.That(score.WordScores[3].Kind, Is.EqualTo(PronunciationMatchKind.Missing));
             }
@@ -339,6 +345,9 @@ namespace FluentEcho.Tests
                 Assert.That(score.WordScores[1].Score, Is.GreaterThanOrEqualTo(95));
                 Assert.That(score.WordScores[1].Matched, Is.True);
                 Assert.That(score.WordScores[1].Kind, Is.EqualTo(PronunciationMatchKind.Alternative));
+                Assert.That(score.ExactWordCount, Is.EqualTo(3));
+                Assert.That(score.ApproximateWordCount, Is.EqualTo(1));
+                Assert.That(score.MissedWordCount, Is.EqualTo(0));
                 Assert.That(score.ConfidenceReason, Does.Contain("approximately"));
             }
             finally
@@ -365,6 +374,9 @@ namespace FluentEcho.Tests
                 Assert.That(score.WordScores[1].Score, Is.LessThan(100));
                 Assert.That(score.WordQualityScore, Is.LessThan(100));
                 Assert.That(score.ConfidenceBand, Is.EqualTo("high"));
+                Assert.That(score.ExactWordCount, Is.EqualTo(3));
+                Assert.That(score.ApproximateWordCount, Is.EqualTo(1));
+                Assert.That(score.MissedWordCount, Is.EqualTo(0));
                 Assert.That(score.ConfidenceReason, Does.Contain("approximately"));
             }
             finally
@@ -425,6 +437,9 @@ namespace FluentEcho.Tests
                 Assert.That(score.SummaryText, Does.Contain("LOW"));
                 Assert.That(score.EstimateBasisText, Does.Contain("No speech was transcribed"));
                 Assert.That(score.FeedbackText, Is.EqualTo(FluentEchoCopy.DidNotCatchThatDetailedStatus));
+                Assert.That(score.ExactWordCount, Is.EqualTo(4));
+                Assert.That(score.ApproximateWordCount, Is.EqualTo(0));
+                Assert.That(score.MissedWordCount, Is.EqualTo(4));
             }
             finally
             {

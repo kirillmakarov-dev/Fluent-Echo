@@ -60,6 +60,9 @@ namespace FluentEcho.Services
             0,
             0,
             0,
+            0,
+            0,
+            0,
             0f,
             Array.Empty<PronunciationWordScore>());
 
@@ -76,6 +79,9 @@ namespace FluentEcho.Services
             int expectedWordCount,
             int missingWordCount,
             int extraWordCount,
+            int exactWordCount,
+            int approximateWordCount,
+            int missedWordCount,
             int coverageScore,
             int precisionScore,
             int tempoScore,
@@ -96,6 +102,9 @@ namespace FluentEcho.Services
             ExpectedWordCount = Mathf.Max(0, expectedWordCount);
             MissingWordCount = Mathf.Max(0, missingWordCount);
             ExtraWordCount = Mathf.Max(0, extraWordCount);
+            ExactWordCount = Mathf.Max(0, exactWordCount);
+            ApproximateWordCount = Mathf.Max(0, approximateWordCount);
+            MissedWordCount = Mathf.Max(0, missedWordCount);
             CoverageScore = Mathf.Clamp(coverageScore, 0, 100);
             PrecisionScore = Mathf.Clamp(precisionScore, 0, 100);
             TempoScore = Mathf.Clamp(tempoScore, 0, 100);
@@ -117,6 +126,9 @@ namespace FluentEcho.Services
         public int ExpectedWordCount { get; }
         public int MissingWordCount { get; }
         public int ExtraWordCount { get; }
+        public int ExactWordCount { get; }
+        public int ApproximateWordCount { get; }
+        public int MissedWordCount { get; }
         public int CoverageScore { get; }
         public int PrecisionScore { get; }
         public int TempoScore { get; }

@@ -37,6 +37,9 @@ namespace FluentEcho.Services
             int spokenCount = spokenWords.Count;
             int missingCount = Mathf.Max(0, expectedCount - matchedWords);
             int extraCount = Mathf.Max(0, spokenCount - matchedWords);
+            int exactWordCount = CountExactWordScores(wordScores);
+            int approximateWordCount = CountApproximateWordScores(wordScores);
+            int missedWordCount = CountMissedWordScores(wordScores);
 
             if (transcriptWasEmpty)
             {
@@ -56,7 +59,7 @@ namespace FluentEcho.Services
                         missingCount,
                         extraCount,
                         recordingSeconds,
-                        CountApproximateWordScores(wordScores),
+                        approximateWordCount,
                         emptyConfidence,
                         true,
                         transcriptWasEmpty),
@@ -65,6 +68,9 @@ namespace FluentEcho.Services
                     expectedCount,
                     missingCount,
                     extraCount,
+                    exactWordCount,
+                    approximateWordCount,
+                    missedWordCount,
                     0,
                     0,
                     0,
@@ -91,7 +97,7 @@ namespace FluentEcho.Services
                 extraCount,
                 tempoScore,
                 wordQualityScore,
-                CountApproximateWordScores(wordScores),
+                approximateWordCount,
                 matchResult.IsComplete,
                 transcript);
             string confidenceBand = GetConfidenceBand(confidenceScore);
@@ -101,7 +107,7 @@ namespace FluentEcho.Services
                 missingCount,
                 extraCount,
                 recordingSeconds,
-                CountApproximateWordScores(wordScores),
+                approximateWordCount,
                 confidenceBand,
                 matchResult.IsComplete,
                 transcriptWasEmpty);
@@ -137,6 +143,9 @@ namespace FluentEcho.Services
                 expectedCount,
                 missingCount,
                 extraCount,
+                exactWordCount,
+                approximateWordCount,
+                missedWordCount,
                 coverageScore,
                 precisionScore,
                 tempoScore,
@@ -585,6 +594,36 @@ namespace FluentEcho.Services
             for (int i = 0; i < wordScores.Length; i++)
             {
                 if (wordScores[i].Kind is PronunciationMatchKind.Alternative or PronunciationMatchKind.Fuzzy)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static int CountExactWordScores(PronunciationWordScore[] wordScores)
+        {
+            if (wordScores == null || wordScores.Length == 0)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < wordScores.Length; i++)
+            {
+                if (wordScores[i].Kind == PronunciationMatchKind.Exact)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static int CountMissedWordScores(PronunciationWordScore[] wordScores)
+        {
+            if (wordScores == null || wordScores.Length == 0)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < wordScores.Length; i++)
+            {
+                if (wordScores[i].Kind == PronunciationMatchKind.Missing)
                     count++;
             }
 
