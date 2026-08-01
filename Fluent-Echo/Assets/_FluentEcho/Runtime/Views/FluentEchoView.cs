@@ -310,9 +310,7 @@ namespace FluentEcho.Views
             if (progressDetailsLabel != null)
                 progressDetailsLabel.text = string.IsNullOrWhiteSpace(details)
                     ? FluentEchoCopy.FirstLocalEstimateText
-                    : isSuccessVisible
-                        ? FormatResultProgressDetails(details)
-                        : FormatAttemptProgressDetails(details);
+                    : details;
         }
 
         public void SetPronunciation(string summary, string feedback)
@@ -320,16 +318,12 @@ namespace FluentEcho.Views
             if (pronunciationSummaryLabel != null)
                 pronunciationSummaryLabel.text = string.IsNullOrWhiteSpace(summary)
                     ? FluentEchoCopy.FirstPronunciationSummary
-                    : isSuccessVisible
-                        ? FormatResultSummary(summary)
-                        : summary;
+                    : summary;
 
             if (pronunciationFeedbackLabel != null)
                 pronunciationFeedbackLabel.text = string.IsNullOrWhiteSpace(feedback)
                     ? FluentEchoCopy.BuildUnavailablePronunciationDetails()
-                    : isSuccessVisible
-                        ? FormatResultFeedback(feedback)
-                        : feedback;
+                    : feedback;
         }
 
         public void SetPronunciationConfidence(string confidence)
@@ -337,7 +331,7 @@ namespace FluentEcho.Views
             if (pronunciationConfidenceLabel != null)
                 pronunciationConfidenceLabel.text = string.IsNullOrWhiteSpace(confidence)
                     ? FluentEchoCopy.FirstConfidenceSummary
-                    : FormatCompactMetric(confidence);
+                    : confidence;
         }
 
         public void SetPronunciationBreakdown(string wordMatch, string rhythm)
@@ -345,12 +339,12 @@ namespace FluentEcho.Views
             if (pronunciationWordMatchLabel != null)
                 pronunciationWordMatchLabel.text = string.IsNullOrWhiteSpace(wordMatch)
                     ? FluentEchoCopy.FirstWordMatchSummary
-                    : FormatCompactMetric(wordMatch);
+                    : wordMatch;
 
             if (pronunciationRhythmLabel != null)
                 pronunciationRhythmLabel.text = string.IsNullOrWhiteSpace(rhythm)
                     ? FluentEchoCopy.FirstRhythmSummary
-                    : FormatCompactMetric(rhythm);
+                    : rhythm;
         }
 
         public void SetStatus(string status)
@@ -439,8 +433,6 @@ namespace FluentEcho.Views
         public void SetSuccess(bool success)
         {
             isSuccessVisible = success;
-            if (success)
-                RefreshResultContentLayout();
             SetResultPanelVisible(success);
             retryButton.gameObject.SetActive(success);
 
@@ -526,156 +518,6 @@ namespace FluentEcho.Views
             }
         }
 
-        private static string FormatCompactMetric(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return string.Empty;
-
-            string[] parts = value.Split('|');
-            if (parts.Length < 2)
-                return value.Trim();
-
-            string label = parts[0].Trim();
-            string metricValue = parts[1].Trim();
-            return $"{label}\n{metricValue}";
-        }
-
-        private static string FormatResultSummary(string summary)
-        {
-            string[] parts = summary.Split('|');
-            if (parts.Length < 3)
-                return summary.Trim();
-
-            string heading = parts[0].Trim();
-            string score = parts[1].Trim();
-            return $"{heading}\n{score}";
-        }
-
-        private static string FormatResultFeedback(string feedback)
-        {
-            List<string> lines = CollectContentLines(feedback);
-            string takeaway = ExtractFollowingLine(lines, FluentEchoCopy.ResultTakeawayHeader);
-            if (string.IsNullOrWhiteSpace(takeaway))
-                takeaway = ExtractFirstNarrativeLine(lines);
-
-            string confidenceReason = ExtractFirstLineStarting(lines, "Confidence reason:");
-            string matchQuality = ExtractFirstLineStarting(lines, "Match quality:");
-            string exactWords = ExtractFirstLineStarting(lines, "Exact words:");
-            string focusNext = ExtractFollowingLine(lines, "Focus next:");
-            if (string.IsNullOrWhiteSpace(focusNext))
-                focusNext = ExtractFollowingLine(lines, FluentEchoCopy.ResultNextStepHeader);
-
-            var sections = new List<string>();
-            if (!string.IsNullOrWhiteSpace(takeaway) || !string.IsNullOrWhiteSpace(confidenceReason))
-            {
-                sections.Add("Why this was accepted");
-                sections.Add(!string.IsNullOrWhiteSpace(takeaway) ? takeaway : confidenceReason);
-            }
-
-            string detailLine = !string.IsNullOrWhiteSpace(matchQuality)
-                ? matchQuality
-                : exactWords;
-            if (!string.IsNullOrWhiteSpace(detailLine))
-            {
-                sections.Add("Signal snapshot");
-                sections.Add(detailLine);
-            }
-
-            if (!string.IsNullOrWhiteSpace(focusNext))
-            {
-                sections.Add("Focus for the next mission");
-                sections.Add(focusNext);
-            }
-
-            return sections.Count == 0
-                ? "Your result details will appear here after a completed mission."
-                : string.Join("\n\n", sections);
-        }
-
-        private static string FormatResultProgressDetails(string details)
-        {
-            List<string> lines = CollectContentLines(details);
-            string transcript = ExtractQuotedLine(lines);
-            if (string.IsNullOrWhiteSpace(transcript))
-                transcript = ExtractFollowingLine(lines, FluentEchoCopy.ResultWhatWeHeardHeader);
-
-            string progress = ExtractFirstLineStarting(lines, "Progress:");
-            if (string.IsNullOrWhiteSpace(progress))
-                progress = ExtractFollowingLine(lines, FluentEchoCopy.ResultLessonRecapHeader);
-
-            string best = ExtractFirstLineStarting(lines, "Best so far:");
-            string next = ExtractFollowingLine(lines, FluentEchoCopy.ResultNextStepHeader);
-            if (string.IsNullOrWhiteSpace(next))
-                next = ExtractFollowingLine(lines, "Focus next:");
-
-            var sections = new List<string>();
-            if (!string.IsNullOrWhiteSpace(transcript))
-            {
-                sections.Add("Transcript");
-                sections.Add(transcript);
-            }
-
-            if (!string.IsNullOrWhiteSpace(best) || !string.IsNullOrWhiteSpace(progress))
-            {
-                sections.Add("Progress");
-                if (!string.IsNullOrWhiteSpace(best))
-                    sections.Add(best);
-                if (!string.IsNullOrWhiteSpace(progress))
-                    sections.Add(progress);
-            }
-
-            if (!string.IsNullOrWhiteSpace(next))
-            {
-                sections.Add("Next");
-                sections.Add(next);
-            }
-
-            return sections.Count == 0
-                ? "Your completed mission summary will appear here."
-                : string.Join("\n\n", sections);
-        }
-
-        private void RefreshResultContentLayout()
-        {
-            if (progressDetailsLabel != null && !string.IsNullOrWhiteSpace(progressDetailsLabel.text))
-                progressDetailsLabel.text = FormatResultProgressDetails(progressDetailsLabel.text);
-
-            if (pronunciationSummaryLabel != null && !string.IsNullOrWhiteSpace(pronunciationSummaryLabel.text))
-                pronunciationSummaryLabel.text = FormatResultSummary(pronunciationSummaryLabel.text);
-
-            if (pronunciationFeedbackLabel != null && !string.IsNullOrWhiteSpace(pronunciationFeedbackLabel.text))
-                pronunciationFeedbackLabel.text = FormatResultFeedback(pronunciationFeedbackLabel.text);
-
-            if (pronunciationConfidenceLabel != null && !string.IsNullOrWhiteSpace(pronunciationConfidenceLabel.text))
-                pronunciationConfidenceLabel.text = FormatCompactMetric(pronunciationConfidenceLabel.text);
-
-            if (pronunciationWordMatchLabel != null && !string.IsNullOrWhiteSpace(pronunciationWordMatchLabel.text))
-                pronunciationWordMatchLabel.text = FormatCompactMetric(pronunciationWordMatchLabel.text);
-
-            if (pronunciationRhythmLabel != null && !string.IsNullOrWhiteSpace(pronunciationRhythmLabel.text))
-                pronunciationRhythmLabel.text = FormatCompactMetric(pronunciationRhythmLabel.text);
-        }
-
-        private static string FormatAttemptProgressDetails(string details)
-        {
-            List<string> lines = CollectContentLines(details);
-            if (lines.Count <= 6)
-                return string.Join("\n", lines);
-
-            var compact = new List<string>();
-            for (int i = 0; i < lines.Count && compact.Count < 6; i++)
-            {
-                string line = lines[i];
-                if (line.Equals("Current attempt:", StringComparison.OrdinalIgnoreCase)
-                    || line.Equals("Lesson progress:", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                compact.Add(line);
-            }
-
-            return string.Join("\n", compact);
-        }
-
         private static string FormatTopProgress(string progress)
         {
             if (string.IsNullOrWhiteSpace(progress))
@@ -732,85 +574,6 @@ namespace FluentEcho.Views
             {
                 if (parts[i].IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
                     return parts[i];
-            }
-
-            return string.Empty;
-        }
-
-        private static List<string> CollectContentLines(string text)
-        {
-            var result = new List<string>();
-            if (string.IsNullOrWhiteSpace(text))
-                return result;
-
-            string[] rawLines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < rawLines.Length; i++)
-            {
-                string line = rawLines[i]?.Trim();
-                if (!string.IsNullOrWhiteSpace(line))
-                    result.Add(line);
-            }
-
-            return result;
-        }
-
-        private static string ExtractQuotedLine(List<string> lines)
-        {
-            if (lines == null)
-                return string.Empty;
-
-            for (int i = 0; i < lines.Count; i++)
-            {
-                string line = lines[i];
-                if (line.StartsWith("\"", StringComparison.Ordinal) || line.StartsWith("“", StringComparison.Ordinal))
-                    return line;
-            }
-
-            return string.Empty;
-        }
-
-        private static string ExtractFirstNarrativeLine(List<string> lines)
-        {
-            if (lines == null)
-                return string.Empty;
-
-            for (int i = 0; i < lines.Count; i++)
-            {
-                string line = lines[i];
-                if (line.StartsWith("Strong ", StringComparison.OrdinalIgnoreCase)
-                    || line.StartsWith("Good ", StringComparison.OrdinalIgnoreCase)
-                    || line.StartsWith("All target words", StringComparison.OrdinalIgnoreCase)
-                    || line.StartsWith("Clear word match", StringComparison.OrdinalIgnoreCase)
-                    || line.StartsWith("Missing ", StringComparison.OrdinalIgnoreCase))
-                    return line;
-            }
-
-            return string.Empty;
-        }
-
-        private static string ExtractFirstLineStarting(List<string> lines, string prefix)
-        {
-            if (lines == null || string.IsNullOrWhiteSpace(prefix))
-                return string.Empty;
-
-            for (int i = 0; i < lines.Count; i++)
-            {
-                if (lines[i].StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                    return lines[i];
-            }
-
-            return string.Empty;
-        }
-
-        private static string ExtractFollowingLine(List<string> lines, string header)
-        {
-            if (lines == null || string.IsNullOrWhiteSpace(header))
-                return string.Empty;
-
-            for (int i = 0; i < lines.Count - 1; i++)
-            {
-                if (string.Equals(lines[i], header, StringComparison.OrdinalIgnoreCase))
-                    return lines[i + 1];
             }
 
             return string.Empty;
