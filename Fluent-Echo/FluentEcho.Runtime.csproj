@@ -49,26 +49,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\_FluentEcho\Runtime\Domain\SpeechMatchResult.cs" />
-    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\FluentEchoPresenter.cs" />
-    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\FluentEchoCopy.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PhonemeAlignmentTextFormatter.cs" />
-    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PronunciationScoreNarrativeSnapshot.cs" />
-    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PronunciationResultFlowSnapshot.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\FluentEchoPresenter.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Views\FluentEchoView.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Services\PronunciationScoringTypes.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\WhisperSettingsSO.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Presentation\IFluentEchoView.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PronunciationScoreNarrativeSnapshot.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Views\WordChipView.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Data\SpeechExerciseSO.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Domain\SpeechSession.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\FluentEchoCopy.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\MockSpeechRecognitionService.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Presentation\PronunciationResultFlowSnapshot.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Bootstrap\FluentEchoBootstrap.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\ISpeechRecognitionService.cs" />
-    <Compile Include="Assets\_FluentEcho\Runtime\Services\PronunciationScoringTypes.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\PhonemeAwareScoringTypes.cs" />
-    <Compile Include="Assets\_FluentEcho\Runtime\Services\HeuristicPronunciationScoringService.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Domain\SpeechAnswerMatcher.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Services\WhisperSpeechRecognitionService.cs" />
     <Compile Include="Assets\_FluentEcho\Runtime\Data\SpeechExerciseCatalogSO.cs" />
+    <Compile Include="Assets\_FluentEcho\Runtime\Services\HeuristicPronunciationScoringService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\_FluentEcho\Runtime\FluentEcho.Runtime.asmdef" />

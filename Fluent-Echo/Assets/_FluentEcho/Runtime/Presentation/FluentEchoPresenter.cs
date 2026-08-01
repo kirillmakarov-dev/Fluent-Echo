@@ -36,7 +36,6 @@ namespace FluentEcho.Presentation
         private int currentCategoryIndex;
         private int currentExerciseIndex;
         private bool useMock;
-        private bool onboardingRequired;
         private float attemptStartedAt = -1f;
         private PronunciationScoreResult lastPronunciationScore = PronunciationScoreResult.Unavailable;
         private PhonemeAlignmentResult lastPhonemeAlignment = PhonemeAlignmentResult.Unavailable;
@@ -89,16 +88,7 @@ namespace FluentEcho.Presentation
             ResetView();
             activeService.Prepare();
             UpdateMicControlState();
-            onboardingRequired = PlayerPrefs.GetInt(OnboardingPrefsKey, 0) == 0;
-            if (onboardingRequired)
-            {
-                view.SetCategoryScreenVisible(false);
-                ShowOnboardingWelcome();
-            }
-            else
-            {
-                view.SetCategoryScreenVisible(true);
-            }
+            view.SetCategoryScreenVisible(true);
         }
 
         public void Dispose()
@@ -122,9 +112,6 @@ namespace FluentEcho.Presentation
 
         private void HandleMicPressed()
         {
-            if (onboardingRequired)
-                return;
-
             if (session.IsCancelling)
                 return;
 
@@ -161,9 +148,6 @@ namespace FluentEcho.Presentation
 
         private void HandleDemoPressed()
         {
-            if (onboardingRequired)
-                return;
-
             if (IsInteractionLocked())
                 return;
 
@@ -180,9 +164,6 @@ namespace FluentEcho.Presentation
 
         private void HandleRetry()
         {
-            if (onboardingRequired)
-                return;
-
             CancelCurrentService("Resetting attempt...");
             session.Reset();
             ClearAttemptState();
@@ -191,30 +172,16 @@ namespace FluentEcho.Presentation
 
         private void HandleListen()
         {
-            if (onboardingRequired)
-                return;
-
-            if (IsInteractionLocked())
-                return;
-
             if (currentExercise.ReferenceAudio != null)
                 playReference?.Invoke(currentExercise.ReferenceAudio);
         }
 
         private void HandleMockModeChanged(bool value)
         {
-            if (onboardingRequired)
-                return;
-
-            if (IsInteractionLocked())
-            {
-                view.SetMode(useMock);
-                return;
-            }
-
             if (useMock == value)
                 return;
 
+            AbortCurrentAttemptIfNeeded("Switching practice mode...");
             useMock = value;
             SelectService(useMock);
             ResetView();
@@ -223,57 +190,32 @@ namespace FluentEcho.Presentation
 
         private void HandlePreviousExercise()
         {
-            if (onboardingRequired)
-                return;
-
-            if (IsInteractionLocked())
-                return;
-
+            AbortCurrentAttemptIfNeeded("Switching lesson...");
             SwitchExercise(currentExerciseIndex - 1);
         }
 
         private void HandleNextExercise()
         {
-            if (onboardingRequired)
-                return;
-
-            if (IsInteractionLocked())
-                return;
-
+            AbortCurrentAttemptIfNeeded("Switching lesson...");
             SwitchExercise(currentExerciseIndex + 1);
         }
 
         private void HandleCategoriesPressed()
         {
-            if (onboardingRequired)
-                return;
-
-            if (IsInteractionLocked())
-                return;
-
+            AbortCurrentAttemptIfNeeded("Returning to categories...");
             view.SetCategoryScreenVisible(true);
         }
 
         private void HandleCategorySelected(int categoryIndex)
         {
-            if (onboardingRequired)
-                return;
-
-            if (IsInteractionLocked())
-                return;
-
+            AbortCurrentAttemptIfNeeded("Switching category...");
             SwitchCategory(categoryIndex);
             view.SetCategoryScreenVisible(false);
         }
 
         private void HandleLessonSelected(int exerciseIndex)
         {
-            if (onboardingRequired)
-                return;
-
-            if (IsInteractionLocked())
-                return;
-
+            AbortCurrentAttemptIfNeeded("Switching lesson...");
             SwitchExercise(exerciseIndex);
         }
 
@@ -540,7 +482,6 @@ namespace FluentEcho.Presentation
             switch (pendingNoticeAction)
             {
                 case NoticeAction.CompleteOnboarding:
-                    onboardingRequired = false;
                     PlayerPrefs.SetInt(OnboardingPrefsKey, 1);
                     PlayerPrefs.Save();
                     view.HideNotice();
@@ -706,6 +647,18 @@ namespace FluentEcho.Presentation
 
             UnbindService();
             activeService.Cancel();
+        }
+
+        private void AbortCurrentAttemptIfNeeded(string statusMessage)
+        {
+            if (!IsInteractionLocked())
+                return;
+
+            CancelCurrentService(statusMessage);
+            session.Reset();
+            ClearAttemptState();
+            view.SetListening(false);
+            UpdateMicControlState();
         }
 
         private void UpdatePronunciationScore()

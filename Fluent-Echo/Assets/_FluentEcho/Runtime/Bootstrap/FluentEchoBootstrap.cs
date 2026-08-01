@@ -206,23 +206,37 @@ namespace FluentEcho.Bootstrap
             if (view == null)
                 return;
 
-            if (settingsPanelObject == null || settingsToggleButton == null || settingsCloseButton == null)
+            if (settingsPanelObject == null)
             {
                 Debug.LogWarning(
-                    "[FluentEchoBootstrap] Settings panel, toggle button, or close button is not assigned.",
+                    "[FluentEchoBootstrap] Settings panel is not assigned.",
                     this);
-                return;
             }
 
-            settingsToggleButton.onClick.RemoveAllListeners();
-            settingsToggleButton.onClick.AddListener(() =>
+            if (settingsToggleButton == null)
             {
-                bool shouldOpen = !settingsPanelObject.activeSelf;
-                settingsPanelObject.SetActive(shouldOpen);
-            });
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Settings toggle button is not assigned.",
+                    this);
+            }
+            else if (settingsPanelObject != null)
+            {
+                settingsToggleButton.transform.SetAsLastSibling();
+                settingsToggleButton.onClick.RemoveAllListeners();
+                settingsToggleButton.onClick.AddListener(ToggleSettingsPanel);
+            }
 
-            settingsCloseButton.onClick.RemoveAllListeners();
-            settingsCloseButton.onClick.AddListener(() => settingsPanelObject.SetActive(false));
+            if (settingsCloseButton == null)
+            {
+                Debug.LogWarning(
+                    "[FluentEchoBootstrap] Settings close button is not assigned.",
+                    this);
+            }
+            else if (settingsPanelObject != null)
+            {
+                settingsCloseButton.onClick.RemoveAllListeners();
+                settingsCloseButton.onClick.AddListener(CloseSettingsPanel);
+            }
         }
 
         private void WireExistingResultPanel()
@@ -239,7 +253,34 @@ namespace FluentEcho.Bootstrap
             }
 
             resultCloseButton.onClick.RemoveAllListeners();
-            resultCloseButton.onClick.AddListener(() => resultPanelObject.SetActive(false));
+            resultCloseButton.onClick.AddListener(CloseResultPanel);
+        }
+
+        private void ToggleSettingsPanel()
+        {
+            if (settingsPanelObject == null)
+                return;
+
+            bool shouldOpen = !settingsPanelObject.activeSelf;
+            if (shouldOpen)
+                settingsPanelObject.transform.SetAsLastSibling();
+            settingsPanelObject.SetActive(shouldOpen);
+        }
+
+        private void CloseSettingsPanel()
+        {
+            if (settingsPanelObject == null)
+                return;
+
+            settingsPanelObject.SetActive(false);
+        }
+
+        private void CloseResultPanel()
+        {
+            if (resultPanelObject == null)
+                return;
+
+            resultPanelObject.SetActive(false);
         }
 
         private void EnsureMicrophoneDropdown()

@@ -54,7 +54,7 @@ namespace FluentEcho.Tests
         }
 
         [Test]
-        public void FirstLaunch_ShowsOnboardingBeforePractice()
+        public void FirstLaunch_ShowsCategoryScreenBeforePractice()
         {
             PlayerPrefs.DeleteKey(OnboardingPrefsKey);
             PlayerPrefs.Save();
@@ -70,22 +70,9 @@ namespace FluentEcho.Tests
             {
                 presenter.Initialize();
 
-                Assert.That(view.CategoryScreenVisible, Is.False);
-                Assert.That(view.NoticeVisible, Is.True);
-                Assert.That(view.NoticeTitle, Is.EqualTo(FluentEchoCopy.OnboardingWelcomeTitle));
-                Assert.That(view.NoticeBody, Does.Contain("local speech model"));
-
-                view.RaiseNoticeConfirmed();
-
-                Assert.That(view.NoticeVisible, Is.True);
-                Assert.That(view.NoticeTitle, Is.EqualTo(FluentEchoCopy.OnboardingPracticePathsTitle));
-                Assert.That(view.NoticeBody, Does.Contain("Words build clarity"));
-
-                view.RaiseNoticeConfirmed();
-
                 Assert.That(view.NoticeVisible, Is.False);
                 Assert.That(view.CategoryScreenVisible, Is.True);
-                Assert.That(PlayerPrefs.HasKey(OnboardingPrefsKey), Is.True);
+                Assert.That(view.LastStatus, Does.Contain("Ready").Or.Contain("Preparing"));
             }
             finally
             {
@@ -402,6 +389,7 @@ namespace FluentEcho.Tests
                 mockService,
                 false,
                 null,
+                null,
                 0,
                 0,
                 (categoryIndex, exerciseIndex) =>
@@ -451,6 +439,7 @@ namespace FluentEcho.Tests
                 mockService,
                 false,
                 null,
+                null,
                 0,
                 1,
                 (categoryIndex, exerciseIndex) =>
@@ -499,6 +488,7 @@ namespace FluentEcho.Tests
                 service,
                 mockService,
                 false,
+                null,
                 null,
                 0,
                 0,
@@ -567,6 +557,7 @@ namespace FluentEcho.Tests
                 service,
                 mockService,
                 false,
+                null,
                 null,
                 0,
                 1,
@@ -669,6 +660,7 @@ namespace FluentEcho.Tests
                 mockService,
                 false,
                 null,
+                null,
                 1,
                 0,
                 null);
@@ -715,6 +707,7 @@ namespace FluentEcho.Tests
                 service,
                 mockService,
                 false,
+                null,
                 null,
                 1,
                 1,
@@ -1093,6 +1086,7 @@ namespace FluentEcho.Tests
                 mockService,
                 false,
                 null,
+                null,
                 0,
                 0,
                 (categoryIndex, exerciseIndex) =>
@@ -1382,6 +1376,11 @@ namespace FluentEcho.Tests
                 0,
                 0,
                 null);
+        }
+
+        private static SpeechExerciseSO CreateExercise(string name)
+        {
+            return CreateExercise(name, "Say the word.", $"lesson_test_{name}");
         }
 
         private static SpeechExerciseSO CreateExercise(string name, string prompt, string progressKey)

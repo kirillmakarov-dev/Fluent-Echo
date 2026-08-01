@@ -23,10 +23,12 @@ namespace FluentEcho.Services
         [SerializeField] private float legacyMicrophoneChunkSeconds = 0.25f;
         [SerializeField] private float legacyWarmupSeconds = 1.25f;
         [SerializeField] private float stopWatchdogSeconds = 6f;
+        [SerializeField] private float listeningTimeoutSeconds = 25f;
 
         private WhisperStream stream;
         private Task prepareTask;
         private Coroutine stopWatchdog;
+        private Coroutine listeningWatchdog;
         private bool suppressStopEvent;
         private bool finishRequested;
         private bool warmupCompleted;
@@ -128,6 +130,7 @@ namespace FluentEcho.Services
                 finishRequested = false;
 
                 IsListening = true;
+                StartListeningWatchdog();
                 stream.StartStream();
                 if (microphone != null)
                     microphone.OnRecordStop += recordStopHandler;
@@ -483,6 +486,7 @@ namespace FluentEcho.Services
                 return;
 
             StopStopWatchdog();
+            StopListeningWatchdog();
             Unsubscribe();
             IsListening = false;
             finishRequested = false;
@@ -547,9 +551,39 @@ namespace FluentEcho.Services
             stopWatchdog = null;
         }
 
+        private void StartListeningWatchdog()
+        {
+            if (listeningWatchdog != null || !isActiveAndEnabled)
+                return;
+
+            listeningWatchdog = StartCoroutine(CompleteListenIfStalls());
+        }
+
+        private void StopListeningWatchdog()
+        {
+            if (listeningWatchdog == null)
+                return;
+
+            StopCoroutine(listeningWatchdog);
+            listeningWatchdog = null;
+        }
+
+        private IEnumerator CompleteListenIfStalls()
+        {
+            yield return new WaitForSecondsRealtime(Mathf.Max(5f, listeningTimeoutSeconds));
+            listeningWatchdog = null;
+
+            if (!IsListening)
+                yield break;
+
+            RaiseError("Listening timed out.");
+            StatusChanged?.Invoke("Listening timed out.");
+            CompleteStop();
+        }
+
         private IEnumerator CompleteStopIfStreamStalls()
         {
-            yield return new WaitForSeconds(Mathf.Max(1f, stopWatchdogSeconds));
+            yield return new WaitForSecondsRealtime(Mathf.Max(1f, stopWatchdogSeconds));
             stopWatchdog = null;
 
             if (!IsListening)
