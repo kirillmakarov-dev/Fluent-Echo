@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FluentEcho.Data
@@ -64,6 +65,43 @@ namespace FluentEcho.Data
 
         public string GetRecognitionPrompt() => string.Join(" ", GetDisplayWords());
 
+        public bool IsSingleWordExercise()
+        {
+            string[] words = GetDisplayWords();
+            return words.Length == 1 && CountWords(words[0]) <= 1;
+        }
+
+        public bool IsShortUtteranceExercise()
+        {
+            string[] words = GetDisplayWords();
+            return words.Length > 0 && words.Length <= 3;
+        }
+
+        public string GetPrimaryExpectedUtterance()
+        {
+            string[] phrases = GetAcceptedPhrases();
+            if (phrases.Length > 0)
+                return phrases[0];
+
+            return GetRecognitionPrompt();
+        }
+
+        public string[] GetRecognitionCandidates()
+        {
+            var candidates = new List<string>();
+            AppendDistinct(candidates, GetPrimaryExpectedUtterance());
+
+            string[] phrases = GetAcceptedPhrases();
+            for (int i = 0; i < phrases.Length; i++)
+                AppendDistinct(candidates, phrases[i]);
+
+            string[] displayWords = GetDisplayWords();
+            for (int i = 0; i < displayWords.Length; i++)
+                AppendDistinct(candidates, displayWords[i]);
+
+            return candidates.ToArray();
+        }
+
         private static string[] SplitAlternatives(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
@@ -79,6 +117,30 @@ namespace FluentEcho.Data
             }
 
             return cleaned.ToArray();
+        }
+
+        private static void AppendDistinct(List<string> values, string raw)
+        {
+            string value = raw?.Trim();
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (string.Equals(values[i], value, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
+
+            values.Add(value);
+        }
+
+        private static int CountWords(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return 0;
+
+            string[] parts = raw.Split((char[]) null, StringSplitOptions.RemoveEmptyEntries);
+            return parts.Length;
         }
     }
 

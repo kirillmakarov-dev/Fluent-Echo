@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Text;
 using Stopwatch = System.Diagnostics.Stopwatch;
 using FluentEcho.Data;
 using UnityEngine;
@@ -25,6 +26,8 @@ namespace FluentEcho.Services
         [SerializeField] private float legacyWarmupSeconds = 1.25f;
         [SerializeField] private float stopWatchdogSeconds = 6f;
         [SerializeField] private float listeningTimeoutSeconds = 25f;
+        [SerializeField] private float shortUtteranceChunkSeconds = 0.45f;
+        [SerializeField] private float shortUtteranceStreamingStepSeconds = 1.0f;
 
         private WhisperStream stream;
         private Task prepareTask;
@@ -41,6 +44,7 @@ namespace FluentEcho.Services
         private int listeningGeneration;
         private int activeListeningGeneration;
         private string lastTranscript = string.Empty;
+        private SpeechExerciseSO currentExercise;
         private OnStreamResultUpdatedDelegate transcriptUpdatedHandler;
         private OnStreamFinishedDelegate streamFinishedHandler;
         private OnRecordStopDelegate recordStopHandler;
@@ -89,9 +93,12 @@ namespace FluentEcho.Services
 
         public void Configure(SpeechExerciseSO exercise)
         {
+            currentExercise = exercise;
+
             if (whisperManager != null)
             {
                 whisperManager.initialPrompt = BuildRecognitionPrompt(exercise);
+                ApplyExerciseRecognitionBias(exercise);
                 RefreshWhisperManagerParams();
             }
 
@@ -100,7 +107,7 @@ namespace FluentEcho.Services
                 microphone.vadStop = true;
                 microphone.vadStopTime = exercise.SilenceTimeoutSeconds;
                 microphone.echo = false;
-                microphone.chunksLengthSec = ResolveMicrophoneChunkSeconds();
+                microphone.chunksLengthSec = ResolveMicrophoneChunkSeconds(exercise);
             }
         }
 
@@ -117,19 +124,58 @@ namespace FluentEcho.Services
             if (exercise == null)
                 return string.Empty;
 
-            string prompt = exercise.Prompt?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(prompt))
-                return "Practice English pronunciation.";
+            string expectedUtterance = SanitizePromptValue(exercise.GetPrimaryExpectedUtterance());
+            string prompt = SanitizePromptValue(exercise.Prompt);
+            string[] candidates = exercise.GetRecognitionCandidates();
 
-            int colonIndex = prompt.IndexOf(':');
-            if (colonIndex >= 0)
-                prompt = prompt.Substring(0, colonIndex);
+            var builder = new StringBuilder();
+            if (exercise.IsSingleWordExercise())
+            {
+                builder.Append("English pronunciation practice. ");
+                builder.Append("The learner will say exactly one English word. ");
+                builder.Append("Return only the spoken word in lowercase.");
+            }
+            else if (exercise.IsShortUtteranceExercise())
+            {
+                builder.Append("English pronunciation practice. ");
+                builder.Append("The learner will say one short English phrase. ");
+                builder.Append("Return only the spoken phrase.");
+            }
+            else
+            {
+                builder.Append("English pronunciation practice. ");
+                builder.Append("Return only the spoken English sentence.");
+            }
 
-            prompt = prompt.Trim().TrimEnd('.', '!', '?', ':');
-            if (string.IsNullOrWhiteSpace(prompt))
-                return "Practice English pronunciation.";
+            if (!string.IsNullOrWhiteSpace(expectedUtterance))
+            {
+                builder.Append(" Expected answer: ");
+                builder.Append(expectedUtterance);
+                builder.Append('.');
+            }
 
-            return $"{prompt}. Practice English pronunciation.";
+            if (!string.IsNullOrWhiteSpace(prompt))
+            {
+                builder.Append(" Exercise prompt: ");
+                builder.Append(prompt);
+                builder.Append('.');
+            }
+
+            if (candidates.Length > 0)
+            {
+                builder.Append(" Candidate vocabulary: ");
+                for (int i = 0; i < candidates.Length; i++)
+                {
+                    if (i > 0)
+                        builder.Append(", ");
+
+                    builder.Append(SanitizePromptValue(candidates[i]));
+                }
+
+                builder.Append('.');
+            }
+
+            return builder.ToString();
         }
 
         public void Prepare()
@@ -476,8 +522,17 @@ namespace FluentEcho.Services
             return legacyModelPath;
         }
 
-        private float ResolveMicrophoneChunkSeconds() =>
-            whisperSettings != null ? whisperSettings.MicrophoneChunkSeconds : legacyMicrophoneChunkSeconds;
+        private float ResolveMicrophoneChunkSeconds(SpeechExerciseSO exercise)
+        {
+            float defaultChunkSeconds = whisperSettings != null
+                ? whisperSettings.MicrophoneChunkSeconds
+                : legacyMicrophoneChunkSeconds;
+
+            if (exercise == null || !exercise.IsShortUtteranceExercise())
+                return defaultChunkSeconds;
+
+            return Mathf.Max(defaultChunkSeconds, shortUtteranceChunkSeconds);
+        }
 
         private float ResolveWarmupSeconds() =>
             whisperSettings != null ? whisperSettings.WarmupSeconds : legacyWarmupSeconds;
@@ -506,6 +561,24 @@ namespace FluentEcho.Services
                 "UpdateParams",
                 BindingFlags.Instance | BindingFlags.NonPublic);
             method?.Invoke(whisperManager, null);
+        }
+
+        private void ApplyExerciseRecognitionBias(SpeechExerciseSO exercise)
+        {
+            if (whisperManager == null)
+                return;
+
+            bool shortUtterance = exercise != null && exercise.IsShortUtteranceExercise();
+            whisperManager.noContext = true;
+            whisperManager.singleSegment = shortUtterance;
+
+            float defaultStepSeconds = whisperSettings != null
+                ? whisperSettings.StreamingStepSeconds
+                : legacyStreamingStepSeconds;
+
+            whisperManager.stepSec = shortUtterance
+                ? Mathf.Max(1f, shortUtteranceStreamingStepSeconds)
+                : Mathf.Max(1.25f, defaultStepSeconds);
         }
 
         private void HandleTranscript(int generation, string transcript)
@@ -728,6 +801,19 @@ namespace FluentEcho.Services
             return string.Equals(sanitized, "blank audio", StringComparison.OrdinalIgnoreCase)
                 ? string.Empty
                 : sanitized;
+        }
+
+        private static string SanitizePromptValue(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return string.Empty;
+
+            return raw
+                .Replace('\r', ' ')
+                .Replace('\n', ' ')
+                .Replace("  ", " ")
+                .Trim()
+                .TrimEnd('.', '!', '?', ':', ';');
         }
 
         private void Unsubscribe()

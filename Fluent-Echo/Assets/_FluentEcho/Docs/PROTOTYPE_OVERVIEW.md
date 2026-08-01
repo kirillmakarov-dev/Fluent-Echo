@@ -34,23 +34,34 @@ The project is intentionally built as a 2D interface inside a 3D URP project so 
 - `Editor/FluentEchoPrototypeBuilder.cs` - full demo-scene rebuild
 - `Tests/Editor` - edit-mode tests for the matcher, scoring, and presenter flows
 
-## Whisper Model
+## Whisper Models
 
-The Whisper model is stored in:
+The prototype currently supports these local Whisper profiles:
 
-`Assets/StreamingAssets/Whisper/ggml-tiny.en.bin`
+- `Fast` -> `Assets/StreamingAssets/Whisper/ggml-tiny.en.bin`
+- `Balanced` -> `Assets/StreamingAssets/Whisper/ggml-base.en.bin`
+- `Accurate` -> `Assets/StreamingAssets/Whisper/ggml-small.en.bin`
+
+Recommended usage right now:
+
+- `Words` -> `Fast`
+- `Short Sentences` -> `Balanced`
+- `Challenge Sentences` -> `Balanced` first, `Accurate` only when needed
+
+This recommendation reflects the current recognition pipeline.
+Short single-word drills currently behave best on `Fast`, while sentence exercises benefit more from the larger profiles.
 
 ## How To Verify
 
 1. If Unity asks to reload the changed scene from disk, choose `Reload`.
 2. If needed, run `Tools > Fluent Echo > Rebuild Prototype`.
 3. Open `FluentEchoPrototype` and press Play.
-4. Press `RUN DEMO ANSWER`.
-5. After a short pause, `the dog is big` should appear, the word chips should turn green, and the status should read `ANSWER ACCEPTED`.
+4. Press `SHOW DEMO`.
+5. After a short pause, the expected transcript should appear, the word chips should turn green, and the result flow should open.
 6. Press `TRY AGAIN` to reset the exercise.
-7. Turn off `Use deterministic demo engine`.
-8. Press `START SPEAKING`, say `The dog is big`, and pause.
-9. Whisper should output text, highlight words, and complete the exercise.
+7. If Demo Mode is enabled, turn it off in the scene-owned controls first.
+8. Press `START SPEAKING`, say the expected word or sentence, and pause.
+9. Whisper should output text, highlight matched words, and complete the exercise when the answer is accepted.
 
 If Windows or Unity asks for microphone permission, grant it manually.
 The first Whisper warm-up can take a few seconds while the model loads.
