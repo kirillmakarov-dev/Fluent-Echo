@@ -248,6 +248,119 @@ It is useful and product-friendly, but it is not yet:
 
 That future work is already separated at the architecture level so the app can evolve without a rewrite.
 
+## Future Enhancements
+
+The most useful next improvements are not random polish items.
+They fall into a few clear buckets.
+
+### 1. Better Pronunciation Scoring
+
+The strongest upgrade would be a real pronunciation-assessment pipeline instead of the current heuristic estimate.
+
+Good directions:
+
+- local forced alignment and phoneme-aware scoring;
+- a hybrid architecture where Whisper remains local for transcript generation and a dedicated scorer handles pronunciation quality;
+- an optional cloud pronunciation service for higher-fidelity scoring in a future production version.
+
+### 2. Better Recognition For Real Learners
+
+The prototype is now much better on short drills, but the next practical upgrades would be:
+
+- per-category profile recommendations in the UI;
+- phrase-set biasing for difficult lesson vocabulary;
+- noisy-room and weak-microphone testing;
+- accent-coverage validation across more speakers.
+
+### 3. Better Reference Audio
+
+The current reference-audio path is asset-driven, which is good for control and repeatability.
+Possible upgrades:
+
+- batch-generated lesson audio for every exercise;
+- optional dynamic TTS generation for new content;
+- character lip-sync tied to lesson reference audio.
+
+### 4. Better Productization
+
+For a more complete application version, useful additions would be:
+
+- onboarding that checks microphone and model readiness before first practice;
+- downloadable model management from inside the app;
+- lesson analytics that do not store raw user audio;
+- exportable practice summaries;
+- teacher or reviewer mode for curated lesson sets.
+
+## Optional External API Integrations
+
+The project does not need cloud APIs to stay useful.
+However, a production-oriented version could benefit from carefully chosen external integrations.
+
+### Recommended External API Directions
+
+#### Azure AI Speech Pronunciation Assessment
+
+Best use:
+
+- real pronunciation scoring;
+- word-level and fluency-oriented learner feedback;
+- a stronger future replacement for the current heuristic scorer.
+
+Why it matters:
+
+- this is the clearest upgrade path if the goal is real assessment rather than transcript-only practice.
+
+Suggested role in Fluent Echo:
+
+- keep local Whisper for private/offline mode;
+- add Azure as an optional `cloud scoring mode`;
+- keep the scorer behind a separate service interface so the UI and presenter do not need a rewrite.
+
+#### Google Cloud Speech-to-Text With Adaptation
+
+Best use:
+
+- cloud fallback recognition;
+- phrase and vocabulary biasing for lesson-specific content;
+- benchmarking local Whisper against a managed STT stack.
+
+Why it matters:
+
+- phrase adaptation is useful when the product uses a constrained lesson vocabulary and you want the recognizer to prefer expected words.
+
+Suggested role in Fluent Echo:
+
+- optional fallback recognizer for difficult microphones, noisy rooms, or evaluation builds;
+- not a replacement for the current local-first positioning unless the product direction changes.
+
+#### Deepgram Speech-to-Text
+
+Best use:
+
+- cloud fallback transcription;
+- keyword boosting for target lesson vocabulary;
+- latency and accuracy benchmarking against local Whisper.
+
+Why it matters:
+
+- it is a practical option when you want to compare local transcription quality against a modern speech API without redesigning the app.
+
+Suggested role in Fluent Echo:
+
+- optional benchmark mode or cloud fallback path;
+- especially useful if future testing shows that some lesson types consistently fail on-device hardware.
+
+### Integration Rule
+
+If external APIs are introduced later, keep this split:
+
+- local Whisper remains the private, offline default;
+- cloud recognizers stay optional;
+- cloud pronunciation scoring lives behind a separate scoring interface;
+- UI copy must clearly state when audio stays local and when it is sent to a cloud service.
+
+That rule preserves the current architecture and keeps the product honest.
+
 ## Useful Project Docs
 
 - [`Assets/_FluentEcho/Docs/PROTOTYPE_OVERVIEW.md`](C:/Portfolio%20Projects/Fluent-Echo/Fluent-Echo/Assets/_FluentEcho/Docs/PROTOTYPE_OVERVIEW.md)

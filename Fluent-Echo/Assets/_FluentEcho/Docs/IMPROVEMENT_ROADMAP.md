@@ -135,3 +135,70 @@ UI должен показывать отдельно:
 Не стоит начинать с обучения собственной speech model или сложного 3D. Сначала
 нужно получить быстрый, измеримый и повторяемый цикл:
 `record -> transcript -> score -> useful feedback`.
+
+## Stage 7 - Optional External Integrations
+
+The current prototype does not require cloud APIs.
+That is still the right default for a portfolio-ready local-first version.
+
+However, if Fluent Echo evolves into a stronger production-oriented application,
+the following optional integrations are the most reasonable next step.
+
+### A. Cloud Pronunciation Scoring
+
+Goal:
+
+- replace or complement the current heuristic pronunciation estimate with a more objective scoring layer.
+
+Good fit:
+
+- Azure AI Speech Pronunciation Assessment
+
+Recommended role:
+
+- keep local Whisper for transcript generation and private practice mode;
+- add cloud scoring as a separate optional service;
+- keep it behind `IPronunciationScoringService` so the presenter and UI do not need a rewrite.
+
+### B. Cloud Speech Recognition Fallback
+
+Goal:
+
+- improve recognition quality when the local device, microphone, or lesson type is too difficult for the on-device path.
+
+Good fits:
+
+- Google Cloud Speech-to-Text with phrase adaptation
+- Deepgram Speech-to-Text with keyword boosting
+
+Recommended role:
+
+- use only as an optional fallback or benchmark mode;
+- keep the local-first experience as the default product identity.
+
+### C. Dynamic Reference Audio
+
+Goal:
+
+- generate native-sounding lesson playback without manually recording every lesson.
+
+Good fit:
+
+- a cloud TTS service, or a local/offline TTS pipeline depending on the privacy target
+
+Recommended role:
+
+- keep the current asset-based `Reference Audio` flow for stable portfolio demos;
+- add optional generated lesson audio only when the content catalog grows large enough to justify it.
+
+### D. Product Rules For Any External API
+
+If external APIs are added later, the project should preserve these rules:
+
+- local Whisper stays the default transcription path;
+- external STT is optional, not mandatory;
+- external pronunciation scoring is separate from transcript recognition;
+- the UI must clearly tell the user whether audio stays local or is sent to a cloud service;
+- diagnostics and analytics must avoid storing raw learner audio by default.
+
+This keeps the architecture clean and preserves the current trust model of the prototype.
