@@ -177,7 +177,7 @@ namespace FluentEcho.Tests
         }
 
         [Test]
-        public void LoadingStatus_DisablesMicUntilSpeechModelIsReady()
+        public void LoadingStatus_KeepsMicAvailableWhileSpeechModelPrepares()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the word.", "lesson_test_loading_status");
             SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
@@ -190,10 +190,14 @@ namespace FluentEcho.Tests
             {
                 presenter.Initialize();
 
-                Assert.That(view.LastMicInteractable, Is.False);
+                Assert.That(view.LastMicInteractable, Is.True);
 
                 service.RaiseStatus("Loading speech engine...");
-                Assert.That(view.LastMicInteractable, Is.False);
+                Assert.That(view.LastMicInteractable, Is.True);
+
+                view.RaiseMicPressed();
+                Assert.That(service.StartListeningCalls, Is.EqualTo(1));
+                Assert.That(view.LastListeningState, Is.True);
 
                 service.IsReady = true;
                 service.RaiseStatus("Whisper ready.");
@@ -1279,6 +1283,55 @@ namespace FluentEcho.Tests
         }
 
         [Test]
+        public void DemoButton_RunsOneShotPreviewAndReturnsToRealService()
+        {
+            SpeechExerciseSO exercise = CreateExercise("apple", "Say the word: Apple.", "lesson_test_demo_one_shot");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+
+                presenter.Initialize();
+                view.RaiseDemoPressed();
+                mockService.RaiseTranscript("apple");
+                mockService.RaiseListeningStopped();
+
+                LessonProgressState saved = LessonProgressRepository.Load(exercise.ProgressKey, 1);
+                try
+                {
+                    Assert.That(mockService.StartListeningCalls, Is.EqualTo(1));
+                    Assert.That(service.StartListeningCalls, Is.EqualTo(0));
+                    Assert.That(view.LastTranscript, Is.EqualTo("apple"));
+                    Assert.That(view.LastSuccessState, Is.True);
+                    Assert.That(view.LastMockMode, Is.False);
+                    Assert.That(view.LastStatus, Does.Contain("Demo answer shown"));
+                    Assert.That(saved.Attempts, Is.EqualTo(0));
+                    Assert.That(saved.SuccessfulAttempts, Is.EqualTo(0));
+                }
+                finally
+                {
+                    LessonProgressRepository.Clear(exercise.ProgressKey);
+                }
+
+                view.RaiseMicPressed();
+
+                Assert.That(service.StartListeningCalls, Is.EqualTo(1));
+                Assert.That(view.LastListeningState, Is.True);
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
         public void PartialTranscript_SavesRetryProgressWithoutSuccess()
         {
             SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_word_retry");
@@ -1319,6 +1372,122 @@ namespace FluentEcho.Tests
             finally
             {
                 UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void ListeningStoppedBeforeAnalysis_IsTreatedAsRetryAndKeepsMicEnabled()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_stop_before_analysis");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                service.RaiseTranscript("word");
+                service.RaiseListeningStopped();
+                service.RaiseAnalysisStarted();
+
+                LessonProgressState saved = LessonProgressRepository.Load(exercise.ProgressKey, 1);
+                try
+                {
+                    Assert.That(view.LastListeningState, Is.False);
+                    Assert.That(view.LastMicInteractable, Is.True);
+                    Assert.That(view.LastStatus, Does.Not.Contain("Analyzing"));
+                    Assert.That(view.LastStatus, Does.Contain("missing").Or.Contain("retry"));
+                    Assert.That(saved.Attempts, Is.EqualTo(1));
+                    Assert.That(saved.SuccessfulAttempts, Is.EqualTo(0));
+                }
+                finally
+                {
+                    LessonProgressRepository.Clear(exercise.ProgressKey);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void EmptyTranscriptUpdate_DoesNotClearLastHeardText()
+        {
+            SpeechExerciseSO exercise = CreateExercise("word_01", "Say the sentence.", "lesson_test_empty_transcript_guard");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { exercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(exercise, catalog, view, service, mockService);
+
+            try
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                service.RaiseTranscript("Ringo");
+                Assert.That(view.LastTranscript, Is.EqualTo("Ringo"));
+
+                service.RaiseTranscript(string.Empty);
+                Assert.That(view.LastTranscript, Is.EqualTo("Ringo"));
+
+                service.RaiseListeningStopped();
+
+                Assert.That(view.LastTranscript, Is.EqualTo("Ringo"));
+                Assert.That(view.LastStatus, Does.Contain("missing").Or.Contain("retry"));
+                Assert.That(view.LastMicInteractable, Is.True);
+
+                view.RaiseMicPressed();
+                Assert.That(service.StartListeningCalls, Is.EqualTo(2));
+                Assert.That(view.LastListeningState, Is.True);
+            }
+            finally
+            {
+                LessonProgressRepository.Clear(exercise.ProgressKey);
+                UnityEngine.Object.DestroyImmediate(exercise);
+                UnityEngine.Object.DestroyImmediate(catalog);
+            }
+        }
+
+        [Test]
+        public void SwitchingLessonDuringAttempt_RebindsServiceEventsForNextAttempt()
+        {
+            SpeechExerciseSO firstExercise = CreateExercise("apple", "Say the word: Apple.", "lesson_test_rebind_first");
+            SpeechExerciseSO secondExercise = CreateExercise("window", "Say the word: Window.", "lesson_test_rebind_second");
+            SpeechExerciseCatalogSO catalog = CreateCatalog(new[] { firstExercise, secondExercise });
+            var view = new FakeView();
+            var service = new FakeSpeechService { IsReady = true };
+            var mockService = new FakeSpeechService { IsReady = true };
+            var presenter = CreatePresenter(firstExercise, catalog, view, service, mockService);
+
+            try
+            {
+                presenter.Initialize();
+                view.RaiseMicPressed();
+
+                view.RaiseNextPressed();
+                view.RaiseMicPressed();
+                service.RaiseTranscript("window");
+
+                Assert.That(service.CancelCalls, Is.EqualTo(1));
+                Assert.That(service.StartListeningCalls, Is.EqualTo(2));
+                Assert.That(view.LastTranscript, Is.EqualTo("window"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(firstExercise);
+                UnityEngine.Object.DestroyImmediate(secondExercise);
                 UnityEngine.Object.DestroyImmediate(catalog);
             }
         }

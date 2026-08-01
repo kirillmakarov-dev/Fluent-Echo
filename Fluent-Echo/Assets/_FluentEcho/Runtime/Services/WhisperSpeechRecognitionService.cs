@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -29,14 +30,17 @@ namespace FluentEcho.Services
         private Task prepareTask;
         private Coroutine stopWatchdog;
         private Coroutine listeningWatchdog;
+        private readonly Queue<Action> mainThreadActions = new();
         private bool suppressStopEvent;
         private bool finishRequested;
         private bool warmupCompleted;
         private float lastPrepareSeconds;
         private float lastWarmupSeconds;
         private int prepareGeneration;
+        private int startGeneration;
         private int listeningGeneration;
         private int activeListeningGeneration;
+        private string lastTranscript = string.Empty;
         private OnStreamResultUpdatedDelegate transcriptUpdatedHandler;
         private OnStreamFinishedDelegate streamFinishedHandler;
         private OnRecordStopDelegate recordStopHandler;
@@ -59,10 +63,37 @@ namespace FluentEcho.Services
             ApplyConfiguration();
         }
 
+        private void Update()
+        {
+            while (true)
+            {
+                Action action;
+                lock (mainThreadActions)
+                {
+                    if (mainThreadActions.Count == 0)
+                        return;
+
+                    action = mainThreadActions.Dequeue();
+                }
+
+                try
+                {
+                    action?.Invoke();
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, this);
+                }
+            }
+        }
+
         public void Configure(SpeechExerciseSO exercise)
         {
-            if (whisperManager != null && exercise != null)
-                whisperManager.initialPrompt = exercise.GetRecognitionPrompt();
+            if (whisperManager != null)
+            {
+                whisperManager.initialPrompt = BuildRecognitionPrompt(exercise);
+                RefreshWhisperManagerParams();
+            }
 
             if (microphone != null && exercise != null)
             {
@@ -79,6 +110,26 @@ namespace FluentEcho.Services
                 return;
 
             whisperSettings.SetRuntimeProfile(profile);
+        }
+
+        private static string BuildRecognitionPrompt(SpeechExerciseSO exercise)
+        {
+            if (exercise == null)
+                return string.Empty;
+
+            string prompt = exercise.Prompt?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(prompt))
+                return "Practice English pronunciation.";
+
+            int colonIndex = prompt.IndexOf(':');
+            if (colonIndex >= 0)
+                prompt = prompt.Substring(0, colonIndex);
+
+            prompt = prompt.Trim().TrimEnd('.', '!', '?', ':');
+            if (string.IsNullOrWhiteSpace(prompt))
+                return "Practice English pronunciation.";
+
+            return $"{prompt}. Practice English pronunciation.";
         }
 
         public void Prepare()
@@ -103,33 +154,40 @@ namespace FluentEcho.Services
                 if (IsListening)
                     return;
 
+                int generation = ++startGeneration;
+                IsListening = true;
+                finishRequested = false;
+                suppressStopEvent = false;
+                lastTranscript = string.Empty;
+
                 if (Microphone.devices.Length == 0)
                 {
                     RaiseError("No microphone device was detected.");
-                    StatusChanged?.Invoke("No microphone device was detected.");
-                    ListeningStopped?.Invoke();
+                    RaiseStatusChanged("No microphone device was detected.");
+                    CompleteStop();
                     return;
                 }
 
-                if (!await EnsurePreparedAsync())
+                if (!await EnsurePreparedAsync()
+                    || !IsCurrentStartGeneration(generation)
+                    || !IsListening
+                    || finishRequested)
                 {
-                    ListeningStopped?.Invoke();
+                    CompleteStop();
                     return;
                 }
 
                 if (stream == null)
                 {
                     RaiseError("Whisper stream was not ready.");
-                    StatusChanged?.Invoke("Whisper stream was not ready.");
-                    ListeningStopped?.Invoke();
+                    RaiseStatusChanged("Whisper stream was not ready.");
+                    CompleteStop();
                     return;
                 }
 
                 SubscribeCurrentSessionCallbacks();
-                suppressStopEvent = false;
                 finishRequested = false;
 
-                IsListening = true;
                 StartListeningWatchdog();
                 stream.StartStream();
                 if (microphone != null)
@@ -137,7 +195,7 @@ namespace FluentEcho.Services
                 if (!microphone.StartRecord())
                 {
                     RaiseError("The microphone could not start. Check operating-system permission.");
-                    StatusChanged?.Invoke("The microphone could not start. Check operating-system permission.");
+                    RaiseStatusChanged("The microphone could not start. Check operating-system permission.");
                     stream.StopStream();
                     CompleteStop();
                     return;
@@ -146,7 +204,7 @@ namespace FluentEcho.Services
                 if (!microphone.IsRecording)
                 {
                     RaiseError("The microphone could not start. Check operating-system permission.");
-                    StatusChanged?.Invoke("The microphone could not start. Check operating-system permission.");
+                    RaiseStatusChanged("The microphone could not start. Check operating-system permission.");
                     stream.StopStream();
                     CompleteStop();
                 }
@@ -154,7 +212,7 @@ namespace FluentEcho.Services
             catch (Exception exception)
             {
                 RaiseError($"Listening failed: {exception.Message}");
-                StatusChanged?.Invoke("Listening failed.");
+                RaiseStatusChanged("Listening failed.");
                 try
                 {
                     if (stream != null)
@@ -180,6 +238,7 @@ namespace FluentEcho.Services
         public void Cancel()
         {
             prepareGeneration++;
+            startGeneration++;
 
             if (!IsListening)
                 return;
@@ -211,14 +270,14 @@ namespace FluentEcho.Services
             if (IsPrepareStale(generation))
                 return;
 
-            StatusChanged?.Invoke($"Loading speech model ({profileLabel})...");
+            RaiseStatusChanged($"Loading speech model ({profileLabel})...");
 
             string modelPath = ResolveModelPath();
             string fullModelPath = ResolveFullModelPath(modelPath);
             if (!File.Exists(fullModelPath))
             {
                 RaiseError($"Whisper model is missing: {fullModelPath}");
-                StatusChanged?.Invoke("Speech model is missing.");
+                RaiseStatusChanged("Speech model is missing.");
                 return;
             }
 
@@ -234,7 +293,7 @@ namespace FluentEcho.Services
                 catch (Exception exception)
                 {
                     RaiseError($"Whisper model failed to load: {exception.Message}");
-                    StatusChanged?.Invoke("Speech model failed to load.");
+                    RaiseStatusChanged("Speech model failed to load.");
                     return;
                 }
             }
@@ -245,7 +304,7 @@ namespace FluentEcho.Services
             if (!whisperManager.IsLoaded)
             {
                 RaiseError($"Whisper could not load model: {fullModelPath}");
-                StatusChanged?.Invoke("The selected speech model could not load.");
+                RaiseStatusChanged("The selected speech model could not load.");
                 return;
             }
 
@@ -258,8 +317,11 @@ namespace FluentEcho.Services
             if (IsPrepareStale(generation))
                 return;
 
-            if (stream == null && !IsListening)
+            if (stream == null)
+            {
+                RefreshWhisperManagerParams();
                 stream = await whisperManager.CreateStream(microphone);
+            }
 
             if (IsPrepareStale(generation))
                 return;
@@ -267,7 +329,7 @@ namespace FluentEcho.Services
             if (stream == null)
             {
                 RaiseError("Whisper stream could not be created.");
-                StatusChanged?.Invoke("Speech analysis could not start.");
+                RaiseStatusChanged("Speech analysis could not start.");
                 return;
             }
 
@@ -279,7 +341,7 @@ namespace FluentEcho.Services
                 readyMessage += $", warm-up {lastWarmupSeconds:0.0}s";
 
             readyMessage += ").";
-            StatusChanged?.Invoke(readyMessage);
+            RaiseStatusChanged(readyMessage);
         }
 
         private void ApplyConfiguration()
@@ -301,6 +363,8 @@ namespace FluentEcho.Services
 
                 if (whisperManager != null)
                 {
+                    whisperManager.noContext = true;
+                    whisperManager.singleSegment = false;
                     whisperManager.language = "en";
                     whisperManager.stepSec = Mathf.Max(1.25f, legacyStreamingStepSeconds);
                     whisperManager.keepSec = 0.2f;
@@ -326,6 +390,12 @@ namespace FluentEcho.Services
             {
                 whisperManager.IsModelPathInStreamingAssets = true;
                 whisperManager.ModelPath = ResolveModelPath();
+            }
+
+            if (whisperManager != null)
+            {
+                whisperManager.noContext = true;
+                whisperManager.singleSegment = false;
                 whisperManager.language = settings.Language;
                 // Whisper rejects audio shorter than one second. Keep a small safety margin
                 // because microphone chunk boundaries are not sample-perfect.
@@ -343,6 +413,7 @@ namespace FluentEcho.Services
                 bool flashAttention = settings.FlashAttention && useGpu;
                 SetWhisperManagerField(whisperManager, "useGpu", useGpu);
                 SetWhisperManagerField(whisperManager, "flashAttention", flashAttention);
+                RefreshWhisperManagerParams();
             }
 
             if (microphone != null)
@@ -367,7 +438,7 @@ namespace FluentEcho.Services
             if (whisperManager == null || !whisperManager.IsLoaded)
                 return false;
 
-            StatusChanged?.Invoke($"Warming up speech model ({profileLabel})...");
+            RaiseStatusChanged($"Warming up speech model ({profileLabel})...");
             Stopwatch warmupStopwatch = Stopwatch.StartNew();
 
             int sampleRate = microphone != null ? microphone.frequency : 16000;
@@ -387,7 +458,7 @@ namespace FluentEcho.Services
             catch (Exception exception)
             {
                 RaiseError($"Whisper warm-up failed: {exception.Message}");
-                StatusChanged?.Invoke("Speech warm-up failed.");
+                RaiseStatusChanged("Speech warm-up failed.");
                 return false;
             }
             finally
@@ -426,6 +497,17 @@ namespace FluentEcho.Services
             field.SetValue(manager, value);
         }
 
+        private void RefreshWhisperManagerParams()
+        {
+            if (whisperManager == null || !whisperManager.IsLoaded)
+                return;
+
+            MethodInfo method = typeof(WhisperManager).GetMethod(
+                "UpdateParams",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            method?.Invoke(whisperManager, null);
+        }
+
         private void HandleTranscript(int generation, string transcript)
         {
             if (!IsCurrentListeningGeneration(generation))
@@ -433,7 +515,7 @@ namespace FluentEcho.Services
 
             string sanitizedTranscript = SanitizeTranscript(transcript);
             if (!string.IsNullOrWhiteSpace(sanitizedTranscript))
-                TranscriptUpdated?.Invoke(sanitizedTranscript);
+                RaiseTranscriptUpdated(sanitizedTranscript);
         }
 
         private void HandleRecordStop(int generation, AudioChunk chunk)
@@ -444,7 +526,7 @@ namespace FluentEcho.Services
             if (!IsListening)
                 return;
 
-            AnalysisStarted?.Invoke();
+            RaiseAnalysisStarted();
             finishRequested = true;
             StartStopWatchdog();
         }
@@ -475,7 +557,7 @@ namespace FluentEcho.Services
 
             string sanitizedTranscript = SanitizeTranscript(finalTranscript);
             if (!string.IsNullOrWhiteSpace(sanitizedTranscript))
-                TranscriptUpdated?.Invoke(sanitizedTranscript);
+                RaiseTranscriptUpdated(sanitizedTranscript);
 
             CompleteStop();
         }
@@ -488,6 +570,7 @@ namespace FluentEcho.Services
             StopStopWatchdog();
             StopListeningWatchdog();
             Unsubscribe();
+            stream = null;
             IsListening = false;
             finishRequested = false;
             activeListeningGeneration = 0;
@@ -498,16 +581,55 @@ namespace FluentEcho.Services
                 return;
             }
 
-            ListeningStopped?.Invoke();
+            if (!string.IsNullOrWhiteSpace(lastTranscript))
+                RaiseTranscriptUpdated(lastTranscript);
+            RaiseListeningStopped();
+        }
+
+        private void RaiseTranscriptUpdated(string transcript)
+        {
+            string sanitizedTranscript = SanitizeTranscript(transcript);
+            if (string.IsNullOrWhiteSpace(sanitizedTranscript))
+                return;
+
+            lastTranscript = sanitizedTranscript;
+            RunOnMainThread(() => TranscriptUpdated?.Invoke(sanitizedTranscript));
+        }
+
+        private void RaiseAnalysisStarted()
+        {
+            RunOnMainThread(() => AnalysisStarted?.Invoke());
+        }
+
+        private void RaiseListeningStopped()
+        {
+            RunOnMainThread(() => ListeningStopped?.Invoke());
+        }
+
+        private void RaiseStatusChanged(string message)
+        {
+            RunOnMainThread(() => StatusChanged?.Invoke(message));
+        }
+
+        private void RunOnMainThread(Action action)
+        {
+            if (action == null)
+                return;
+
+            lock (mainThreadActions)
+                mainThreadActions.Enqueue(action);
         }
 
         private void RaiseError(string message)
         {
             Debug.LogError($"[FluentEcho.Whisper] {message}", this);
-            Failed?.Invoke(message);
+            RunOnMainThread(() => Failed?.Invoke(message));
         }
 
         private bool IsPrepareStale(int generation) => generation != prepareGeneration;
+
+        private bool IsCurrentStartGeneration(int generation) =>
+            generation != 0 && generation == startGeneration;
 
         private void EnsureStreamFinishedSubscription()
         {
@@ -577,7 +699,7 @@ namespace FluentEcho.Services
                 yield break;
 
             RaiseError("Listening timed out.");
-            StatusChanged?.Invoke("Listening timed out.");
+            RaiseStatusChanged("Listening timed out.");
             CompleteStop();
         }
 
@@ -589,7 +711,7 @@ namespace FluentEcho.Services
             if (!IsListening)
                 yield break;
 
-            StatusChanged?.Invoke("No clear speech was recognized. You can try again.");
+            RaiseStatusChanged("No clear speech was recognized. You can try again.");
             CompleteStop();
         }
 

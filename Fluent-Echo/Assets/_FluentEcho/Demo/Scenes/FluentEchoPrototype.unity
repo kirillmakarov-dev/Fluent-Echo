@@ -9321,7 +9321,7 @@ MonoBehaviour:
   settingsToggleButton: {fileID: 1833243723}
   settingsCloseButton: {fileID: 2025640857}
   resultPanelObject: {fileID: 590223882}
-  resultCloseButton: {fileID: 1530958021}
+  resultCloseButton: {fileID: 1530958023}
   microphoneValueLabel: {fileID: 0}
   whisperProfileValueLabel: {fileID: 0}
   progressLabel: {fileID: 0}
