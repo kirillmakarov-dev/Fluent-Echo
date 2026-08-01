@@ -42,7 +42,6 @@ namespace FluentEcho.Presentation
             if (score != null && score.IsAvailable)
             {
                 AppendAcceptedProgress(acceptedResultLines, progress);
-                AppendHistory(acceptedResultLines, historyText);
                 AppendNextStep(acceptedResultLines, nextStepPrompt);
             }
 
@@ -62,18 +61,7 @@ namespace FluentEcho.Presentation
 
             if (progress.BestPronunciationScore > 0)
             {
-                bool isNewBestAttempt =
-                    progress.BestPronunciationScore == score.OverallScore
-                    && string.Equals(
-                        progress.BestTranscript?.Trim(),
-                        transcript?.Trim(),
-                        StringComparison.Ordinal);
-
-                lines.Add(isNewBestAttempt
-                    ? "Best attempt so far: this attempt is the new best."
-                    : "Best attempt so far:");
-
-                string bestAttempt = $"Practice score {progress.BestPronunciationScore}/100";
+                string bestAttempt = $"Best so far: {progress.BestPronunciationScore}/100";
                 if (!string.IsNullOrWhiteSpace(progress.BestPronunciationConfidenceBand))
                     bestAttempt += $" | confidence {Capitalize(progress.BestPronunciationConfidenceBand)}";
 

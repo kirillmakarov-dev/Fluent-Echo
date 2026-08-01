@@ -28,7 +28,6 @@ namespace FluentEcho.Presentation
             string focusNext = PronunciationScoreNarrativeFormatter.BuildFocusNextText(score);
             string matchQuality = PronunciationScoreNarrativeFormatter.BuildMatchQualityText(score);
             string approximateMatches = PronunciationScoreNarrativeFormatter.BuildApproximateMatchText(score);
-            string wordBreakdown = BuildWordBreakdown(score.WordScores);
 
             var currentAttemptLines = new System.Collections.Generic.List<string>
             {
@@ -57,9 +56,6 @@ namespace FluentEcho.Presentation
             if (!string.IsNullOrWhiteSpace(approximateMatches))
                 currentAttemptLines.Add(approximateMatches);
 
-            if (!string.IsNullOrWhiteSpace(wordBreakdown))
-                currentAttemptLines.Add(wordBreakdown);
-
             currentAttemptLines.Add("Focus next:");
             currentAttemptLines.Add(focusNext);
 
@@ -85,10 +81,7 @@ namespace FluentEcho.Presentation
                     : score.EstimateBasisText,
                 string.Empty,
                 FluentEchoCopy.ResultSignalBreakdownHeader,
-                $"Coverage: {score.MatchedWordCount}/{score.ExpectedWordCount}",
-                $"Precision: {score.PrecisionScore}%",
-                $"Rhythm: {score.TempoScore}%",
-                $"Word focus: {score.WordQualityScore}%"
+                $"Coverage: {score.MatchedWordCount}/{score.ExpectedWordCount} | Precision: {score.PrecisionScore}% | Rhythm: {score.TempoScore}% | Word focus: {score.WordQualityScore}%"
             };
 
             if (!string.IsNullOrWhiteSpace(phonemeAlignmentText))
@@ -96,12 +89,6 @@ namespace FluentEcho.Presentation
 
             if (!string.IsNullOrWhiteSpace(matchQuality))
                 acceptedResultLines.Add(matchQuality);
-
-            if (!string.IsNullOrWhiteSpace(approximateMatches))
-                acceptedResultLines.Add(approximateMatches);
-
-            if (!string.IsNullOrWhiteSpace(wordBreakdown))
-                acceptedResultLines.Add(wordBreakdown);
 
             if (!string.IsNullOrWhiteSpace(score.FeedbackText))
             {
@@ -117,29 +104,6 @@ namespace FluentEcho.Presentation
             return new PronunciationScoreNarrativeSnapshot(
                 currentAttemptLines.ToArray(),
                 acceptedResultLines.ToArray());
-        }
-
-        private static string BuildWordBreakdown(System.Collections.Generic.IReadOnlyList<PronunciationWordScore> wordScores)
-        {
-            if (wordScores == null || wordScores.Count == 0)
-                return string.Empty;
-
-            int limit = Mathf.Min(5, wordScores.Count);
-            var parts = new System.Collections.Generic.List<string>(limit);
-            for (int i = 0; i < limit; i++)
-            {
-                PronunciationWordScore wordScore = wordScores[i];
-                string marker = wordScore.Kind == PronunciationMatchKind.Exact
-                    ? "exact"
-                    : wordScore.Kind == PronunciationMatchKind.Alternative
-                        ? "alt"
-                        : wordScore.Kind == PronunciationMatchKind.Fuzzy
-                            ? "fuzzy"
-                            : "miss";
-                parts.Add($"{wordScore.Word}: {wordScore.Score}% {marker}");
-            }
-
-            return $"Word focus: {string.Join(" | ", parts)}";
         }
 
         private static string Capitalize(string value)

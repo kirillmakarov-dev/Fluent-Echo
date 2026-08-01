@@ -4,17 +4,17 @@ namespace FluentEcho.Presentation
     {
         public const string FirstProgressSummary = "Progress: ready for first recording";
         public const string FirstLocalEstimateText = "Your first practice score will appear here.";
-        public const string FirstCoachingTipText = "Your first focus next step will appear here.";
+        public const string FirstCoachingTipText = "Feedback stays short and readable.";
         public const string FirstPronunciationSummary = "PRACTICE SCORE | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstConfidenceSummary = "CONFIDENCE | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstWordMatchSummary = "WORD MATCH | READY FOR YOUR FIRST ATTEMPT";
         public const string FirstRhythmSummary = "RHYTHM | READY FOR YOUR FIRST ATTEMPT";
-        public const string FirstEstimatePrompt = "Speak once to generate the first practice score.";
+        public const string FirstEstimatePrompt = "Record once to see your first practice score.";
         public const string OnboardingWelcomeTitle = "Practice English privately";
         public const string OnboardingWelcomeBody = "Fluent Echo listens on this device and uses a local speech model.";
         public const string OnboardingPracticePathsTitle = "Choose your practice path";
         public const string OnboardingPracticePathsBody = "Words build clarity, short sentences build rhythm, and challenge sentences build fluency. Your voice stays local either way.";
-        public const string PhonemeRoadmapText = "True phoneme scoring is planned for a future sprint.";
+        public const string PhonemeRoadmapText = "True phoneme scoring is still a future sprint.";
         public const string ReadyToPracticeStatus = "Ready to practice.";
         public const string DemoModeReadyStatus = "Demo mode is ready. Press Start Speaking to preview the demo answer.";
         public const string PreparingSpeechModelStatus = "Preparing speech model...";

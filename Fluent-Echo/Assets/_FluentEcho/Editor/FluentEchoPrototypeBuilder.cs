@@ -324,7 +324,7 @@ namespace FluentEcho.Editor
             if (resultPanel == null)
             {
                 resultPanel = CreatePanel(canvasRoot, "Result Panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), ResultFill);
-                SetCenteredSize(resultPanel, new Vector2(960f, 680f));
+                SetCenteredSize(resultPanel, new Vector2(1080f, 760f));
             }
 
             Image resultImage = resultPanel.GetComponent<Image>();
@@ -740,7 +740,7 @@ namespace FluentEcho.Editor
             Image success = CreatePanel(
                 root, "Result Panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), ResultFill)
                 .GetComponent<Image>();
-            SetCenteredSize(success.rectTransform, new Vector2(960f, 680f));
+            SetCenteredSize(success.rectTransform, new Vector2(1080f, 760f));
             ApplyRoundedSurface(success.rectTransform);
             CanvasGroup successGroup = success.gameObject.AddComponent<CanvasGroup>();
             ApplyPanelFrame(success.rectTransform, ResultBorder);

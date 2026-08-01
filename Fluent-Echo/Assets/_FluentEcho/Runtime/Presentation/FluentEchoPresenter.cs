@@ -748,7 +748,7 @@ namespace FluentEcho.Presentation
                 session.Transcript,
                 PhonemeAlignmentTextFormatter.BuildPreviewText(lastPhonemeAlignment),
                 progress,
-                progress?.GetHistoryText(2),
+                progress?.GetHistoryText(1),
                 BuildResultNextStepPrompt());
         }
 
