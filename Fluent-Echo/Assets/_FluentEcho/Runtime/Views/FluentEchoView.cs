@@ -13,9 +13,6 @@ namespace FluentEcho.Views
         private static readonly Color NoticeAccent = new(0.20f, 0.90f, 0.68f, 0.88f);
         private static readonly Color NoticeActionFill = new(0.20f, 0.90f, 0.68f, 1f);
         private static readonly Color NoticeActionText = new(0.06f, 0.13f, 0.15f, 1f);
-        private static readonly Color ResultHeading = new(0.09f, 0.16f, 0.19f, 1f);
-        private static readonly Color ResultBody = new(0.24f, 0.27f, 0.29f, 1f);
-        private static readonly Color ResultAccent = new(0.23f, 0.56f, 0.49f, 1f);
         private const float WordChipMinWidth = 110f;
         private const float WordChipMaxWidth = 190f;
         private const float WordChipHeight = 60f;
@@ -124,10 +121,6 @@ namespace FluentEcho.Views
                     wordLayoutGroup.enabled = false;
             }
 
-            EnsureCategoriesButton();
-            ConfigureResultButton(resultCloseButton, "CLOSE", 12);
-            ConfigureResultButton(resultNextButton, "NEXT MISSION", 12);
-            ConfigureResultButton(resultTryAgainButton, "TRY AGAIN", 12);
             micButton.onClick.AddListener(() => MicPressed?.Invoke());
             demoButton.onClick.AddListener(() => DemoPressed?.Invoke());
             retryButton.onClick.AddListener(() => RetryPressed?.Invoke());
@@ -166,48 +159,6 @@ namespace FluentEcho.Views
                 mockModeToggle.onValueChanged.AddListener(value => MockModeChanged?.Invoke(value));
             EnsureResultAnimationReferences();
             EnsureNoticePanel();
-            ApplyFeedbackPanelTypography();
-        }
-
-        private void EnsureCategoriesButton()
-        {
-            if (categoriesButton == null)
-            {
-                Debug.LogWarning(
-                    "[FluentEchoView] Category Back Button is not assigned in the scene.",
-                    this);
-                return;
-            }
-
-            ConfigureCategoriesButton(categoriesButton);
-        }
-
-        private static void ConfigureCategoriesButton(Button button)
-        {
-            if (button == null)
-                return;
-
-            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (label != null)
-            {
-                label.text = "CATEGORIES";
-                label.fontSize = 14;
-                label.alignment = TextAlignmentOptions.Center;
-            }
-        }
-
-        private static void ConfigureResultButton(Button button, string labelText, int fontSize)
-        {
-            if (button == null)
-                return;
-
-            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (label != null)
-            {
-                label.text = labelText;
-                label.fontSize = fontSize;
-                label.alignment = TextAlignmentOptions.Center;
-            }
         }
 
         public void Build(string prompt, string[] targetWords)
@@ -215,13 +166,6 @@ namespace FluentEcho.Views
             if (wordChipPrefab == null)
                 throw new InvalidOperationException(
                     "FluentEchoView requires a WordChipView prefab. Rebuild the prototype scene.");
-
-            if (promptLabel != null)
-            {
-                promptLabel.enableAutoSizing = true;
-                promptLabel.fontSizeMin = 28;
-                promptLabel.fontSizeMax = 42;
-            }
 
             promptLabel.text = prompt;
             for (int i = wordContainer.childCount - 1; i >= 0; i--)
@@ -495,7 +439,6 @@ namespace FluentEcho.Views
         public void SetSuccess(bool success)
         {
             isSuccessVisible = success;
-            ApplyFeedbackPanelTypography();
             if (success)
                 RefreshResultContentLayout();
             SetResultPanelVisible(success);
@@ -583,64 +526,6 @@ namespace FluentEcho.Views
             }
         }
 
-        private void ApplyFeedbackPanelTypography()
-        {
-            StyleLabel(
-                pronunciationSummaryLabel,
-                20f,
-                FontStyles.Bold,
-                ResultHeading,
-                12f);
-            StyleLabel(
-                pronunciationFeedbackLabel,
-                15f,
-                FontStyles.Normal,
-                ResultBody,
-                5f);
-            StyleLabel(
-                progressDetailsLabel,
-                17f,
-                FontStyles.Normal,
-                ResultBody,
-                6f);
-            StyleLabel(
-                pronunciationConfidenceLabel,
-                14f,
-                FontStyles.Bold,
-                ResultAccent,
-                4f);
-            StyleLabel(
-                pronunciationWordMatchLabel,
-                14f,
-                FontStyles.Bold,
-                ResultAccent,
-                4f);
-            StyleLabel(
-                pronunciationRhythmLabel,
-                14f,
-                FontStyles.Bold,
-                ResultAccent,
-                4f);
-        }
-
-        private static void StyleLabel(
-            TextMeshProUGUI label,
-            float fontSize,
-            FontStyles style,
-            Color color,
-            float lineSpacing)
-        {
-            if (label == null)
-                return;
-
-            label.fontSize = fontSize;
-            label.fontStyle = style;
-            label.color = color;
-            label.lineSpacing = lineSpacing;
-            label.textWrappingMode = TextWrappingModes.Normal;
-            label.overflowMode = TextOverflowModes.Overflow;
-        }
-
         private static string FormatCompactMetric(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -652,18 +537,18 @@ namespace FluentEcho.Views
 
             string label = parts[0].Trim();
             string metricValue = parts[1].Trim();
-            return $"<size=12><b>{label}</b></size>\n<size=20>{metricValue}</size>";
+            return $"{label}\n{metricValue}";
         }
 
         private static string FormatResultSummary(string summary)
         {
             string[] parts = summary.Split('|');
             if (parts.Length < 3)
-                return $"<b>{summary.Trim()}</b>";
+                return summary.Trim();
 
             string heading = parts[0].Trim();
             string score = parts[1].Trim();
-            return $"<size=16><b>{heading}</b></size>\n<size=36><b>{score}</b></size>";
+            return $"{heading}\n{score}";
         }
 
         private static string FormatResultFeedback(string feedback)
@@ -683,8 +568,8 @@ namespace FluentEcho.Views
             var sections = new List<string>();
             if (!string.IsNullOrWhiteSpace(takeaway) || !string.IsNullOrWhiteSpace(confidenceReason))
             {
-                sections.Add("<size=13><b>Why this was accepted</b></size>");
-                sections.Add($"<size=16>{(!string.IsNullOrWhiteSpace(takeaway) ? takeaway : confidenceReason)}</size>");
+                sections.Add("Why this was accepted");
+                sections.Add(!string.IsNullOrWhiteSpace(takeaway) ? takeaway : confidenceReason);
             }
 
             string detailLine = !string.IsNullOrWhiteSpace(matchQuality)
@@ -692,14 +577,14 @@ namespace FluentEcho.Views
                 : exactWords;
             if (!string.IsNullOrWhiteSpace(detailLine))
             {
-                sections.Add("<size=13><b>Signal snapshot</b></size>");
-                sections.Add($"<size=16>{detailLine}</size>");
+                sections.Add("Signal snapshot");
+                sections.Add(detailLine);
             }
 
             if (!string.IsNullOrWhiteSpace(focusNext))
             {
-                sections.Add("<size=13><b>Focus for the next mission</b></size>");
-                sections.Add($"<size=16>{focusNext}</size>");
+                sections.Add("Focus for the next mission");
+                sections.Add(focusNext);
             }
 
             return sections.Count == 0
@@ -726,23 +611,23 @@ namespace FluentEcho.Views
             var sections = new List<string>();
             if (!string.IsNullOrWhiteSpace(transcript))
             {
-                sections.Add("<size=13><b>Transcript</b></size>");
-                sections.Add($"<size=16>{transcript}</size>");
+                sections.Add("Transcript");
+                sections.Add(transcript);
             }
 
             if (!string.IsNullOrWhiteSpace(best) || !string.IsNullOrWhiteSpace(progress))
             {
-                sections.Add("<size=13><b>Progress</b></size>");
+                sections.Add("Progress");
                 if (!string.IsNullOrWhiteSpace(best))
-                    sections.Add($"<size=16>{best}</size>");
+                    sections.Add(best);
                 if (!string.IsNullOrWhiteSpace(progress))
-                    sections.Add($"<size=16>{progress}</size>");
+                    sections.Add(progress);
             }
 
             if (!string.IsNullOrWhiteSpace(next))
             {
-                sections.Add("<size=13><b>Next</b></size>");
-                sections.Add($"<size=16>{next}</size>");
+                sections.Add("Next");
+                sections.Add(next);
             }
 
             return sections.Count == 0

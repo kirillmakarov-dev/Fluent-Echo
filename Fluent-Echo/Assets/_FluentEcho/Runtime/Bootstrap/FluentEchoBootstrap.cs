@@ -14,13 +14,6 @@ namespace FluentEcho.Bootstrap
 {
     public sealed class FluentEchoBootstrap : MonoBehaviour
     {
-        private static readonly Color SettingsFill = new(0.11f, 0.24f, 0.28f, 1f);
-        private static readonly Color SettingsBorder = new(0.20f, 0.90f, 0.68f, 0.24f);
-        private static readonly Color SettingsAccent = new(0.20f, 0.90f, 0.68f, 0.9f);
-        private static readonly Color ResultFill = new(0.94f, 0.89f, 0.80f, 1f);
-        private static readonly Color ResultBorder = new(0.89f, 0.37f, 0.30f, 0.20f);
-        private static readonly Color ResultAccent = new(0.89f, 0.37f, 0.30f, 0.92f);
-
         [SerializeField] private SpeechExerciseSO exercise;
         [SerializeField] private SpeechExerciseCatalogSO exerciseCatalog;
         [SerializeField] private FluentEchoView view;
@@ -221,7 +214,6 @@ namespace FluentEcho.Bootstrap
             }
             else if (settingsPanelObject != null)
             {
-                settingsToggleButton.transform.SetAsLastSibling();
                 settingsToggleButton.onClick.RemoveAllListeners();
                 settingsToggleButton.onClick.AddListener(ToggleSettingsPanel);
             }
@@ -262,8 +254,6 @@ namespace FluentEcho.Bootstrap
                 return;
 
             bool shouldOpen = !settingsPanelObject.activeSelf;
-            if (shouldOpen)
-                settingsPanelObject.transform.SetAsLastSibling();
             settingsPanelObject.SetActive(shouldOpen);
         }
 
@@ -302,7 +292,6 @@ namespace FluentEcho.Bootstrap
             if (microphone != null)
                 microphone.microphoneDropdown = dropdown;
 
-            StyleDropdown(dropdown, SettingsFill);
             PopulateDropdown(microphone, dropdown, microphoneValueLabel);
         }
 
@@ -374,55 +363,6 @@ namespace FluentEcho.Bootstrap
             });
 
             dropdown.SetValueWithoutNotify((int) currentProfile);
-            StyleDropdown(dropdown, SettingsFill);
-        }
-
-        private void EnsureProgressLabel()
-        {
-            if (view == null)
-                return;
-
-            if (progressLabel == null)
-            {
-                Debug.LogWarning("[FluentEchoBootstrap] Progress label is not assigned in the scene.", this);
-                return;
-            }
-
-            progressLabel.color = new Color(0.18f, 0.18f, 0.18f, 1f);
-            progressLabel.fontStyle = FontStyles.Normal;
-            view.ConfigureProgressLabel(progressLabel);
-        }
-
-        private void EnsureProgressDetailsLabel()
-        {
-            if (view == null)
-                return;
-
-            if (progressDetailsLabel == null)
-            {
-                Debug.LogWarning("[FluentEchoBootstrap] Progress Details label is not assigned in the scene.", this);
-                return;
-            }
-
-            progressDetailsLabel.color = new Color(0.18f, 0.18f, 0.18f, 1f);
-            progressDetailsLabel.fontStyle = FontStyles.Normal;
-            view.ConfigureProgressDetailsLabel(progressDetailsLabel);
-        }
-
-        private void EnsurePronunciationLabels()
-        {
-            if (view == null)
-                return;
-
-            if (pronunciationSummaryLabel == null || pronunciationFeedbackLabel == null)
-            {
-                Debug.LogWarning("[FluentEchoBootstrap] Pronunciation summary or feedback labels are not assigned in the scene.", this);
-                return;
-            }
-
-            pronunciationSummaryLabel.color = new Color(0.89f, 0.37f, 0.30f, 1f);
-            pronunciationFeedbackLabel.color = new Color(0.21f, 0.21f, 0.21f, 1f);
-            view.ConfigurePronunciationLabels(pronunciationSummaryLabel, pronunciationFeedbackLabel);
         }
 
         private SpeechExerciseSO ResolveSelectedExercise()
@@ -839,27 +779,6 @@ namespace FluentEcho.Bootstrap
 
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() => panel.gameObject.SetActive(false));
-        }
-
-        private static void StyleDropdown(Dropdown dropdown, Color fillColor)
-        {
-            if (dropdown == null)
-                return;
-
-            if (dropdown.targetGraphic != null)
-                dropdown.targetGraphic.color = fillColor;
-
-            if (dropdown.captionText != null)
-            {
-                dropdown.captionText.color = new Color(0.96f, 0.94f, 0.88f, 1f);
-                dropdown.captionText.fontSize = 15;
-            }
-
-            if (dropdown.itemText != null)
-            {
-                dropdown.itemText.color = new Color(0.10f, 0.12f, 0.13f, 1f);
-                dropdown.itemText.fontSize = 14;
-            }
         }
 
         private static Transform FindDeepTransform(Transform root, string name)
