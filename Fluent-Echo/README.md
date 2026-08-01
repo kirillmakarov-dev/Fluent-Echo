@@ -1,10 +1,10 @@
 # Fluent Echo
 
-Fluent Echo is a Unity-based offline English speech-practice prototype built as a portfolio case study.
-It demonstrates a local-first speech loop with Whisper, scene-owned UI, category-based lesson content, and a feedback flow that stays honest about what the current system can and cannot measure.
+Fluent Echo is a Unity-based offline English speech-practice prototype.
+It combines local Whisper transcription, scene-owned UI, category-based lesson content, and a feedback flow designed to stay explicit about the current system's capabilities and limits.
 
-This project is meant to show product thinking and architecture, not just a visual mockup.
-The current app focuses on:
+The project is structured as a production-style application slice that can continue evolving without a rewrite.
+The current implementation focuses on:
 
 - local Whisper transcription;
 - transparent practice scoring instead of fake "AI pronunciation magic";
@@ -21,12 +21,12 @@ The product promise is simple:
 - the app supports repeatable speaking practice without a cloud dependency;
 - the UI does not pretend the current heuristic scorer is full phoneme-level pronunciation assessment.
 
-That makes Fluent Echo a strong portfolio slice for:
+These constraints shape the current engineering direction:
 
-- Unity application architecture;
-- local AI integration;
-- UX around privacy and speech interaction;
-- maintainable content pipelines for learning products.
+- predictable Unity application architecture;
+- local AI integration without a mandatory cloud dependency;
+- privacy-aware UX for speech interaction;
+- maintainable lesson and content pipelines.
 
 ## Current User Flow
 
@@ -369,12 +369,14 @@ That rule preserves the current architecture and keeps the product honest.
 - [`Assets/_FluentEcho/Docs/IMPROVEMENT_ROADMAP.md`](C:/Portfolio%20Projects/Fluent-Echo/Fluent-Echo/Assets/_FluentEcho/Docs/IMPROVEMENT_ROADMAP.md)
 - [`Assets/_FluentEcho/Docs/SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md`](C:/Portfolio%20Projects/Fluent-Echo/Fluent-Echo/Assets/_FluentEcho/Docs/SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md)
 
-## Portfolio Framing
+## Engineering Focus
 
-If you are reviewing this repo as a hiring manager or teammate, the value of this project is in the combination of:
+The current implementation emphasizes a few explicit priorities:
 
-- local AI integration;
-- honest UX around speech uncertainty;
-- maintainable Unity architecture;
-- content scalability through ScriptableObjects;
-- scene-driven presentation that stays editable by hand.
+- local AI integration with a clear privacy boundary;
+- maintainable Unity architecture with separated runtime responsibilities;
+- content scalability through ScriptableObjects and catalog-based lesson composition;
+- scene-driven presentation that remains editable in the Unity editor;
+- transparent UX around recognition quality, uncertainty, and scoring limits.
+
+These priorities are intended to keep the project readable, extensible, and stable as additional scoring, content, and presentation systems are introduced.
