@@ -1,146 +1,369 @@
 # Fluent Echo
 
-Fluent Echo is a portfolio-oriented Unity speech-practice prototype.
+Fluent Echo is a Unity-based offline English speech-practice prototype.
+It combines local Whisper transcription, scene-owned UI, category-based lesson content, and a feedback flow designed to stay explicit about the current system's capabilities and limits.
 
-It exists to show how a small product can still be built with real architectural discipline: explicit data models, a clean runtime split, scene-owned UI, local speech processing, and a result flow that is honest about what the system can and cannot measure.
+The project is structured as a production-style application slice that can continue evolving without a rewrite.
+The current implementation focuses on:
 
-This is not a content dump project. It is a resume project meant to demonstrate product thinking, code organization, and careful scene composition.
+- local Whisper transcription;
+- transparent practice scoring instead of overstated "AI pronunciation" claims;
+- scene-driven UI that remains editable by hand in Unity;
+- ScriptableObject-based lesson content;
+- a clear separation between composition root, presentation, domain, services, and content.
 
-## Product Snapshot
+## Project Goal
 
-Fluent Echo is a local English speaking practice app built around this loop:
+The product promise is simple:
 
-`open app -> choose a category -> record speech -> get local transcript -> get practice feedback -> retry or continue`
+- audio stays on the device;
+- speech recognition runs locally;
+- the app supports repeatable speaking practice without a mandatory cloud dependency;
+- the UI does not present the current heuristic scorer as full phoneme-level assessment.
 
-The key design choice is that audio stays on the device. Whisper runs locally, the UI stays inspectable in the scene, and the app does not depend on paid speech APIs.
+These constraints shape the current engineering direction:
 
-## What The Project Demonstrates
+- predictable Unity application architecture;
+- local AI integration without a required online service;
+- privacy-aware UX for speech interaction;
+- maintainable lesson and content pipelines.
 
-- Local microphone capture with device selection.
-- Local Whisper transcription with warm-up and profile switching.
-- Category-based lesson navigation.
-- Progress persistence per lesson.
-- A transparent practice-score pipeline.
-- Scene-owned UI wiring instead of hidden runtime layout rebuilding.
-- An honest separation between transcript quality and pronunciation estimation.
-- A result panel that reads like coaching feedback, not a debug log.
+## Current User Flow
 
-## Layer Map
+The current vertical slice follows this loop:
 
-The code is organized around small, explicit responsibilities:
+`launch -> onboarding -> choose category -> choose lesson -> record -> transcript -> practice estimate -> feedback -> retry or continue`
 
-- `Runtime/Data` - `SpeechExerciseSO`, `SpeechExerciseCatalogSO`, and `WhisperSettingsSO`.
-- `Runtime/Domain` - `SpeechAnswerMatcher`, `SpeechSession`, and lesson state.
-- `Runtime/Services` - speech recognition, scoring, persistence, and Whisper configuration.
-- `Runtime/Presentation` - `FluentEchoPresenter` and the flow orchestration layer.
-- `Runtime/Views` - `FluentEchoView` and the visible Unity panels.
-- `Runtime/Bootstrap` - scene wiring and service composition.
-- `Tests/Editor` - edit-mode coverage for matcher, session state, scoring, and presenter flows.
+Three practice categories are currently available:
 
-Sample content lives under `Fluent-Echo/Assets/_FluentEcho/Demo/Data`.
-The main demo scene is `Fluent-Echo/Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`.
+- `Words`
+- `Short Sentences`
+- `Challenge Sentences`
 
-## Architecture
+Each category contains multiple lessons configured as ScriptableObjects.
 
-The runtime flow is intentionally simple:
+## What Already Works
 
-`Scene -> Bootstrap -> Presenter -> Domain / Services -> View -> User`
+- category-first lesson selection;
+- local Whisper transcription;
+- microphone device selection from the scene;
+- Whisper profile selection from the scene;
+- saved lesson progress;
+- a result panel with retry, close, and next-mission actions;
+- deterministic demo mode for UI verification;
+- scene-owned UI wiring instead of hidden runtime recreation;
+- edit-mode coverage for matcher, presenter, settings, and scoring flows.
 
-The important boundary is this:
+## Architecture At A Glance
 
-- Whisper turns speech into text.
-- The domain layer checks whether the lesson target was hit.
-- The scoring layer produces an honest practice estimate.
-- The view renders the result.
+The project is intentionally organized around small layers with clear responsibilities.
 
-Whisper is not treated as a pronunciation engine. The current scorer is intentionally described as a practice estimate, not a phoneme-level assessment.
+### Scene-Owned UI
 
-For a fuller diagram, see [Fluent-Echo/Assets/_FluentEcho/Docs/DEPENDENCY_MAP.md](Fluent-Echo/Assets/_FluentEcho/Docs/DEPENDENCY_MAP.md).
+The scene owns:
 
-## How The App Works
+- panel layout;
+- anchors and positions;
+- buttons and labels;
+- settings panel placement;
+- feedback panel placement;
+- visual hierarchy.
 
-1. The scene loads.
-2. `FluentEchoBootstrap` resolves the existing scene references.
-3. `FluentEchoPresenter` selects the current category and lesson.
-4. The active speech service prepares Whisper or demo mode.
-5. The user records a phrase or chooses a demo attempt.
-6. Whisper returns a transcript.
-7. The matcher compares that transcript against the lesson target.
-8. The scoring service builds a local practice estimate.
-9. The view shows transcript, word match, confidence, rhythm, and a focused next step.
-10. Progress is saved per lesson.
+The runtime updates state and text, but it should not silently rebuild the layout or override manual scene composition.
 
-## How To Run
+### Composition Root
+
+`FluentEchoBootstrap` wires scene references, services, and saved selections.
+
+### Presentation
+
+`FluentEchoPresenter` owns flow and state transitions.
+
+`FluentEchoView` renders state and raises UI events.
+
+### Domain
+
+Core logic lives in types such as:
+
+- `SpeechAnswerMatcher`
+- `SpeechSession`
+- `SpeechMatchResult`
+- `LessonProgressState`
+
+### Services
+
+Speech and persistence live in:
+
+- `WhisperSpeechRecognitionService`
+- `MockSpeechRecognitionService`
+- `HeuristicPronunciationScoringService`
+- `LessonProgressRepository`
+
+### Content
+
+Lessons and settings live in:
+
+- `SpeechExerciseSO`
+- `SpeechExerciseCatalogSO`
+- `WhisperSettingsSO`
+
+For a fuller engineering map, read:
+
+- [`Fluent-Echo/Assets/_FluentEcho/Docs/DEPENDENCY_MAP.md`](Fluent-Echo/Assets/_FluentEcho/Docs/DEPENDENCY_MAP.md)
+- [`Fluent-Echo/Assets/_FluentEcho/Docs/MB_ARCHITECTURE.md`](Fluent-Echo/Assets/_FluentEcho/Docs/MB_ARCHITECTURE.md)
+
+## Whisper Models And Recommended Profiles
+
+The project currently supports three local Whisper profiles:
+
+- `Fast` -> `ggml-tiny.en.bin`
+- `Balanced` -> `ggml-base.en.bin`
+- `Accurate` -> `ggml-small.en.bin`
+
+Configured in:
+
+- [`Fluent-Echo/Assets/_FluentEcho/Runtime/Services/WhisperSettingsSO.cs`](Fluent-Echo/Assets/_FluentEcho/Runtime/Services/WhisperSettingsSO.cs)
+
+Expected model location:
+
+- `Assets/StreamingAssets/Whisper/ggml-tiny.en.bin`
+- `Assets/StreamingAssets/Whisper/ggml-base.en.bin`
+- `Assets/StreamingAssets/Whisper/ggml-small.en.bin`
+
+### Recommended Usage Right Now
+
+Based on the current recognition pipeline, these are the recommended profiles:
+
+| Practice type | Recommended profile | Why |
+| --- | --- | --- |
+| `Words` | `Fast` | The current short-word bias works best here and tends to overthink less on single-word exercises |
+| `Short Sentences` | `Balanced` | Better stability than `Fast` while still staying responsive |
+| `Challenge Sentences` | `Balanced` first, `Accurate` if needed | Longer utterances benefit more from the larger model |
+
+### Important Note About Accuracy
+
+Bigger is not always better for this prototype.
+
+For short single-word exercises such as `Apple`, `Water`, or `Window`, `Fast` may currently outperform `Balanced` or `Accurate` because:
+
+- the current recognition bias is tuned for short utterances;
+- tiny English models can behave better on narrow expected vocabulary;
+- larger models sometimes normalize short speech into the wrong but plausible English output.
+
+In other words:
+
+- `Fast` is currently the safest default for word drills;
+- `Balanced` is the safer default for sentence drills;
+- `Accurate` should be treated as an optional heavier pass, not an automatic upgrade for every lesson type.
+
+## How To Set Up The Project
 
 1. Open the Unity project in the nested `Fluent-Echo` folder.
-2. Load `Fluent-Echo/Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`.
-3. If Unity asks to reload the scene from disk, choose `Reload`.
+2. Make sure the Whisper model files are present in `Assets/StreamingAssets/Whisper/`.
+3. Open the scene:
+   - [`Fluent-Echo/Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity`](Fluent-Echo/Assets/_FluentEcho/Demo/Scenes/FluentEchoPrototype.unity)
 4. Press Play.
 
-If you want the deterministic path for quick checks, use Demo Mode first.
+If needed, rebuild the demo scene from:
 
-## How To Add A New Lesson
+- `Tools > Fluent Echo > Rebuild Prototype`
 
-1. Create a new `SpeechExerciseSO` asset.
-2. Fill in the prompt, target words, accepted phrases, and progress key.
-3. Add an optional reference audio clip if you have one.
-4. Add the exercise to the correct category inside `SpeechExerciseCatalogSO`.
-5. Save the asset and reopen the scene if Unity does not refresh the catalog immediately.
+## How To Verify The Prototype
 
-## How To Add A New Category
+1. Launch the `FluentEchoPrototype` scene.
+2. Pick a category.
+3. Pick a lesson.
+4. Use `SHOW DEMO` to verify the happy path without a microphone.
+5. Use `START SPEAKING` or `CHECK ANSWER` for live practice.
+6. Confirm that transcript, word chips, result panel, and progress update correctly.
 
-Categories are data-driven, but the scene still needs to expose them intentionally.
+If Windows asks for microphone permission, grant it in system privacy settings first.
 
-1. Add a new `SpeechExerciseCategory` entry to `SpeechExerciseCatalogSO`.
-2. Give it a clear display name and short description.
-3. Assign the exercises that belong to that path.
-4. Add or wire the matching category button in the scene if the UI should expose it directly.
-5. Update the category screen copy so the new path makes sense to a user at first glance.
+The first Whisper warm-up may take a few seconds while the selected model is loading.
 
-If you only add lesson assets, the catalog can still consume them. If you want a new first-class category in the UI, the scene should expose it explicitly.
+## Reference Audio Placement
 
-## Honest Scoring Model
+If you already have generated audio for lesson playback, place it here:
 
-The current scoring pipeline is deliberate about its limits.
+- [`Fluent-Echo/Assets/_FluentEcho/Demo/Audio/References/`](Fluent-Echo/Assets/_FluentEcho/Demo/Audio/References/)
 
-- Whisper provides transcript text.
-- The matcher checks word coverage and accepted alternatives.
-- The scorer turns that into a practice estimate.
-- The UI labels it as an estimate, not as full phoneme scoring.
+Then assign the clip in the corresponding `SpeechExerciseSO` asset through the `Reference Audio` field.
 
-That choice matters for the portfolio story. It shows engineering honesty instead of overclaiming capability.
+Example lesson assets:
 
-## Why This Works For A Resume
+- [`Fluent-Echo/Assets/_FluentEcho/Demo/Data/Words_01_Apple.asset`](Fluent-Echo/Assets/_FluentEcho/Demo/Data/Words_01_Apple.asset)
+- [`Fluent-Echo/Assets/_FluentEcho/Demo/Data/Short_04_Apple.asset`](Fluent-Echo/Assets/_FluentEcho/Demo/Data/Short_04_Apple.asset)
 
-This project is useful in a portfolio because it shows more than feature output.
+## How To Add New Lessons
 
-It shows:
+### Add A New Exercise
 
-- how the UI is composed and owned by the scene;
-- how data is isolated from presentation;
-- how an app can stay local and privacy-first;
-- how to structure a real-time flow without letting the code turn into one big controller;
-- how to present product limitations clearly instead of hiding them.
+1. Create or duplicate a `SpeechExerciseSO`.
+2. Set:
+   - `Prompt`
+   - `Target Words`
+   - `Accepted Phrases`
+   - `Progress Key`
+   - optional `Reference Audio`
+3. Add the exercise to the correct category inside the catalog.
 
-In other words, the value here is not only that the app works. The value is that the app is built in a way another engineer can read, extend, and trust.
+### Update The Catalog
+
+Use:
+
+- [`Fluent-Echo/Assets/_FluentEcho/Runtime/Data/SpeechExerciseCatalogSO.cs`](Fluent-Echo/Assets/_FluentEcho/Runtime/Data/SpeechExerciseCatalogSO.cs)
+
+The content flow should stay:
+
+`new lesson asset -> catalog assignment -> scene UI uses existing presenter flow`
+
+That keeps content extensible without rewriting runtime code.
+
+## How To Adjust The UI
+
+The current direction is scene-driven UI.
+
+That means layout should be adjusted manually in Unity for:
+
+- panel positions;
+- text placement;
+- anchors;
+- button placement;
+- settings panel composition;
+- feedback panel composition.
+
+The runtime should not pull those objects back into a hidden default layout.
+
+## Honest Limitation
+
+The current scoring flow is still a heuristic practice estimate.
+
+It is useful and product-friendly, but it is not yet:
+
+- true phoneme scoring;
+- stress scoring;
+- accent scoring;
+- production-grade speech evaluation.
+
+That future work is already separated at the architecture level so the app can evolve without a rewrite.
+
+## Future Enhancements
+
+The most useful next improvements fall into a few clear buckets.
+
+### 1. Better Pronunciation Scoring
+
+The strongest upgrade would be a real pronunciation-assessment pipeline instead of the current heuristic estimate.
+
+Good directions:
+
+- local forced alignment and phoneme-aware scoring;
+- a hybrid architecture where Whisper remains local for transcript generation and a dedicated scorer handles pronunciation quality;
+- an optional cloud pronunciation service for higher-fidelity scoring in a future production version.
+
+### 2. Better Recognition For Real Learners
+
+The prototype is now much better on short drills, but the next practical upgrades would be:
+
+- per-category profile recommendations in the UI;
+- phrase-set biasing for difficult lesson vocabulary;
+- noisy-room and weak-microphone testing;
+- accent-coverage validation across more speakers.
+
+### 3. Better Reference Audio
+
+The current reference-audio path is asset-driven, which is good for control and repeatability.
+Possible upgrades:
+
+- batch-generated lesson audio for every exercise;
+- optional dynamic TTS generation for new content;
+- character lip-sync tied to lesson reference audio.
+
+### 4. Better Productization
+
+For a more complete application version, useful additions would be:
+
+- onboarding that checks microphone and model readiness before first practice;
+- downloadable model management from inside the app;
+- lesson analytics that do not store raw user audio;
+- exportable practice summaries;
+- teacher or reviewer mode for curated lesson sets.
+
+## Optional External API Integrations
+
+The project does not need cloud APIs to stay useful.
+However, a production-oriented version could benefit from carefully chosen external integrations.
+
+### Recommended External API Directions
+
+#### Azure AI Speech Pronunciation Assessment
+
+Best use:
+
+- real pronunciation scoring;
+- word-level and fluency-oriented learner feedback;
+- a stronger future replacement for the current heuristic scorer.
+
+Suggested role in Fluent Echo:
+
+- keep local Whisper for private/offline mode;
+- add Azure as an optional `cloud scoring mode`;
+- keep the scorer behind a separate service interface so the UI and presenter do not need a rewrite.
+
+#### Google Cloud Speech-to-Text With Adaptation
+
+Best use:
+
+- cloud fallback recognition;
+- phrase and vocabulary biasing for lesson-specific content;
+- benchmarking local Whisper against a managed STT stack.
+
+Suggested role in Fluent Echo:
+
+- optional fallback recognizer for difficult microphones, noisy rooms, or evaluation builds;
+- not a replacement for the current local-first positioning unless the product direction changes.
+
+#### Deepgram Speech-to-Text
+
+Best use:
+
+- cloud fallback transcription;
+- keyword boosting for target lesson vocabulary;
+- latency and accuracy benchmarking against local Whisper.
+
+Suggested role in Fluent Echo:
+
+- optional benchmark mode or cloud fallback path;
+- especially useful if future testing shows that some lesson types consistently fail on-device hardware.
+
+### Integration Rule
+
+If external APIs are introduced later, keep this split:
+
+- local Whisper remains the private, offline default;
+- cloud recognizers stay optional;
+- cloud pronunciation scoring lives behind a separate scoring interface;
+- UI copy must clearly state when audio stays local and when it is sent to a cloud service.
+
+That rule preserves the current architecture and keeps the product honest.
 
 ## Documentation
 
 - [Architecture Brief](Fluent-Echo/Assets/_FluentEcho/Docs/MB_ARCHITECTURE.md)
-- [Next Steps Brief](Fluent-Echo/Assets/_FluentEcho/Docs/MB_NEXT_STEPS.md)
+- [Prototype Overview](Fluent-Echo/Assets/_FluentEcho/Docs/PROTOTYPE_OVERVIEW.md)
+- [Improvement Roadmap](Fluent-Echo/Assets/_FluentEcho/Docs/IMPROVEMENT_ROADMAP.md)
+- [Dependency Map](Fluent-Echo/Assets/_FluentEcho/Docs/DEPENDENCY_MAP.md)
 - [Case Study Brief](Fluent-Echo/Assets/_FluentEcho/Docs/CASE_STUDY_BRIEF.md)
 - [Portfolio Demo Script](Fluent-Echo/Assets/_FluentEcho/Docs/PORTFOLIO_DEMO_SCRIPT.md)
-- [Sprint Roadmap](Fluent-Echo/Assets/_FluentEcho/Docs/SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md)
-- [Dependency Map](Fluent-Echo/Assets/_FluentEcho/Docs/DEPENDENCY_MAP.md)
 
-## Scope
+## Engineering Focus
 
-This repository is intentionally a vertical slice.
-The goal is to present a strong engineering story, not to pretend the prototype is a finished consumer app.
+The current implementation emphasizes a few explicit priorities:
 
-The current roadmap keeps the work honest:
+- local AI integration with a clear privacy boundary;
+- maintainable Unity architecture with separated runtime responsibilities;
+- content scalability through ScriptableObjects and catalog-based lesson composition;
+- scene-driven presentation that remains editable in the Unity editor;
+- transparent UX around recognition quality, uncertainty, and scoring limits.
 
-1. keep the interaction loop stable;
-2. improve the local scoring story;
-3. polish the portfolio presentation;
-4. keep the architecture readable enough that the next engineer can extend it without reverse engineering the scene.
+These priorities are intended to keep the project readable, extensible, and stable as additional scoring, content, and presentation systems are introduced.
