@@ -4,9 +4,9 @@ Fluent Echo is a portfolio-oriented Unity speech-practice prototype.
 
 It exists to show how a small product can still be built with real architectural discipline: explicit data models, a clean runtime split, scene-owned UI, local speech processing, and a result flow that is honest about what the system can and cannot measure.
 
-This is not a "content dump" project. It is a resume project meant to demonstrate product thinking, code organization, and careful scene composition.
+This is not a content dump project. It is a resume project meant to demonstrate product thinking, code organization, and careful scene composition.
 
-## What This Project Is
+## Product Snapshot
 
 Fluent Echo is a local English speaking practice app built around this loop:
 
@@ -14,7 +14,7 @@ Fluent Echo is a local English speaking practice app built around this loop:
 
 The key design choice is that audio stays on the device. Whisper runs locally, the UI stays inspectable in the scene, and the app does not depend on paid speech APIs.
 
-## What It Demonstrates
+## What The Project Demonstrates
 
 - Local microphone capture with device selection.
 - Local Whisper transcription with warm-up and profile switching.
@@ -25,15 +25,15 @@ The key design choice is that audio stays on the device. Whisper runs locally, t
 - An honest separation between transcript quality and pronunciation estimation.
 - A result panel that reads like coaching feedback, not a debug log.
 
-## Project Layout
+## Layer Map
 
 The code is organized around small, explicit responsibilities:
 
-- `Runtime/Data` - ScriptableObject types for exercises and catalogs.
-- `Runtime/Domain` - pure lesson state and matching rules.
+- `Runtime/Data` - `SpeechExerciseSO`, `SpeechExerciseCatalogSO`, and `WhisperSettingsSO`.
+- `Runtime/Domain` - `SpeechAnswerMatcher`, `SpeechSession`, and lesson state.
 - `Runtime/Services` - speech recognition, scoring, persistence, and Whisper configuration.
-- `Runtime/Presentation` - the presenter that coordinates state, speech, and UI.
-- `Runtime/Views` - Unity UI bindings and visible panels.
+- `Runtime/Presentation` - `FluentEchoPresenter` and the flow orchestration layer.
+- `Runtime/Views` - `FluentEchoView` and the visible Unity panels.
 - `Runtime/Bootstrap` - scene wiring and service composition.
 - `Tests/Editor` - edit-mode coverage for matcher, session state, scoring, and presenter flows.
 
@@ -99,7 +99,7 @@ Categories are data-driven, but the scene still needs to expose them intentional
 
 If you only add lesson assets, the catalog can still consume them. If you want a new first-class category in the UI, the scene should expose it explicitly.
 
-## Current Scoring Model
+## Honest Scoring Model
 
 The current scoring pipeline is deliberate about its limits.
 
@@ -110,7 +110,7 @@ The current scoring pipeline is deliberate about its limits.
 
 That choice matters for the portfolio story. It shows engineering honesty instead of overclaiming capability.
 
-## Why This Makes Sense For A Resume
+## Why This Works For A Resume
 
 This project is useful in a portfolio because it shows more than feature output.
 
@@ -133,7 +133,7 @@ In other words, the value here is not only that the app works. The value is that
 - [Sprint Roadmap](Fluent-Echo/Assets/_FluentEcho/Docs/SPRINT_ROADMAP_LOCAL_SCORING_ONBOARDING.md)
 - [Dependency Map](Fluent-Echo/Assets/_FluentEcho/Docs/DEPENDENCY_MAP.md)
 
-## A Note On Scope
+## Scope
 
 This repository is intentionally a vertical slice.
 The goal is to present a strong engineering story, not to pretend the prototype is a finished consumer app.

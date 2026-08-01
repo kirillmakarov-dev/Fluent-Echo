@@ -1,71 +1,71 @@
 # Fluent Echo Dependency Map
 
-This diagram shows the runtime dependency chain in the current prototype.
+This page shows the runtime dependency chain in the current prototype.
 It is intentionally written as an engineering map, not a folder tree.
 
-The main rule is simple:
+The short version is:
 
-- data defines what can be practiced;
+- scene-owned UI defines the layout;
+- bootstrap wires the scene together;
+- presenter owns flow and state;
 - services do the work;
-- presenter coordinates state and flow;
-- view renders the experience;
-- bootstrap wires the scene together.
+- data defines what can be practiced.
 
 ## Runtime Map
 
 ```mermaid
-flowchart LR
-    subgraph Scene["Unity Scene"]
-        SceneObjects["Scene-owned UI objects\n(FluentEchoPrototype.unity)"]
-        EventSystem["EventSystem / Input System UI"]
-        Canvas["Root Canvas"]
+flowchart TB
+    subgraph Scene["Scene-Owned UI"]
+        direction TB
+        SceneObjects["Canvas, EventSystem, panels, buttons\n(edited in the scene)"]
     end
 
-    subgraph Bootstrap["Bootstrap"]
+    subgraph Bootstrap["Composition Root"]
+        direction TB
         Bootstrapper["FluentEchoBootstrap"]
     end
 
-    subgraph View["View Layer"]
-        FluentEchoView["FluentEchoView"]
-        SettingsPanel["Settings Panel"]
-        ResultPanel["Result Panel"]
-        CategoryScreen["Category Screen"]
-        NoticePanel["Notice / Onboarding Panel"]
-    end
-
     subgraph Presentation["Presentation"]
+        direction TB
         Presenter["FluentEchoPresenter"]
+        View["FluentEchoView"]
     end
 
     subgraph Domain["Domain"]
+        direction TB
         Matcher["SpeechAnswerMatcher"]
         Session["SpeechSession"]
         Progress["LessonProgressState"]
     end
 
     subgraph Services["Services"]
+        direction TB
         Whisper["WhisperSpeechRecognitionService"]
         Mock["MockSpeechRecognitionService"]
         Scoring["HeuristicPronunciationScoringService"]
-        Alignment["IPhonemeAlignmentService\n(optional preview boundary)"]
-        Settings["WhisperSettingsSO"]
-        Catalog["SpeechExerciseCatalogSO"]
-        Exercise["SpeechExerciseSO"]
+        Alignment["IPhonemeAlignmentService\n(future boundary)"]
         Repository["LessonProgressRepository"]
     end
 
-    SceneObjects --> Bootstrapper
-    EventSystem --> FluentEchoView
-    Canvas --> FluentEchoView
+    subgraph Content["Content"]
+        direction TB
+        Settings["WhisperSettingsSO"]
+        Catalog["SpeechExerciseCatalogSO"]
+        Exercise["SpeechExerciseSO"]
+    end
 
+    SceneObjects --> Bootstrapper
     Bootstrapper --> Presenter
+    Bootstrapper --> View
     Bootstrapper --> Settings
     Bootstrapper --> Catalog
     Bootstrapper --> Exercise
     Bootstrapper --> Whisper
     Bootstrapper --> Mock
-    Bootstrapper --> FluentEchoView
+    Bootstrapper --> Scoring
+    Bootstrapper --> Repository
 
+    Presenter --> View
     Presenter --> Matcher
     Presenter --> Session
     Presenter --> Progress
@@ -76,20 +76,26 @@ flowchart LR
     Presenter --> Catalog
     Presenter --> Exercise
     Presenter --> Repository
-    Presenter --> FluentEchoView
 
-    FluentEchoView --> SettingsPanel
-    FluentEchoView --> ResultPanel
-    FluentEchoView --> CategoryScreen
-    FluentEchoView --> NoticePanel
-
-    Whisper --> Session
+    View --> SceneObjects
+    Matcher --> Exercise
+    Scoring --> Exercise
     Whisper --> Settings
     Whisper --> Repository
-    Scoring --> Exercise
-    Matcher --> Exercise
     Progress --> Repository
+    Catalog --> Exercise
 ```
+
+## Layer Guide
+
+| Layer | What lives there | Why it matters |
+| --- | --- | --- |
+| Scene-Owned UI | Canvas, buttons, panels, anchors, layout | Designers can move and restyle it without rewriting code |
+| Composition Root | `FluentEchoBootstrap` | Wires scene references and restores saved state |
+| Presentation | `FluentEchoPresenter`, `FluentEchoView` | Owns flow, screens, and UI state changes |
+| Domain | `SpeechAnswerMatcher`, `SpeechSession`, `LessonProgressState` | Keeps logic testable and independent from Unity UI |
+| Services | Whisper, mock mode, heuristic scoring, persistence | Handles speech, scoring, and saved progress |
+| Content | `SpeechExerciseSO`, `SpeechExerciseCatalogSO`, `WhisperSettingsSO` | Defines lessons, categories, and model/profile data |
 
 ## How To Read The Map
 
@@ -116,4 +122,3 @@ When you add new lessons or categories, keep the same chain:
 `new ScriptableObject content -> catalog update -> scene UI exposure if needed -> presenter reuse`
 
 That keeps the project readable and prevents content from leaking into the runtime architecture.
-
