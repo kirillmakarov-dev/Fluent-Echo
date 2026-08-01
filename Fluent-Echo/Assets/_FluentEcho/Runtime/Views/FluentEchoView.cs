@@ -13,6 +13,15 @@ namespace FluentEcho.Views
         private static readonly Color NoticeAccent = new(0.20f, 0.90f, 0.68f, 0.88f);
         private static readonly Color NoticeActionFill = new(0.20f, 0.90f, 0.68f, 1f);
         private static readonly Color NoticeActionText = new(0.06f, 0.13f, 0.15f, 1f);
+        private static readonly Color ResultHeading = new(0.09f, 0.16f, 0.19f, 1f);
+        private static readonly Color ResultBody = new(0.24f, 0.27f, 0.29f, 1f);
+        private static readonly Color ResultAccent = new(0.23f, 0.56f, 0.49f, 1f);
+        private const float WordChipMinWidth = 110f;
+        private const float WordChipMaxWidth = 190f;
+        private const float WordChipHeight = 60f;
+        private const float WordChipHorizontalPadding = 48f;
+        private const float WordChipSpacing = 12f;
+        private const float WordChipRowSpacing = 12f;
 
         [SerializeField] private TextMeshProUGUI promptLabel;
         [SerializeField] private TextMeshProUGUI progressLabel;
@@ -70,6 +79,7 @@ namespace FluentEcho.Views
         private Coroutine resultAnimation;
         private bool isSuccessVisible;
         private bool canShowResultNextButton = true;
+        private HorizontalLayoutGroup wordLayoutGroup;
 
         public event Action MicPressed;
         public event Action DemoPressed;
@@ -107,6 +117,13 @@ namespace FluentEcho.Views
 
         private void Awake()
         {
+            if (wordContainer != null)
+            {
+                wordLayoutGroup = wordContainer.GetComponent<HorizontalLayoutGroup>();
+                if (wordLayoutGroup != null)
+                    wordLayoutGroup.enabled = false;
+            }
+
             EnsureCategoriesButton();
             ConfigureResultButton(resultCloseButton, "CLOSE", 12);
             ConfigureResultButton(resultNextButton, "NEXT MISSION", 12);
@@ -149,6 +166,7 @@ namespace FluentEcho.Views
                 mockModeToggle.onValueChanged.AddListener(value => MockModeChanged?.Invoke(value));
             EnsureResultAnimationReferences();
             EnsureNoticePanel();
+            ApplyFeedbackPanelTypography();
         }
 
         private void EnsureCategoriesButton()
@@ -198,6 +216,13 @@ namespace FluentEcho.Views
                 throw new InvalidOperationException(
                     "FluentEchoView requires a WordChipView prefab. Rebuild the prototype scene.");
 
+            if (promptLabel != null)
+            {
+                promptLabel.enableAutoSizing = true;
+                promptLabel.fontSizeMin = 28;
+                promptLabel.fontSizeMax = 42;
+            }
+
             promptLabel.text = prompt;
             for (int i = wordContainer.childCount - 1; i >= 0; i--)
                 Destroy(wordContainer.GetChild(i).gameObject);
@@ -210,6 +235,8 @@ namespace FluentEcho.Views
                 chip.Configure(targetWords[i]);
                 chips.Add(chip);
             }
+
+            LayoutWordChips();
         }
 
         public void SetProgress(string progress)
@@ -217,7 +244,7 @@ namespace FluentEcho.Views
             if (progressLabel != null && progressLabel != lessonPositionLabel)
                 progressLabel.text = string.IsNullOrWhiteSpace(progress)
                     ? FluentEchoCopy.FirstProgressSummary
-                    : progress;
+                    : FormatTopProgress(progress);
         }
 
         public void SetLessonPosition(int currentLesson, int totalLessons)
@@ -226,7 +253,7 @@ namespace FluentEcho.Views
             int safeCurrent = Mathf.Clamp(currentLesson, 1, safeTotal);
 
             if (lessonPositionLabel != null)
-                lessonPositionLabel.text = $"Lesson {safeCurrent} / {safeTotal}";
+                lessonPositionLabel.text = $"{safeCurrent}/{safeTotal}";
 
             if (lessonProgressFill != null)
             {
@@ -339,7 +366,9 @@ namespace FluentEcho.Views
             if (progressDetailsLabel != null)
                 progressDetailsLabel.text = string.IsNullOrWhiteSpace(details)
                     ? FluentEchoCopy.FirstLocalEstimateText
-                    : details;
+                    : isSuccessVisible
+                        ? FormatResultProgressDetails(details)
+                        : FormatAttemptProgressDetails(details);
         }
 
         public void SetPronunciation(string summary, string feedback)
@@ -347,12 +376,16 @@ namespace FluentEcho.Views
             if (pronunciationSummaryLabel != null)
                 pronunciationSummaryLabel.text = string.IsNullOrWhiteSpace(summary)
                     ? FluentEchoCopy.FirstPronunciationSummary
-                    : summary;
+                    : isSuccessVisible
+                        ? FormatResultSummary(summary)
+                        : summary;
 
             if (pronunciationFeedbackLabel != null)
                 pronunciationFeedbackLabel.text = string.IsNullOrWhiteSpace(feedback)
                     ? FluentEchoCopy.BuildUnavailablePronunciationDetails()
-                    : feedback;
+                    : isSuccessVisible
+                        ? FormatResultFeedback(feedback)
+                        : feedback;
         }
 
         public void SetPronunciationConfidence(string confidence)
@@ -360,7 +393,7 @@ namespace FluentEcho.Views
             if (pronunciationConfidenceLabel != null)
                 pronunciationConfidenceLabel.text = string.IsNullOrWhiteSpace(confidence)
                     ? FluentEchoCopy.FirstConfidenceSummary
-                    : confidence;
+                    : FormatCompactMetric(confidence);
         }
 
         public void SetPronunciationBreakdown(string wordMatch, string rhythm)
@@ -368,12 +401,12 @@ namespace FluentEcho.Views
             if (pronunciationWordMatchLabel != null)
                 pronunciationWordMatchLabel.text = string.IsNullOrWhiteSpace(wordMatch)
                     ? FluentEchoCopy.FirstWordMatchSummary
-                    : wordMatch;
+                    : FormatCompactMetric(wordMatch);
 
             if (pronunciationRhythmLabel != null)
                 pronunciationRhythmLabel.text = string.IsNullOrWhiteSpace(rhythm)
                     ? FluentEchoCopy.FirstRhythmSummary
-                    : rhythm;
+                    : FormatCompactMetric(rhythm);
         }
 
         public void SetStatus(string status)
@@ -462,6 +495,9 @@ namespace FluentEcho.Views
         public void SetSuccess(bool success)
         {
             isSuccessVisible = success;
+            ApplyFeedbackPanelTypography();
+            if (success)
+                RefreshResultContentLayout();
             SetResultPanelVisible(success);
             retryButton.gameObject.SetActive(success);
 
@@ -547,6 +583,354 @@ namespace FluentEcho.Views
             }
         }
 
+        private void ApplyFeedbackPanelTypography()
+        {
+            StyleLabel(
+                pronunciationSummaryLabel,
+                20f,
+                FontStyles.Bold,
+                ResultHeading,
+                12f);
+            StyleLabel(
+                pronunciationFeedbackLabel,
+                15f,
+                FontStyles.Normal,
+                ResultBody,
+                5f);
+            StyleLabel(
+                progressDetailsLabel,
+                17f,
+                FontStyles.Normal,
+                ResultBody,
+                6f);
+            StyleLabel(
+                pronunciationConfidenceLabel,
+                14f,
+                FontStyles.Bold,
+                ResultAccent,
+                4f);
+            StyleLabel(
+                pronunciationWordMatchLabel,
+                14f,
+                FontStyles.Bold,
+                ResultAccent,
+                4f);
+            StyleLabel(
+                pronunciationRhythmLabel,
+                14f,
+                FontStyles.Bold,
+                ResultAccent,
+                4f);
+        }
+
+        private static void StyleLabel(
+            TextMeshProUGUI label,
+            float fontSize,
+            FontStyles style,
+            Color color,
+            float lineSpacing)
+        {
+            if (label == null)
+                return;
+
+            label.fontSize = fontSize;
+            label.fontStyle = style;
+            label.color = color;
+            label.lineSpacing = lineSpacing;
+            label.textWrappingMode = TextWrappingModes.Normal;
+            label.overflowMode = TextOverflowModes.Overflow;
+        }
+
+        private static string FormatCompactMetric(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            string[] parts = value.Split('|');
+            if (parts.Length < 2)
+                return value.Trim();
+
+            string label = parts[0].Trim();
+            string metricValue = parts[1].Trim();
+            return $"<size=12><b>{label}</b></size>\n<size=20>{metricValue}</size>";
+        }
+
+        private static string FormatResultSummary(string summary)
+        {
+            string[] parts = summary.Split('|');
+            if (parts.Length < 3)
+                return $"<b>{summary.Trim()}</b>";
+
+            string heading = parts[0].Trim();
+            string score = parts[1].Trim();
+            return $"<size=16><b>{heading}</b></size>\n<size=36><b>{score}</b></size>";
+        }
+
+        private static string FormatResultFeedback(string feedback)
+        {
+            List<string> lines = CollectContentLines(feedback);
+            string takeaway = ExtractFollowingLine(lines, FluentEchoCopy.ResultTakeawayHeader);
+            if (string.IsNullOrWhiteSpace(takeaway))
+                takeaway = ExtractFirstNarrativeLine(lines);
+
+            string confidenceReason = ExtractFirstLineStarting(lines, "Confidence reason:");
+            string matchQuality = ExtractFirstLineStarting(lines, "Match quality:");
+            string exactWords = ExtractFirstLineStarting(lines, "Exact words:");
+            string focusNext = ExtractFollowingLine(lines, "Focus next:");
+            if (string.IsNullOrWhiteSpace(focusNext))
+                focusNext = ExtractFollowingLine(lines, FluentEchoCopy.ResultNextStepHeader);
+
+            var sections = new List<string>();
+            if (!string.IsNullOrWhiteSpace(takeaway) || !string.IsNullOrWhiteSpace(confidenceReason))
+            {
+                sections.Add("<size=13><b>Why this was accepted</b></size>");
+                sections.Add($"<size=16>{(!string.IsNullOrWhiteSpace(takeaway) ? takeaway : confidenceReason)}</size>");
+            }
+
+            string detailLine = !string.IsNullOrWhiteSpace(matchQuality)
+                ? matchQuality
+                : exactWords;
+            if (!string.IsNullOrWhiteSpace(detailLine))
+            {
+                sections.Add("<size=13><b>Signal snapshot</b></size>");
+                sections.Add($"<size=16>{detailLine}</size>");
+            }
+
+            if (!string.IsNullOrWhiteSpace(focusNext))
+            {
+                sections.Add("<size=13><b>Focus for the next mission</b></size>");
+                sections.Add($"<size=16>{focusNext}</size>");
+            }
+
+            return sections.Count == 0
+                ? "Your result details will appear here after a completed mission."
+                : string.Join("\n\n", sections);
+        }
+
+        private static string FormatResultProgressDetails(string details)
+        {
+            List<string> lines = CollectContentLines(details);
+            string transcript = ExtractQuotedLine(lines);
+            if (string.IsNullOrWhiteSpace(transcript))
+                transcript = ExtractFollowingLine(lines, FluentEchoCopy.ResultWhatWeHeardHeader);
+
+            string progress = ExtractFirstLineStarting(lines, "Progress:");
+            if (string.IsNullOrWhiteSpace(progress))
+                progress = ExtractFollowingLine(lines, FluentEchoCopy.ResultLessonRecapHeader);
+
+            string best = ExtractFirstLineStarting(lines, "Best so far:");
+            string next = ExtractFollowingLine(lines, FluentEchoCopy.ResultNextStepHeader);
+            if (string.IsNullOrWhiteSpace(next))
+                next = ExtractFollowingLine(lines, "Focus next:");
+
+            var sections = new List<string>();
+            if (!string.IsNullOrWhiteSpace(transcript))
+            {
+                sections.Add("<size=13><b>Transcript</b></size>");
+                sections.Add($"<size=16>{transcript}</size>");
+            }
+
+            if (!string.IsNullOrWhiteSpace(best) || !string.IsNullOrWhiteSpace(progress))
+            {
+                sections.Add("<size=13><b>Progress</b></size>");
+                if (!string.IsNullOrWhiteSpace(best))
+                    sections.Add($"<size=16>{best}</size>");
+                if (!string.IsNullOrWhiteSpace(progress))
+                    sections.Add($"<size=16>{progress}</size>");
+            }
+
+            if (!string.IsNullOrWhiteSpace(next))
+            {
+                sections.Add("<size=13><b>Next</b></size>");
+                sections.Add($"<size=16>{next}</size>");
+            }
+
+            return sections.Count == 0
+                ? "Your completed mission summary will appear here."
+                : string.Join("\n\n", sections);
+        }
+
+        private void RefreshResultContentLayout()
+        {
+            if (progressDetailsLabel != null && !string.IsNullOrWhiteSpace(progressDetailsLabel.text))
+                progressDetailsLabel.text = FormatResultProgressDetails(progressDetailsLabel.text);
+
+            if (pronunciationSummaryLabel != null && !string.IsNullOrWhiteSpace(pronunciationSummaryLabel.text))
+                pronunciationSummaryLabel.text = FormatResultSummary(pronunciationSummaryLabel.text);
+
+            if (pronunciationFeedbackLabel != null && !string.IsNullOrWhiteSpace(pronunciationFeedbackLabel.text))
+                pronunciationFeedbackLabel.text = FormatResultFeedback(pronunciationFeedbackLabel.text);
+
+            if (pronunciationConfidenceLabel != null && !string.IsNullOrWhiteSpace(pronunciationConfidenceLabel.text))
+                pronunciationConfidenceLabel.text = FormatCompactMetric(pronunciationConfidenceLabel.text);
+
+            if (pronunciationWordMatchLabel != null && !string.IsNullOrWhiteSpace(pronunciationWordMatchLabel.text))
+                pronunciationWordMatchLabel.text = FormatCompactMetric(pronunciationWordMatchLabel.text);
+
+            if (pronunciationRhythmLabel != null && !string.IsNullOrWhiteSpace(pronunciationRhythmLabel.text))
+                pronunciationRhythmLabel.text = FormatCompactMetric(pronunciationRhythmLabel.text);
+        }
+
+        private static string FormatAttemptProgressDetails(string details)
+        {
+            List<string> lines = CollectContentLines(details);
+            if (lines.Count <= 6)
+                return string.Join("\n", lines);
+
+            var compact = new List<string>();
+            for (int i = 0; i < lines.Count && compact.Count < 6; i++)
+            {
+                string line = lines[i];
+                if (line.Equals("Current attempt:", StringComparison.OrdinalIgnoreCase)
+                    || line.Equals("Lesson progress:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                compact.Add(line);
+            }
+
+            return string.Join("\n", compact);
+        }
+
+        private static string FormatTopProgress(string progress)
+        {
+            if (string.IsNullOrWhiteSpace(progress))
+                return FluentEchoCopy.FirstProgressSummary;
+
+            List<string> parts = CollectPipeParts(progress);
+            if (parts.Count == 0)
+                return progress.Trim();
+
+            string cleared = FindPartContaining(parts, "lessons cleared");
+            string bestScore = FindPartContaining(parts, "best score");
+            string confidence = FindPartContaining(parts, "confidence");
+            string attempts = FindPartContaining(parts, "attempts");
+
+            var compact = new List<string>();
+            if (!string.IsNullOrWhiteSpace(cleared))
+                compact.Add(cleared.Replace("Progress: ", string.Empty));
+            if (!string.IsNullOrWhiteSpace(bestScore))
+                compact.Add(bestScore.Replace("best score ", "best "));
+            if (!string.IsNullOrWhiteSpace(confidence))
+                compact.Add(confidence);
+            if (!string.IsNullOrWhiteSpace(attempts))
+                compact.Add(attempts);
+
+            if (compact.Count == 0)
+                return progress.Trim();
+
+            return string.Join("  •  ", compact);
+        }
+
+        private static List<string> CollectPipeParts(string text)
+        {
+            var parts = new List<string>();
+            if (string.IsNullOrWhiteSpace(text))
+                return parts;
+
+            string[] split = text.Split('|');
+            for (int i = 0; i < split.Length; i++)
+            {
+                string part = split[i]?.Trim();
+                if (!string.IsNullOrWhiteSpace(part))
+                    parts.Add(part);
+            }
+
+            return parts;
+        }
+
+        private static string FindPartContaining(List<string> parts, string needle)
+        {
+            if (parts == null || string.IsNullOrWhiteSpace(needle))
+                return string.Empty;
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                if (parts[i].IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return parts[i];
+            }
+
+            return string.Empty;
+        }
+
+        private static List<string> CollectContentLines(string text)
+        {
+            var result = new List<string>();
+            if (string.IsNullOrWhiteSpace(text))
+                return result;
+
+            string[] rawLines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < rawLines.Length; i++)
+            {
+                string line = rawLines[i]?.Trim();
+                if (!string.IsNullOrWhiteSpace(line))
+                    result.Add(line);
+            }
+
+            return result;
+        }
+
+        private static string ExtractQuotedLine(List<string> lines)
+        {
+            if (lines == null)
+                return string.Empty;
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                string line = lines[i];
+                if (line.StartsWith("\"", StringComparison.Ordinal) || line.StartsWith("“", StringComparison.Ordinal))
+                    return line;
+            }
+
+            return string.Empty;
+        }
+
+        private static string ExtractFirstNarrativeLine(List<string> lines)
+        {
+            if (lines == null)
+                return string.Empty;
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                string line = lines[i];
+                if (line.StartsWith("Strong ", StringComparison.OrdinalIgnoreCase)
+                    || line.StartsWith("Good ", StringComparison.OrdinalIgnoreCase)
+                    || line.StartsWith("All target words", StringComparison.OrdinalIgnoreCase)
+                    || line.StartsWith("Clear word match", StringComparison.OrdinalIgnoreCase)
+                    || line.StartsWith("Missing ", StringComparison.OrdinalIgnoreCase))
+                    return line;
+            }
+
+            return string.Empty;
+        }
+
+        private static string ExtractFirstLineStarting(List<string> lines, string prefix)
+        {
+            if (lines == null || string.IsNullOrWhiteSpace(prefix))
+                return string.Empty;
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                if (lines[i].StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    return lines[i];
+            }
+
+            return string.Empty;
+        }
+
+        private static string ExtractFollowingLine(List<string> lines, string header)
+        {
+            if (lines == null || string.IsNullOrWhiteSpace(header))
+                return string.Empty;
+
+            for (int i = 0; i < lines.Count - 1; i++)
+            {
+                if (string.Equals(lines[i], header, StringComparison.OrdinalIgnoreCase))
+                    return lines[i + 1];
+            }
+
+            return string.Empty;
+        }
+
         private void EnsureNoticePanel()
         {
             if (noticePanel == null)
@@ -599,6 +983,56 @@ namespace FluentEcho.Views
             noticeActionButton.onClick.AddListener(() => NoticeConfirmed?.Invoke());
 
             HideNotice();
+        }
+
+        private void OnRectTransformDimensionsChange()
+        {
+            if (chips.Count == 0)
+                return;
+
+            LayoutWordChips();
+        }
+
+        private void LayoutWordChips()
+        {
+            if (wordContainer == null || chips.Count == 0)
+                return;
+
+            Canvas.ForceUpdateCanvases();
+            if (wordLayoutGroup != null && wordLayoutGroup.enabled)
+                wordLayoutGroup.enabled = false;
+
+            float availableWidth = Mathf.Max(320f, wordContainer.rect.width);
+            float x = 0f;
+            float y = 0f;
+            float rowHeight = WordChipHeight;
+
+            for (int i = 0; i < chips.Count; i++)
+            {
+                WordChipView chip = chips[i];
+                if (chip == null)
+                    continue;
+
+                RectTransform chipRect = (RectTransform) chip.transform;
+                chipRect.anchorMin = new Vector2(0f, 1f);
+                chipRect.anchorMax = new Vector2(0f, 1f);
+                chipRect.pivot = new Vector2(0f, 1f);
+
+                float width = chip.GetPreferredWidth(
+                    WordChipMinWidth,
+                    WordChipHorizontalPadding,
+                    WordChipMaxWidth);
+
+                if (x > 0f && x + width > availableWidth)
+                {
+                    x = 0f;
+                    y += rowHeight + WordChipRowSpacing;
+                }
+
+                chip.SetSize(width, WordChipHeight);
+                chipRect.anchoredPosition = new Vector2(x, -y);
+                x += width + WordChipSpacing;
+            }
         }
 
         private static TextMeshProUGUI CreateNoticeText(
